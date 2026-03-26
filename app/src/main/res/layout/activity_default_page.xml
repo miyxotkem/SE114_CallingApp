@@ -28,7 +28,7 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="16dp"
                 android:contentDescription="Search"
-                android:src="@android:drawable/ic_menu_search"
+                android:src="@drawable/icon_searchbutton"
                 app:tint="@color/tint_default" />
         </com.google.android.material.card.MaterialCardView>
 
