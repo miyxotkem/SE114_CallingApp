@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SE114_CallingSystem">
         <activity
+            android:name=".list_item_servers"
+            android:exported="false" />
+        <activity
             android:name=".Server_on_create"
             android:exported="false" />
         <activity

@@ -1,14 +1,35 @@
 package com.example.se114_callingsystem;
 
+import com.google.firebase.firestore.DocumentId;
+
 public class Server {
-    private String name;
-    private String username;
+    @DocumentId
+    private String serverId;
+    private String serverName;
+    private String ownerId;
+    private String iconUrl;
+    private String purpose;
 
+    private int order;
     public Server() {}
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
 
-    public String getKey() { return username; }
-    public void setKey(String username) { this.username = username; }
+    public Server(String serverName, String ownerId, String iconUrl, String purpose) {
+        this.serverName = serverName;
+        this.ownerId = ownerId;
+        this.iconUrl = iconUrl;
+        this.purpose = purpose;
+    }
 
+    public String getServerId() { return serverId; }
+    public void setServerId(String serverId) { this.serverId = serverId; }
+    public String getServerName() { return serverName; }
+    public void setServerName(String serverName) { this.serverName = serverName; }
+    public String getOwnerId() { return ownerId; }
+    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
+    public String getIconUrl() { return iconUrl; }
+    public void setIconUrl(String iconUrl) { this.iconUrl = iconUrl; }
+    public String getPurpose() { return purpose; }
+    public void setPurpose(String purpose) { this.purpose = purpose; }
+    public int getOrder() { return order; }
+    public void setOrder(int order) { this.order = order; }
 }

@@ -2,6 +2,9 @@ package com.example.se114_callingsystem;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
@@ -11,55 +14,53 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Default_page extends AppCompatActivity {
+
+    private ServerAdapter adapter;
+    private List<Server> serverList;
+    private FirebaseFirestore db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_default_page);
 
-        DatabaseReference usersRef = Firebase.getUsersRef();
+        db = FirebaseFirestore.getInstance();
+        serverList = new ArrayList<>();
+        adapter = new ServerAdapter(serverList);
 
-//        HashMap<String, Object> user = new HashMap<>();
-//        user.put("username", "JohnDoe");
-//        user.put("role", "student");
-//        user.put("email", "john@example.com");
-//        usersRef.push().setValue(user);
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
 
-//        usersRef.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                // This runs immediately AND every time data changes in the cloud
-//                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-//                    String name = snapshot.child("username").getValue(String.class);
-//                    Log.d("FirebaseData", "User found: " + name);
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//                Log.w("FirebaseData", "loadPost:onCancelled", databaseError.toException());
-//            }
-//        });
-
-
-        MaterialCardView cardServerItem = findViewById(R.id.cardServerItem);
-        cardServerItem.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Default_page.this, Server_on_click.class);
-                startActivity(intent);
-            }
-        });
+        fetchServers();
 
         MaterialCardView cardServerCreate = findViewById(R.id.mcvServerCreate);
-        cardServerCreate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Server_on_create dialog = new Server_on_create();
-                dialog.show(getSupportFragmentManager(), "Server_on_create");
+        cardServerCreate.setOnClickListener(v -> {
+            Server_on_create dialog = new Server_on_create();
+            dialog.show(getSupportFragmentManager(), "Server_on_create");
+        });
+    }
+
+    private void fetchServers() {
+        db.collection("servers").addSnapshotListener((value, error) -> {
+            if (error != null) {
+                Log.e("Firestore", "Error: " + error.getMessage());
+                return;
+            }
+            if (value != null) {
+                serverList.clear();
+                for (com.google.firebase.firestore.DocumentSnapshot doc : value) {
+                    Server server = doc.toObject(Server.class);
+                    serverList.add(server);
+                }
+                adapter.notifyDataSetChanged();
             }
         });
     }

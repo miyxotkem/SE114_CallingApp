@@ -26,24 +26,12 @@ public class Server_on_click extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_on_click);
 
-        tvServerName = findViewById(R.id.tvServerName);
+        String serverName = getIntent().getStringExtra("SERVER_NAME");
 
-        DatabaseReference specificServerRef = Firebase.getUsersRefByID("-Ook1EZKyNDeypbtMy19");
-
-        specificServerRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Server server = snapshot.getValue(Server.class);
-                if (server != null) {
-                    tvServerName.setText(server.getName());
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Handle error
-            }
-        });
+        TextView title = findViewById(R.id.tvServerName);
+        if (serverName != null) {
+            title.setText(serverName);
+        }
 
         ImageView btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(new View.OnClickListener() {

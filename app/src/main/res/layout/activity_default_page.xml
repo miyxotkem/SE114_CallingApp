@@ -66,109 +66,12 @@
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp">
 
-        <LinearLayout
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardServerItem"
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginHorizontal="6dp"
-                app:cardBackgroundColor="@color/bg_default"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="5dp"
-                app:strokeWidth="2dp">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="16dp"
-                    app:cardBackgroundColor="@color/bg_icon"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="0dp">
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="Server Icon"
-                        android:src="@android:drawable/ic_menu_myplaces"
-                        app:tint="@color/tint_alter" />
-                </com.google.android.material.card.MaterialCardView>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="12dp" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginHorizontal="6dp"
-                app:cardBackgroundColor="@color/bg_default"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="5dp"
-                app:strokeWidth="0dp">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="16dp"
-                    app:cardBackgroundColor="@color/bg_icon"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="0dp">
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="Server Icon"
-                        android:src="@android:drawable/ic_menu_myplaces"
-                        app:tint="@color/tint_alter" />
-                </com.google.android.material.card.MaterialCardView>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="12dp" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:layout_marginHorizontal="6dp"
-                app:cardBackgroundColor="@color/bg_default"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="5dp"
-                app:strokeWidth="0dp">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="16dp"
-                    app:cardBackgroundColor="@color/bg_icon"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="0dp">
-
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="Server Icon"
-                        android:src="@android:drawable/ic_menu_myplaces"
-                        app:tint="@color/tint_alter" />
-                </com.google.android.material.card.MaterialCardView>
-
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
+            android:padding="10dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
