@@ -12,23 +12,37 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SE114_CallingSystem">
         <activity
-            android:name=".list_item_servers"
+            android:name=".item_participant"
             android:exported="false" />
         <activity
-            android:name=".Server_on_create"
+            android:name=".call"
             android:exported="false" />
         <activity
-            android:name=".Server_on_click"
+            android:name=".item_chat_bubble"
             android:exported="false" />
         <activity
-            android:name=".Default_page"
-            android:exported="true">
+            android:name=".chat_detail"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".list_item_servers"
+            android:exported="false" />
+        <activity
+            android:name=".Server_on_create"
+            android:exported="false"
+            tools:ignore="Instantiatable" />
+        <activity
+            android:name=".Server_on_click"
+            android:exported="false" />
+        <activity
+            android:name=".Default_page"
+            android:exported="true" />
     </application>
 
 </manifest>
