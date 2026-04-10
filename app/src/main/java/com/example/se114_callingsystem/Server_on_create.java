@@ -16,12 +16,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
+import com.google.firebase.firestore.Query;
 
 public class Server_on_create extends DialogFragment {
 
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     @Nullable
     @Override
@@ -38,12 +37,49 @@ public class Server_on_create extends DialogFragment {
 
         ViewFlipper viewFlipper = view.findViewById(R.id.viewFlipper);
         EditText etName = view.findViewById(R.id.etServerName);
-        EditText etPurpose = view.findViewById(R.id.etPurpose); // Found the missing field
+        EditText etPurpose = view.findViewById(R.id.etPurpose);
         Button btnFinish = view.findViewById(R.id.btnFinish);
 
+        // Navigation logic stays the same
+        setupNavigation(view, viewFlipper, etName);
+
+        btnFinish.setOnClickListener(v -> {
+            btnFinish.setEnabled(false);
+
+            // 1. Get current server count to set the 'order' field automatically
+            db.collection("servers").get().addOnSuccessListener(queryDocumentSnapshots -> {
+                int currentOrder = queryDocumentSnapshots.size();
+
+                // 2. Create Server object using your Model
+                Server newServer = new Server(
+                        etName.getText().toString().trim(),
+                        "L2j7rDA0Y0cmsO0XNcaW", // ownerId
+                        "default_icon_url",
+                        etPurpose.getText().toString().trim()
+                );
+                newServer.setOrderIndex(currentOrder);
+
+                // 3. Save to Firestore
+                db.collection("servers")
+                        .add(newServer)
+                        .addOnSuccessListener(documentReference -> {
+                            Log.d("Firestore", "Server Created with ID: " + documentReference.getId());
+                            if (getActivity() != null) {
+                                Toast.makeText(getContext(), "Server Created!", Toast.LENGTH_SHORT).show();
+                            }
+                            dismiss();
+                        })
+                        .addOnFailureListener(e -> {
+                            btnFinish.setEnabled(true);
+                            Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+            });
+        });
+    }
+
+    private void setupNavigation(View view, ViewFlipper viewFlipper, EditText etName) {
         view.findViewById(R.id.btnNext1).setOnClickListener(v -> {
-            String name = etName.getText().toString().trim();
-            if (name.isEmpty()) {
+            if (etName.getText().toString().trim().isEmpty()) {
                 etName.setError("Please enter a server name");
                 return;
             }
@@ -68,27 +104,6 @@ public class Server_on_create extends DialogFragment {
             viewFlipper.setInAnimation(getContext(), R.anim.slide_in_left);
             viewFlipper.setOutAnimation(getContext(), R.anim.slide_out_right);
             viewFlipper.showPrevious();
-        });
-
-        btnFinish.setOnClickListener(v -> {
-            btnFinish.setEnabled(false); // Prevent double clicks
-
-            HashMap<String, Object> serverData = new HashMap<>();
-            serverData.put("serverName", etName.getText().toString().trim());
-            serverData.put("purpose", etPurpose.getText().toString().trim()); // Saving purpose
-            serverData.put("ownerId", "L2j7rDA0Y0cmsO0XNcaW");
-            serverData.put("iconUrl", "default_icon_url");
-
-            db.collection("servers")
-                .add(serverData)
-                .addOnSuccessListener(documentReference -> {
-                    Log.d("Firestore", "Server Created with ID: " + documentReference.getId());
-                    dismiss();
-                })
-                .addOnFailureListener(e -> {
-                    btnFinish.setEnabled(true);
-                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
         });
     }
 

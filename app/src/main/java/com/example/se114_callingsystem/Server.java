@@ -9,10 +9,9 @@ public class Server {
     private String ownerId;
     private String iconUrl;
     private String purpose;
+    private int orderIndex;
 
-    private int order;
     public Server() {}
-
     public Server(String serverName, String ownerId, String iconUrl, String purpose) {
         this.serverName = serverName;
         this.ownerId = ownerId;
@@ -30,6 +29,6 @@ public class Server {
     public void setIconUrl(String iconUrl) { this.iconUrl = iconUrl; }
     public String getPurpose() { return purpose; }
     public void setPurpose(String purpose) { this.purpose = purpose; }
-    public int getOrder() { return order; }
-    public void setOrder(int order) { this.order = order; }
+    public int getOrderIndex() { return orderIndex; }
+    public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
 }
