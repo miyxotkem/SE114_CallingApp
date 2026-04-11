@@ -25,7 +25,8 @@
             android:exported="false" />
         <activity
             android:name=".Server_on_create"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="Instantiatable" />
         <activity
             android:name=".Server_on_click"
             android:exported="false" />
