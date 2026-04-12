@@ -1,7 +1,6 @@
 package com.example.se114_callingsystem;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -201,7 +200,7 @@ public class Server_on_click extends AppCompatActivity {
 
     private void showAddChannelDialog(boolean isChat) {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View view = getLayoutInflater().inflate(R.layout.add_channel_bottom_sheet, null);
+        View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
         dialog.setContentView(view);
 
         TextView title = view.findViewById(R.id.tvBottomSheetTitle);
@@ -260,7 +259,7 @@ public class Server_on_click extends AppCompatActivity {
 
     private void showBaseRenameDialog(String id, String currentName, String collection, boolean isChat) {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View view = getLayoutInflater().inflate(R.layout.add_channel_bottom_sheet, null);
+        View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
         dialog.setContentView(view);
 
         EditText etName = view.findViewById(R.id.etChannelName);

@@ -12,21 +12,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SE114_CallingSystem">
         <activity
-            android:name=".add_channel_bottom_sheet"
-            android:exported="false" />
-        <activity
-            android:name=".channel_item_selector"
-            android:exported="false" />
-        <activity
             android:name=".list_item_chat_channels"
             android:exported="false" />
         <activity
             android:name=".list_item_servers"
             android:exported="false" />
-        <activity
-            android:name=".Server_on_create"
-            android:exported="false"
-            tools:ignore="Instantiatable" />
         <activity
             android:name=".Server_on_click"
             android:exported="false" />
