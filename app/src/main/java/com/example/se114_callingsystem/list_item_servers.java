@@ -25,7 +25,7 @@ public class list_item_servers extends AppCompatActivity {
         });
         MaterialCardView cardServerCreate = findViewById(R.id.main);
         cardServerCreate.setOnClickListener(v -> {
-            Intent intent = new Intent(this, chat_detail.class);
+            Intent intent = new Intent(this, Chat_detail.class);
             startActivity(intent);
         });
 

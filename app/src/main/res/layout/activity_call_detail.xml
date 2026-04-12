@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1A1A1A"> <LinearLayout
-    android:id="@+id/callHeader"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp"
@@ -70,7 +70,7 @@
                 app:tint="@color/white" />
 
             <ImageButton
-                android:id="@+id/btnToggleMic"
+                android:id="@+id/btnMute"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="12dp"
@@ -87,7 +87,7 @@
                 android:src="@android:drawable/ic_menu_share"
                 app:tint="#4CAF50" />
             <ImageButton
-            android:id="@+id/btnHangUp"
+            android:id="@+id/btnEndCall"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="24dp"

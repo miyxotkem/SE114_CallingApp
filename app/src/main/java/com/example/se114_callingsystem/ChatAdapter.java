@@ -1,5 +1,6 @@
 package com.example.se114_callingsystem;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +47,20 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
             int currentPos = holder.getAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION) {
                 listener.onRemove(channels.get(currentPos));
+            }
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            int currentPos = holder.getAdapterPosition();
+            if (currentPos != RecyclerView.NO_POSITION) {
+                ChatChannel currentChannel = channels.get(currentPos); // Get the channel object
+                Intent intent = new Intent(holder.itemView.getContext(), Chat_detail.class);
+
+                // Pass the name and ID to the next activity
+                intent.putExtra("CHAT_NAME", currentChannel.getChatName());
+                intent.putExtra("CHAT_ID", currentChannel.getChatId());
+
+                holder.itemView.getContext().startActivity(intent);
             }
         });
     }

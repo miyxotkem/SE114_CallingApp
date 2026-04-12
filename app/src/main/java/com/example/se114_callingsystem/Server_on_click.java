@@ -207,20 +207,25 @@ public class Server_on_click extends AppCompatActivity {
         EditText etName = view.findViewById(R.id.etChannelName);
         android.widget.Button btn = view.findViewById(R.id.btnCreateConfirm);
 
-        if (title != null) {
-            title.setText(isChat ? "Create Chat Channel" : "Create Call Channel");
-        }
+        if (title != null) title.setText(isChat ? "Create Chat Channel" : "Create Call Channel");
 
         btn.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
-            if (!name.isEmpty()) {
-                if (isChat) {
-                    createNewChatChannel(name);
+            if (name.isEmpty()) return;
+
+            String collection = isChat ? "Channels" : "CallChannels";
+            String field = isChat ? "chatName" : "callName";
+
+            // Check for duplicate
+            checkChannelNameExists(collection, field, name, exists -> {
+                if (exists) {
+                    etName.setError("Channel name already exists!");
                 } else {
-                    createNewCallChannel(name);
+                    if (isChat) createNewChatChannel(name);
+                    else createNewCallChannel(name);
+                    dialog.dismiss();
                 }
-                dialog.dismiss();
-            }
+            });
         });
 
         dialog.show();
@@ -262,19 +267,43 @@ public class Server_on_click extends AppCompatActivity {
         View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
         dialog.setContentView(view);
 
+        TextView tvTitle = view.findViewById(R.id.tvBottomSheetTitle);
         EditText etName = view.findViewById(R.id.etChannelName);
+        android.widget.Button btnConfirm = view.findViewById(R.id.btnCreateConfirm);
+
+        if (tvTitle != null) tvTitle.setText(isChat ? "Rename Chat Channel" : "Rename Call Channel");
+        if (btnConfirm != null) btnConfirm.setText("Rename");
+
         etName.setText(currentName);
 
-        view.findViewById(R.id.btnCreateConfirm).setOnClickListener(v -> {
+        btnConfirm.setOnClickListener(v -> {
             String newName = etName.getText().toString().trim();
-            if (!newName.isEmpty()) {
-                db.collection(collection).document(id).update(isChat ? "chatName" : "callName", newName)
-                        .addOnSuccessListener(aVoid -> {
-                            if (isChat) loadChatData(); else loadCallData();
-                            dialog.dismiss();
-                        });
+            String field = isChat ? "chatName" : "callName";
+
+            if (newName.isEmpty()) return;
+
+            // If the name hasn't changed, just close the dialog
+            if (newName.equalsIgnoreCase(currentName)) {
+                dialog.dismiss();
+                return;
             }
+
+            // Check for duplicate before updating
+            checkChannelNameExists(collection, field, newName, exists -> {
+                if (exists) {
+                    etName.setError("This name is already taken in this server");
+                } else {
+                    db.collection(collection).document(id)
+                            .update(field, newName)
+                            .addOnSuccessListener(aVoid -> {
+                                if (isChat) loadChatData(); else loadCallData();
+                                dialog.dismiss();
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(this, "Update failed", Toast.LENGTH_SHORT).show());
+                }
+            });
         });
+
         dialog.show();
         applyTransparentBackground(dialog);
     }
@@ -294,5 +323,23 @@ public class Server_on_click extends AppCompatActivity {
     private void applyTransparentBackground(BottomSheetDialog dialog) {
         View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet != null) bottomSheet.setBackgroundResource(android.R.color.transparent);
+    }
+
+    private void checkChannelNameExists(String collection, String fieldName, String name, OnValidationListener listener) {
+        db.collection(collection)
+                .whereEqualTo("serverId", serverId) // Only check names in THIS server
+                .whereEqualTo(fieldName, name)
+                .get()
+                .addOnSuccessListener(snapshots -> {
+                    listener.onResult(!snapshots.isEmpty()); // True if name exists
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Error checking name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // Interface for the callback
+    interface OnValidationListener {
+        void onResult(boolean exists);
     }
 }

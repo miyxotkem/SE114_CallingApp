@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SE114_CallingSystem">
         <activity
+            android:name=".Chat_detail"
+            android:exported="false" />
+        <activity
+            android:name=".Call_detail"
+            android:exported="false" />
+        <activity
             android:name=".list_item_chat_channels"
             android:exported="false" />
         <activity

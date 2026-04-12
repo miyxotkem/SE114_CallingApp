@@ -30,7 +30,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
         Server server = serverList.get(position);
         holder.nameText.setText(server.getServerName());
 
-        holder.nameText.setOnClickListener(v -> {
+        holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), Server_on_click.class);
 
             intent.putExtra("SERVER_NAME", server.getServerName());

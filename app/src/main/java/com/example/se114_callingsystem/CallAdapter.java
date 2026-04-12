@@ -1,5 +1,6 @@
 package com.example.se114_callingsystem;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +44,16 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
         holder.btnRemove.setOnClickListener(v -> {
             if (holder.getAdapterPosition() != RecyclerView.NO_POSITION)
                 listener.onRemove(channels.get(holder.getAdapterPosition()));
+        });
+
+        holder.itemView.setOnClickListener(v->{
+            int currentPos = holder.getAdapterPosition();
+            if (currentPos != RecyclerView.NO_POSITION) {
+                Intent intent = new Intent(holder.itemView.getContext(), Call_detail.class);
+                
+
+                holder.itemView.getContext().startActivity(intent);
+            }
         });
     }
 
