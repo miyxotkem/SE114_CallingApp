@@ -1,5 +1,6 @@
 package com.example.se114_callingsystem;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,23 +13,20 @@ import java.util.List;
 
 public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    // Định nghĩa 2 loại View
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
 
     private List<MessageModel> mMessages;
-    // ID của Nhã để so sánh (Sau này nên truyền từ Activity qua)
-    private String currentUserId = "L2j7rDA0Y0cmsO0XNcaW";
+    private String currentUserId = "znNKHjrncFBE39hu8h8V"; // ID của Nhã
 
     public Chat_adapter(List<MessageModel> messages) {
         this.mMessages = messages;
     }
 
-    // Bước 1: Xác định tin nhắn này là Gửi hay Nhận
+    // Xác định loại tin nhắn dựa trên senderId
     @Override
     public int getItemViewType(int position) {
-        MessageModel message = mMessages.get(position);
-        if (message.getSenderId().equals(currentUserId)) {
+        if (mMessages.get(position).getSenderId().equals(currentUserId)) {
             return TYPE_SENT;
         } else {
             return TYPE_RECEIVED;
@@ -39,12 +37,10 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_SENT) {
-            // Nạp layout bên phải (Người gửi)
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.activity_item_chat_bubble, parent, false);
             return new SentMessageViewHolder(view);
         } else {
-            // Nạp layout bên trái (Người nhận)
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.activity_item_chat_bubble_receive, parent, false);
             return new ReceivedMessageViewHolder(view);
@@ -55,10 +51,19 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageModel message = mMessages.get(position);
 
-        if (getItemViewType(position) == TYPE_SENT) {
+        // Logic xử lý gom nhóm: Nếu người trước đó trùng người hiện tại -> ẩn tên
+        boolean showName = true;
+        if (position > 0) {
+            MessageModel previousMsg = mMessages.get(position - 1);
+            if (previousMsg.getSenderId().equals(message.getSenderId())) {
+                showName = false;
+            }
+        }
+
+        if (holder instanceof SentMessageViewHolder) {
             ((SentMessageViewHolder) holder).bind(message);
-        } else {
-            ((ReceivedMessageViewHolder) holder).bind(message);
+        } else if (holder instanceof ReceivedMessageViewHolder) {
+            ((ReceivedMessageViewHolder) holder).bind(message, showName);
         }
     }
 
@@ -67,29 +72,50 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return mMessages != null ? mMessages.size() : 0;
     }
 
-    // --- CÁC VIEWHOLDER RIÊNG BIỆT ---
+    // --- VIEWHOLDERS ---
 
-    // ViewHolder cho tin nhắn gửi đi
+    // 1. ViewHolder cho tin nhắn Nhã gửi (Bên phải)
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText;
+
         public SentMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.textMessage);
         }
+
         void bind(MessageModel message) {
             messageText.setText(message.getContent());
         }
     }
 
-    // ViewHolder cho tin nhắn nhận về
+    // 2. ViewHolder cho tin nhắn người khác gửi (Bên trái)
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText;
+        TextView messageText, senderName;
+
         public ReceivedMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.textMessage);
+            senderName = itemView.findViewById(R.id.textSenderName);
         }
-        void bind(MessageModel message) {
+
+        void bind(MessageModel message, boolean showName) {
             messageText.setText(message.getContent());
+
+            if (showName) {
+                senderName.setVisibility(View.VISIBLE);
+                // Hiển thị 5 ký tự đầu của ID nếu chưa có field Name, kèm màu sắc để phân biệt
+                senderName.setText("ID: " + message.getSenderId().substring(0, 5));
+                senderName.setTextColor(getConsistentColor(message.getSenderId()));
+            } else {
+                senderName.setVisibility(View.GONE);
+            }
+        }
+
+        // Hàm tạo màu cố định dựa trên ID người dùng để mỗi người 1 màu khác nhau
+        private int getConsistentColor(String uid) {
+            int hash = uid.hashCode();
+            int[] colors = {Color.RED, Color.BLUE, Color.parseColor("#FF9800"), Color.parseColor("#4CAF50"), Color.MAGENTA};
+            return colors[Math.abs(hash) % colors.length];
         }
     }
 }

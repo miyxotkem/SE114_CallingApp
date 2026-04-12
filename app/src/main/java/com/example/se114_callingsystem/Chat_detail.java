@@ -73,7 +73,7 @@ public class Chat_detail extends AppCompatActivity {
         }); // ID người nhận
 
         // 3. ID của Nhã (phải khớp với ID lúc gửi)
-        String senderId = "L2j7rDA0Y0cmsO0XNcaW";
+        String senderId = "znNKHjrncFBE39hu8h8V";
 
         if (channelName != null) {
             tvChannelName.setText("# " + channelName);
@@ -81,13 +81,9 @@ public class Chat_detail extends AppCompatActivity {
 
         // --- PHẦN QUAN TRỌNG NHẤT ---
         if (receiverId != null) {
-            // Tạo lại chatRoomID giống hệt lúc gửi
-            String chatRoomID = (senderId.compareTo(receiverId) < 0)
-                    ? senderId + "_" + receiverId
-                    : receiverId + "_" + senderId;
-
             // Gọi lắng nghe với cái ID phòng dài này
-            listenForMessages(chatRoomID);
+            String groupId = getIntent().getStringExtra("CHAT_ID");
+            listenForMessages(groupId);
         }
 
     }
@@ -120,41 +116,27 @@ public class Chat_detail extends AppCompatActivity {
     private void sendMessage() {
         String msg = edtMessage.getText().toString().trim();
         if (!msg.isEmpty()) {
-            // LẤY ID CỦA BẠN:
-            // Nếu đã login, dùng: FirebaseAuth.getInstance().getUid();
-            // Ở đây tôi tạm dùng ID bạn đã ghi trong code nhưng ở dạng String chuẩn:
-            String senderId = "L2j7rDA0Y0cmsO0XNcaW";
+            String senderId = "znNKHjrncFBE39hu8h8V"; // ID của Nhã
 
-            String receiverId = getIntent().getStringExtra("CHAT_ID");
+            // Lấy ID Nhóm (truyền từ màn hình danh sách nhóm sang)
+            String groupId = getIntent().getStringExtra("CHAT_ID");
 
-            if (receiverId == null) {
-                Toast.makeText(this, "Không tìm thấy ID người nhận", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            if (groupId == null) return;
 
             long timestamp = System.currentTimeMillis();
 
-            // Tạo ID phòng chat duy nhất
-            String chatRoomID = (senderId.compareTo(receiverId) < 0)
-                    ? senderId + "_" + receiverId
-                    : receiverId + "_" + senderId;
+            // Tạo model tin nhắn (Nhớ thêm senderName để mọi người biết ai nhắn)
+            MessageModel messageModel = new MessageModel(senderId, groupId, msg, timestamp);
 
-            MessageModel messageModel = new MessageModel(senderId, receiverId, msg, timestamp);
-
-            DatabaseReference chatRef = Firebase.getDatabase()
+            // Đẩy vào đúng địa chỉ của nhóm
+            DatabaseReference groupChatRef = Firebase.getDatabase()
                     .getReference("chats")
-                    .child(chatRoomID);
+                    .child(groupId); // Dùng ID nhóm cố định ở đây
 
-            String messageId = chatRef.push().getKey();
-
+            String messageId = groupChatRef.push().getKey();
             if (messageId != null) {
-                chatRef.child(messageId).setValue(messageModel)
-                        .addOnSuccessListener(aVoid -> {
-                            edtMessage.setText("");
-                        })
-                        .addOnFailureListener(e -> {
-                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        });
+                groupChatRef.child(messageId).setValue(messageModel)
+                        .addOnSuccessListener(aVoid -> edtMessage.setText(""));
             }
         }
     }
