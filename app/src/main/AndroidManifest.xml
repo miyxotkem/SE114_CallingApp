@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SE114_CallingSystem">
         <activity
+            android:name=".item_chat_bubble_receive"
+            android:exported="false" />
+        <activity
             android:name=".Chat_detail"
             android:exported="false" />
         <activity
