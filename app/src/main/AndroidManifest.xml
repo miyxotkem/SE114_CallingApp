@@ -16,6 +16,7 @@
             android:exported="false" />
         <activity
             android:name=".Chat_detail"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".Call_detail"

@@ -3,9 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:id="@+id/main"
     android:padding="8dp">
 
     <LinearLayout
+        android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start"
@@ -15,13 +17,13 @@
 
         <TextView
             android:id="@+id/textSenderName"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
-            android:textColor="#757575"
-            android:layout_marginStart="4dp"
             android:layout_marginBottom="2dp"
-            android:text="User Name" />
+            android:text="User Name"
+            android:textColor="#757575"
+            android:textSize="12sp" />
+
         <TextView
             android:id="@+id/textMessage"
             android:layout_width="wrap_content"
