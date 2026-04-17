@@ -35,5 +35,6 @@ public class Firebase {
         return getDatabase().getReference("users");
     }
 
-    public static DatabaseReference getUsersRefByID(String ID) { return getDatabase().getReference("users").child(ID); }
+
+
 }
