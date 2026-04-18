@@ -59,7 +59,7 @@ public class Chat_detail extends AppCompatActivity {
 
     private String groupId;
     private DatabaseReference groupChatRef;
-    private String senderId = "znNKHjrncFBE39hu8h8V"; // ID của Nhã
+    private String senderId = "L2j7rDA0Y0cmsO0XNcaW"; // ID của Nhã
 
     @SuppressLint("ClickableViewAccessibility")
     @Override

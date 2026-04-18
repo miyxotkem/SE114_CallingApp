@@ -4,13 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.util.Log;
+import android.net.Uri;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,7 +33,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     private List<MessageModel> mMessages;
     private static FirebaseFirestore db;
-    private String currentUserId = "znNKHjrncFBE39hu8h8V"; // ID của Nhã
+    private String currentUserId = "L2j7rDA0Y0cmsO0XNcaW"; // ID của Nhã
     private OnChatInteractListener listener;
 
     public interface OnChatInteractListener {
@@ -117,8 +118,9 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     // --- VIEWHOLDERS ---
 
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText, textReaction, textRepliedTo, textTime;
+        TextView messageText, textReaction, textRepliedTo, textTime, tvFileName;
         ImageView ivMessageImage;
+        LinearLayout layoutFile;
         View cardBubble;
 
         public SentMessageViewHolder(@NonNull View itemView) {
@@ -129,10 +131,12 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             cardBubble = itemView.findViewById(R.id.cardBubble);
             textTime = itemView.findViewById(R.id.textTime);
             ivMessageImage = itemView.findViewById(R.id.ivMessageImage);
+            layoutFile = itemView.findViewById(R.id.layoutFile);
+            tvFileName = itemView.findViewById(R.id.tvFileName);
         }
 
         void bind(MessageModel message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup) {
-            bindSharedLogic(message, messageText, ivMessageImage, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -145,8 +149,9 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     }
 
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText, senderName, textTime, textReaction, textRepliedTo;
+        TextView messageText, senderName, textTime, textReaction, textRepliedTo, tvFileName;
         ImageView avatarImg, ivMessageImage;
+        LinearLayout layoutFile;
         View cardBubble;
 
         public ReceivedMessageViewHolder(@NonNull View itemView) {
@@ -159,10 +164,12 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             cardBubble = itemView.findViewById(R.id.cardBubble);
             avatarImg = itemView.findViewById(R.id.imgAvatar);
             ivMessageImage = itemView.findViewById(R.id.ivMessageImage);
+            layoutFile = itemView.findViewById(R.id.layoutFile);
+            tvFileName = itemView.findViewById(R.id.tvFileName);
         }
 
         void bind(MessageModel message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId) {
-            bindSharedLogic(message, messageText, ivMessageImage, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
 
             // Xử lý Tên (Hiện ở tin đầu nhóm)
             if (isFirstInGroup && senderName != null) {
@@ -201,51 +208,47 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
     }
 
-    private static void bindSharedLogic(MessageModel msg, TextView textMessage, ImageView ivMessageImage, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
+    private static void bindSharedLogic(MessageModel msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
         if (msg.isDeleted()) {
             textMessage.setVisibility(View.VISIBLE);
             textMessage.setText("Tin nhắn đã bị thu hồi");
             textMessage.setTypeface(null, Typeface.ITALIC);
             textMessage.setTextColor(Color.GRAY);
             if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
+            if (layoutFile != null) layoutFile.setVisibility(View.GONE);
             if (textReaction != null) textReaction.setVisibility(View.GONE);
             if (textRepliedTo != null) textRepliedTo.setVisibility(View.GONE);
         } else {
             textMessage.setTypeface(null, Typeface.NORMAL);
             textMessage.setTextColor(Color.BLACK);
 
-            // XỬ LÝ PHÂN LOẠI TIN NHẮN (TEXT vs IMAGE)
+            // XỬ LÝ PHÂN LOẠI TIN NHẮN (TEXT vs IMAGE vs FILE)
             if ("image".equals(msg.getType())) {
                 textMessage.setVisibility(View.GONE);
+                if (layoutFile != null) layoutFile.setVisibility(View.GONE);
+
                 if (ivMessageImage != null) {
                     ivMessageImage.setVisibility(View.VISIBLE);
-
-                    // Cắt bo góc trực tiếp trên ảnh bằng Glide (không cần hộp background)
                     Glide.with(ivMessageImage.getContext())
                             .load(msg.getContent())
-                            .apply(RequestOptions.bitmapTransform(new RoundedCorners(32))) // Có thể chỉnh độ cong theo ý muốn
+                            .apply(RequestOptions.bitmapTransform(new RoundedCorners(32)))
                             .into(ivMessageImage);
 
-                    // Sử dụng GestureDetector để phân biệt Click, Double Click và Long Press trên ảnh
                     GestureDetector gestureDetector = new GestureDetector(ivMessageImage.getContext(), new GestureDetector.SimpleOnGestureListener() {
-
-                        // Bắt lấy sự kiện chạm xuống đầu tiên (Cực kỳ quan trọng để không bị lỗi spam chạm)
                         @Override
                         public boolean onDown(MotionEvent e) {
                             return true;
                         }
 
-                        // Single Tap -> Mở Activity xem ảnh
                         @Override
                         public boolean onSingleTapConfirmed(MotionEvent e) {
                             Context context = ivMessageImage.getContext();
-                            Intent intent = new Intent(context, Image_viewer.class); // Gọi đúng file Image_viewer của bạn
+                            Intent intent = new Intent(context, Image_viewer.class);
                             intent.putExtra("IMAGE_URL", msg.getContent());
                             context.startActivity(intent);
                             return true;
                         }
 
-                        // Double Tap -> Thả tim
                         @Override
                         public boolean onDoubleTap(MotionEvent e) {
                             if ("❤️".equals(msg.getReactionEmoji())) {
@@ -256,15 +259,69 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                             return true;
                         }
 
-                        // Long Press -> Mở menu (giống như nhấn giữ bong bóng chat)
                         @Override
                         public void onLongPress(MotionEvent e) {
-                            cardBubble.performLongClick(); // Tái sử dụng logic long click của bong bóng
+                            cardBubble.performLongClick();
                         }
                     });
 
-                    // Gắn detector vào ảnh (đã xóa v.performClick() để tránh spam chạm)
                     ivMessageImage.setOnTouchListener((v, event) -> {
+                        return gestureDetector.onTouchEvent(event);
+                    });
+                }
+            } else if ("file".equals(msg.getType())) {
+                textMessage.setVisibility(View.GONE);
+                if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
+
+                if (layoutFile != null) {
+                    layoutFile.setVisibility(View.VISIBLE);
+
+                    // Trích xuất tên file từ URL của Cloudinary (Thêm final để dùng trong GestureDetector)
+                    final String fileUrl = msg.getContent();
+                    String extractedFileName = "Tài liệu đính kèm";
+                    try {
+                        extractedFileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+                    } catch (Exception e) {}
+                    final String fileName = extractedFileName;
+
+                    if (tvFileName != null) {
+                        tvFileName.setText(fileName);
+                    }
+
+                    GestureDetector gestureDetector = new GestureDetector(layoutFile.getContext(), new GestureDetector.SimpleOnGestureListener() {
+                        @Override
+                        public boolean onDown(MotionEvent e) {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onSingleTapConfirmed(MotionEvent e) {
+                            // Mở trình xem trước tài liệu thay vì tải ngay
+                            Context context = layoutFile.getContext();
+                            Intent intent = new Intent(context, Document_viewer.class);
+                            intent.putExtra("FILE_URL", fileUrl);
+                            intent.putExtra("FILE_NAME", fileName);
+                            context.startActivity(intent);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onDoubleTap(MotionEvent e) {
+                            if ("❤️".equals(msg.getReactionEmoji())) {
+                                listener.onReact(msg, "");
+                            } else {
+                                listener.onReact(msg, "❤️");
+                            }
+                            return true;
+                        }
+
+                        @Override
+                        public void onLongPress(MotionEvent e) {
+                            cardBubble.performLongClick();
+                        }
+                    });
+
+                    layoutFile.setOnTouchListener((v, event) -> {
                         return gestureDetector.onTouchEvent(event);
                     });
                 }
@@ -274,6 +331,9 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 textMessage.setText(msg.getContent());
                 if (ivMessageImage != null) {
                     ivMessageImage.setVisibility(View.GONE);
+                }
+                if (layoutFile != null) {
+                    layoutFile.setVisibility(View.GONE);
                 }
             }
 

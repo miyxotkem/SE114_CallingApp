@@ -72,6 +72,36 @@
                     android:layout_marginBottom="4dp"
                     android:background="#E0E0E0" />
 
+                <LinearLayout
+                    android:id="@+id/layoutFile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="#1A000000"
+                    android:padding="8dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_file_modern" />
+
+                    <TextView
+                        android:id="@+id/tvFileName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Tài liệu đính kèm"
+                        android:textColor="#333333"
+                        android:textStyle="bold"
+                        android:maxWidth="160dp"
+                        android:ellipsize="middle"
+                        android:singleLine="true"/>
+                </LinearLayout>
+
                 <TextView
                     android:id="@+id/textMessage"
                     android:layout_width="wrap_content"

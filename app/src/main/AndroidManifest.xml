@@ -15,6 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SE114_CallingSystem">
         <activity
+            android:name=".Document_viewer"
+            android:exported="false" />
+        <activity
             android:name=".Image_viewer"
             android:exported="false" />
         <activity
