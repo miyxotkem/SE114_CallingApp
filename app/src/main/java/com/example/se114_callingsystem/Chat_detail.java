@@ -3,6 +3,8 @@ package com.example.se114_callingsystem;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -18,9 +20,11 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -44,8 +48,17 @@ public class Chat_detail extends AppCompatActivity {
     private EditText edtMessage;
     private ImageButton btnSend;
     private ImageView btnBack;
-    private TextView tvChannelName; // For displaying the passed name
+    private TextView tvChannelName;
+
+    // UI để hiển thị đang Reply (Layout hiện đại)
+    private View tvReplyingToLayout;
+    private TextView tvReplyingToText;
+    private MessageModel messageToReply = null;
+
     private FirebaseFirestore db;
+    private String groupId;
+    private DatabaseReference groupChatRef;
+    private String senderId = "znNKHjrncFBE39hu8h8V";
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -54,76 +67,154 @@ public class Chat_detail extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_chat_detail);
 
-        // Handle System Bar Insets (Status bar/Navigation bar padding)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             v.setPadding(0, 0, 0, imeInsets.bottom);
             return insets;
         });
-        imagePickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) uploadFileToFirebase(uri, "image");
-                }
-        );
 
-        // --- Khởi tạo Launcher chọn File ---
-        filePickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) uploadFileToFirebase(uri, "file");
-                }
-        );
+        imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) uploadFileToFirebase(uri, "image");
+        });
+        filePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) uploadFileToFirebase(uri, "file");
+        });
 
-
-        // 1. Initialize Views
         initViews();
 
-        // 2. Get Data from Intent (Passed from ChatAdapter)
         String channelName = getIntent().getStringExtra("CHAT_NAME");
-        String receiverId = getIntent().getStringExtra("CHAT_ID"); // You'll need this later for Firebase messages
+        groupId = getIntent().getStringExtra("CHAT_ID");
+
+        if (groupId != null) {
+            groupChatRef = Firebase.getDatabase().getReference("chats").child(groupId);
+        }
 
         if (channelName != null) {
             tvChannelName.setText("# " + channelName);
         }
 
-        // 3. Setup RecyclerView
-        adapter = new Chat_adapter(messageList);
+        // Khởi tạo Adapter với Interface
+        adapter = new Chat_adapter(messageList, new Chat_adapter.OnChatInteractListener() {
+            @Override
+            public void onReply(MessageModel message) {
+                showReplyUI(message);
+            }
+
+            @Override
+            public void onDelete(MessageModel message) {
+                if (groupChatRef != null && message.getMessageId() != null) {
+                    groupChatRef.child(message.getMessageId()).child("deleted").setValue(true);
+                }
+            }
+
+            @Override
+            public void onReact(MessageModel message, String emoji) {
+                if(emoji.equals("CUSTOM")){
+                    Toast.makeText(Chat_detail.this, "Mở Custom Emoji Picker", Toast.LENGTH_SHORT).show();
+                } else if (groupChatRef != null && message.getMessageId() != null) {
+                    groupChatRef.child(message.getMessageId()).child("reactionEmoji").setValue(emoji);
+                }
+            }
+        });
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
         recyclerView.setOnTouchListener((v,event)->{
             hideKeyboard();
             return false;
         });
-        // 4. Click Listeners
+
+        // --- SWIPE TO REPLY (Vuốt mượt & vẽ Icon phía sau) ---
+        ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                MessageModel message = messageList.get(position);
+                adapter.notifyItemChanged(position); // Trả item về vị trí cũ ngay lập tức
+                showReplyUI(message);
+            }
+
+            // Ghi đè để giới hạn khoảng cách và vẽ icon
+            @Override
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                View itemView = viewHolder.itemView;
+
+                // 1. Vẽ Icon Reply phía sau (Sử dụng icon mặc định của Android hoặc icon của bạn)
+                Drawable replyIcon = ContextCompat.getDrawable(Chat_detail.this, android.R.drawable.ic_menu_revert);
+                if (replyIcon != null) {
+                    int iconMargin = (itemView.getHeight() - replyIcon.getIntrinsicHeight()) / 2;
+                    int iconTop = itemView.getTop() + iconMargin;
+                    int iconBottom = iconTop + replyIcon.getIntrinsicHeight();
+
+                    if (dX > 0) { // Vuốt sang phải
+                        int iconLeft = itemView.getLeft() + iconMargin;
+                        int iconRight = iconLeft + replyIcon.getIntrinsicWidth();
+                        replyIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+                        replyIcon.draw(c);
+                    } else if (dX < 0) { // Vuốt sang trái
+                        int iconRight = itemView.getRight() - iconMargin;
+                        int iconLeft = iconRight - replyIcon.getIntrinsicWidth();
+                        replyIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+                        replyIcon.draw(c);
+                    }
+                }
+
+                // 2. Giới hạn khoảng cách vuốt (Khoảng 250 pixels)
+                float maxSwipeDistance = 250f;
+                float newDx = dX;
+
+                if (dX > maxSwipeDistance) {
+                    newDx = maxSwipeDistance;
+                } else if (dX < -maxSwipeDistance) {
+                    newDx = -maxSwipeDistance;
+                }
+
+                // Chỉ dịch chuyển theo newDx thay vì dX gốc
+                super.onChildDraw(c, recyclerView, viewHolder, newDx, dY, actionState, isCurrentlyActive);
+            }
+        };
+        new ItemTouchHelper(swipeCallback).attachToRecyclerView(recyclerView);
+
+        // Click Listeners
         btnAttachImage.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
         btnAttachFile.setOnClickListener(v -> filePickerLauncher.launch("*/*"));
         btnBack.setOnClickListener(v -> finish());
+        btnSend.setOnClickListener(v -> sendMessage());
 
-        btnSend.setOnClickListener(v -> {
-            sendMessage();
-        }); // ID người nhận
+        // Hủy bỏ Reply khi nhấn vào khu vực Reply
+        tvReplyingToLayout.setOnClickListener(v -> {
+            messageToReply = null;
+            tvReplyingToLayout.setVisibility(View.GONE);
+        });
 
-        // 3. ID của Nhã (phải khớp với ID lúc gửi)
-        String senderId = "znNKHjrncFBE39hu8h8V";
-
-        if (channelName != null) {
-            tvChannelName.setText("# " + channelName);
-        }
-
-        // --- PHẦN QUAN TRỌNG NHẤT ---
-        if (receiverId != null) {
-            // Gọi lắng nghe với cái ID phòng dài này
-            String groupId = getIntent().getStringExtra("CHAT_ID");
+        if (groupId != null) {
             listenForMessages(groupId);
         }
-
     }
+
+    private void showReplyUI(MessageModel message) {
+        if(message.isDeleted()) return;
+        messageToReply = message;
+
+        tvReplyingToLayout.setVisibility(View.VISIBLE);
+        // Cắt bớt text nếu quá dài
+        String content = message.getContent();
+        if(content.length() > 40) content = content.substring(0, 40) + "...";
+        tvReplyingToText.setText("Đang trả lời: " + content);
+
+        // Mở bàn phím
+        edtMessage.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(edtMessage, InputMethodManager.SHOW_IMPLICIT);
+    }
+
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -131,10 +222,10 @@ public class Chat_detail extends AppCompatActivity {
             if (imm != null) {
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
-            // Để chuyên nghiệp hơn, hãy xóa focus khỏi EditText
             view.clearFocus();
         }
     }
+
     private void listenForMessages(String chatRoomID) {
         Firebase.getDatabase().getReference("chats").child(chatRoomID)
                 .addValueEventListener(new ValueEventListener() {
@@ -143,12 +234,14 @@ public class Chat_detail extends AppCompatActivity {
                         messageList.clear();
                         for (DataSnapshot data : snapshot.getChildren()) {
                             MessageModel model = data.getValue(MessageModel.class);
-                            messageList.add(model);
+                            if(model != null) {
+                                model.setMessageId(data.getKey());
+                                messageList.add(model);
+                            }
                         }
                         adapter.notifyDataSetChanged();
                         recyclerView.scrollToPosition(messageList.size() - 1);
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {}
                 });
@@ -162,93 +255,80 @@ public class Chat_detail extends AppCompatActivity {
         tvChannelName = findViewById(R.id.tvChannelName);
         btnAttachImage = findViewById(R.id.btnAttachImage);
         btnAttachFile = findViewById(R.id.btnAttachFile);
+
+        // ID mới cho phần giao diện Reply
+        tvReplyingToLayout = findViewById(R.id.tvReplyingToLayout);
+        tvReplyingToText = findViewById(R.id.tvReplyingToText);
     }
+
     private void sendMessage() {
         String msg = edtMessage.getText().toString().trim();
-        if (!msg.isEmpty()) {
-            String senderId = "znNKHjrncFBE39hu8h8V"; // ID của Nhã
-
-            // Lấy ID Nhóm (truyền từ màn hình danh sách nhóm sang)
-            String groupId = getIntent().getStringExtra("CHAT_ID");
-
-            if (groupId == null) return;
-
+        if (!msg.isEmpty() && groupChatRef != null) {
             long timestamp = System.currentTimeMillis();
 
-            // Tạo model tin nhắn (Nhớ thêm senderName để mọi người biết ai nhắn)
             MessageModel messageModel = new MessageModel(senderId, groupId, msg, timestamp);
 
-            // Đẩy vào đúng địa chỉ của nhóm
-            DatabaseReference groupChatRef = Firebase.getDatabase()
-                    .getReference("chats")
-                    .child(groupId); // Dùng ID nhóm cố định ở đây
+            // Xử lý nếu đang Reply
+            if (messageToReply != null) {
+                messageModel.setRepliedToContent(messageToReply.getContent());
+                messageToReply = null;
+                tvReplyingToLayout.setVisibility(View.GONE);
+            }
 
             String messageId = groupChatRef.push().getKey();
             if (messageId != null) {
+                messageModel.setMessageId(messageId);
                 groupChatRef.child(messageId).setValue(messageModel)
                         .addOnSuccessListener(aVoid -> edtMessage.setText(""));
             }
         }
     }
+
     private void uploadFileToFirebase(Uri fileUri, String type) {
-        // Sử dụng ProgressDialog (Lưu ý: ProgressDialog đã bị deprecated,
-        // nhưng nếu bạn muốn dùng thì vẫn ổn)
         ProgressDialog pd = new ProgressDialog(this);
         pd.setMessage("Đang tải " + type + " lên...");
         pd.setCancelable(false);
         pd.show();
 
-        String groupId = getIntent().getStringExtra("CHAT_ID");
         if (groupId == null) {
             pd.dismiss();
             return;
         }
 
-        // 1. Tạo tên file duy nhất
         String extension = type.equals("image") ? ".jpg" : ".file";
         String fileName = System.currentTimeMillis() + extension;
-
-        // 2. Sửa lỗi gọi hàm: Sử dụng hàm helper từ class Firebase của bạn
-        // Cách này sạch sẽ và đúng chuẩn Singleton bạn vừa viết
         StorageReference storageRef = Firebase.getChatStorageRef(groupId).child(fileName);
 
-        // 3. Thực hiện Upload
-        storageRef.putFile(fileUri)
-                .addOnSuccessListener(taskSnapshot -> {
-                    // 4. Lấy URL tải về sau khi upload thành công
-                    storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                        String downloadUrl = uri.toString();
-
-                        // Gửi tin nhắn chứa link file vào Realtime Database
-                        sendMediaMessage(downloadUrl, type);
-
-                        if (!isFinishing()) pd.dismiss();
-                        Toast.makeText(this, "Gửi thành công!", Toast.LENGTH_SHORT).show();
-                    });
-                })
-                .addOnFailureListener(e -> {
-                    if (!isFinishing()) pd.dismiss();
-                    Toast.makeText(this, "Lỗi upload: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                })
-                .addOnProgressListener(snapshot -> {
-                    // (Tùy chọn) Bạn có thể cập nhật % tiến trình tại đây
-                    double progress = (100.0 * snapshot.getBytesTransferred()) / snapshot.getTotalByteCount();
-                    pd.setMessage("Đang tải lên: " + (int) progress + "%");
-                });
+        storageRef.putFile(fileUri).addOnSuccessListener(taskSnapshot -> {
+            storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                sendMediaMessage(uri.toString(), type);
+                if (!isFinishing()) pd.dismiss();
+            });
+        }).addOnFailureListener(e -> {
+            if (!isFinishing()) pd.dismiss();
+            Toast.makeText(this, "Lỗi upload", Toast.LENGTH_SHORT).show();
+        });
     }
 
-    // --- Hàm gửi tin nhắn Media vào Database ---
     private void sendMediaMessage(String fileUrl, String type) {
-        String senderId = "znNKHjrncFBE39hu8h8V";
-        String groupId = getIntent().getStringExtra("CHAT_ID");
+        if (groupChatRef == null) return;
         long timestamp = System.currentTimeMillis();
 
-        // Giả sử Model của bạn có constructor: (senderId, groupId, content, timestamp, type, fileUrl)
-        // Nếu chưa có, bạn hãy cập nhật MessageModel của mình
         MessageModel messageModel = new MessageModel(senderId, groupId, "["+type+"]", timestamp);
         messageModel.setType(type);
         messageModel.setFileUrl(fileUrl);
 
-        Firebase.getDatabase().getReference("chats").child(groupId).push().setValue(messageModel);
+        // Xử lý reply cho Media
+        if (messageToReply != null) {
+            messageModel.setRepliedToContent(messageToReply.getContent());
+            messageToReply = null;
+            tvReplyingToLayout.setVisibility(View.GONE);
+        }
+
+        String messageId = groupChatRef.push().getKey();
+        if (messageId != null) {
+            messageModel.setMessageId(messageId);
+            groupChatRef.child(messageId).setValue(messageModel);
+        }
     }
 }
