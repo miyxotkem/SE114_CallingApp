@@ -63,8 +63,12 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageModel message = mMessages.get(position);
+        RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) holder.itemView.getLayoutParams();
 
-        // Logic gom nhóm tin nhắn
+        // Lấy density để quy đổi dp sang px
+        float density = holder.itemView.getContext().getResources().getDisplayMetrics().density;
+
+        // 1. Logic gom nhóm tin nhắn (Nhã đã viết đúng)
         boolean isFirstInGroup = true;
         if (position > 0) {
             MessageModel previousMsg = mMessages.get(position - 1);
@@ -81,6 +85,17 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             }
         }
 
+        // 2. Logic điều chỉnh Margin động dựa trên nhóm tin nhắn
+        if (isFirstInGroup) {
+            // Nếu là tin nhắn đầu tiên của một người: giãn ra 8dp để dễ phân biệt với người trước
+            params.topMargin = (int) (8 * density);
+        } else {
+            // Nếu là tin nhắn tiếp theo của cùng một người: cho sát rạt 1dp hoặc 2dp
+            params.topMargin = (int) (1 * density);
+        }
+        holder.itemView.setLayoutParams(params);
+
+        // 3. Gọi hàm bind như bình thường
         if (holder instanceof SentMessageViewHolder) {
             ((SentMessageViewHolder) holder).bind(message, listener, currentUserId, isLastInGroup);
         } else if (holder instanceof ReceivedMessageViewHolder) {
@@ -139,7 +154,6 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
         void bind(MessageModel message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId) {
             bindSharedLogic(message, messageText, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
-
             // Xử lý Tên (Hiện ở tin đầu nhóm)
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);

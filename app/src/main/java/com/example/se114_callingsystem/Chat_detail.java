@@ -147,20 +147,57 @@ public class Chat_detail extends AppCompatActivity {
     private void setupSwipeToReply() {
         ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
-            public boolean onMove(@NonNull RecyclerView r, @NonNull RecyclerView.ViewHolder v, @NonNull RecyclerView.ViewHolder t) { return false; }
+            public boolean onMove(@NonNull RecyclerView r, @NonNull RecyclerView.ViewHolder v, @NonNull RecyclerView.ViewHolder t) {
+                return false;
+            }
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 showReplyUI(messageList.get(position));
+                // Quan trọng: Phải notify để item quay về vị trí cũ sau khi swipe
                 adapter.notifyItemChanged(position);
             }
 
             @Override
-            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-                // Giới hạn độ vuốt và vẽ icon reply
-                float maxSwipe = 200f;
-                super.onChildDraw(c, recyclerView, viewHolder, Math.min(dX, maxSwipe), dY, actionState, isCurrentlyActive);
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView,
+                                    @NonNull RecyclerView.ViewHolder viewHolder,
+                                    float dX, float dY, int actionState, boolean isCurrentlyActive) {
+
+                View itemView = viewHolder.itemView;
+
+                // --- LOGIC VẼ ICON REPLY KHI KÉO ---
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && dX > 0) {
+                    // Lấy icon từ hệ thống hoặc drawable của bạn
+                    Drawable icon = ContextCompat.getDrawable(Chat_detail.this, android.R.drawable.ic_menu_revert);
+                    if (icon != null) {
+                        // Tính toán vị trí icon nằm chính giữa chiều dọc của item
+                        int itemHeight = itemView.getBottom() - itemView.getTop();
+                        int iconHeight = icon.getIntrinsicHeight();
+                        int iconWidth = icon.getIntrinsicWidth();
+
+                        int iconTop = itemView.getTop() + (itemHeight - iconHeight) / 2;
+                        int iconBottom = iconTop + iconHeight;
+
+                        // Hiện icon khi kéo qua một khoảng nhất định (ví dụ 40px)
+                        if (dX > 40) {
+                            int iconLeft = itemView.getLeft() + 40; // Cách lề trái 40px
+                            int iconRight = iconLeft + iconWidth;
+                            icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
+
+                            // Độ mờ của icon tăng dần theo độ kéo (DX)
+                            int alpha = (int) Math.min(255, dX * 2);
+                            icon.setAlpha(alpha);
+                            icon.draw(c);
+                        }
+                    }
+                }
+
+                // Giới hạn độ kéo tối đa (ví dụ 150px) để không bị kéo mất item
+                float maxSwipe = 150f;
+                float limitedDX = Math.min(dX, maxSwipe);
+
+                super.onChildDraw(c, recyclerView, viewHolder, limitedDX, dY, actionState, isCurrentlyActive);
             }
         };
         new ItemTouchHelper(swipeCallback).attachToRecyclerView(recyclerView);
