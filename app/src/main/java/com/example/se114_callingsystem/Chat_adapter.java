@@ -1,18 +1,17 @@
 package com.example.se114_callingsystem;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.firestore.FirebaseFirestore;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -26,9 +25,17 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private List<MessageModel> mMessages;
     private static FirebaseFirestore db;
     private String currentUserId = "znNKHjrncFBE39hu8h8V"; // ID của Nhã
+    private OnChatInteractListener listener;
 
-    public Chat_adapter(List<MessageModel> messages) {
+    public interface OnChatInteractListener {
+        void onReply(MessageModel message);
+        void onDelete(MessageModel message);
+        void onReact(MessageModel message, String emoji);
+    }
+
+    public Chat_adapter(List<MessageModel> messages, OnChatInteractListener listener) {
         this.mMessages = messages;
+        this.listener = listener;
         this.db = FirebaseFirestore.getInstance();
     }
 
@@ -45,12 +52,10 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_SENT) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.activity_item_chat_bubble, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_item_chat_bubble, parent, false);
             return new SentMessageViewHolder(view);
         } else {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.activity_item_chat_bubble_receive, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_item_chat_bubble_receive, parent, false);
             return new ReceivedMessageViewHolder(view);
         }
     }
@@ -59,7 +64,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         MessageModel message = mMessages.get(position);
 
-        // 1. Kiểm tra xem có phải tin ĐẦU TIÊN của nhóm không (để hiện Tên)
+        // Logic gom nhóm tin nhắn
         boolean isFirstInGroup = true;
         if (position > 0) {
             MessageModel previousMsg = mMessages.get(position - 1);
@@ -68,7 +73,6 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             }
         }
 
-        // 2. Kiểm tra xem có phải tin CUỐI CÙNG của nhóm không (để hiện Avatar & Giờ)
         boolean isLastInGroup = true;
         if (position < mMessages.size() - 1) {
             MessageModel nextMsg = mMessages.get(position + 1);
@@ -78,10 +82,9 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
 
         if (holder instanceof SentMessageViewHolder) {
-            ((SentMessageViewHolder) holder).bind(message, isLastInGroup);
+            ((SentMessageViewHolder) holder).bind(message, listener, currentUserId, isLastInGroup);
         } else if (holder instanceof ReceivedMessageViewHolder) {
-            // Truyền cả 2 trạng thái vào bind
-            ((ReceivedMessageViewHolder) holder).bind(message, isFirstInGroup, isLastInGroup);
+            ((ReceivedMessageViewHolder) holder).bind(message, isFirstInGroup, isLastInGroup, listener, currentUserId);
         }
     }
 
@@ -93,69 +96,76 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     // --- VIEWHOLDERS ---
 
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText;
-        TextView textTime;
+        TextView messageText, textReaction, textRepliedTo, textTime;
+        View cardBubble;
 
         public SentMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.textMessage);
-            textTime= itemView.findViewById(R.id.textTime);
+            textReaction = itemView.findViewById(R.id.textReaction);
+            textRepliedTo = itemView.findViewById(R.id.textRepliedTo);
+            cardBubble = itemView.findViewById(R.id.cardBubble);
+            textTime = itemView.findViewById(R.id.textTime);
         }
 
-        void bind(MessageModel message,boolean isLastInGroup) {
-            messageText.setText(message.getContent());
-            if(isLastInGroup){
+        void bind(MessageModel message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup) {
+            bindSharedLogic(message, messageText, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+
+            if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
                 textTime.setText(sdf.format(new Date(message.getTimestamp())));
-            }else{
+            } else if (textTime != null) {
                 textTime.setVisibility(View.GONE);
             }
         }
     }
 
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText, senderName, textTime;
+        TextView messageText, senderName, textTime, textReaction, textRepliedTo;
         ImageView avatarImg;
+        View cardBubble;
 
         public ReceivedMessageViewHolder(@NonNull View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.textMessage);
             senderName = itemView.findViewById(R.id.textSenderName);
             textTime = itemView.findViewById(R.id.textTime);
+            textReaction = itemView.findViewById(R.id.textReaction);
+            textRepliedTo = itemView.findViewById(R.id.textRepliedTo);
+            cardBubble = itemView.findViewById(R.id.cardBubble);
             avatarImg = itemView.findViewById(R.id.imgAvatar);
         }
 
-        void bind(MessageModel message, boolean isFirstInGroup, boolean isLastInGroup) {
-            messageText.setText(message.getContent());
+        void bind(MessageModel message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId) {
+            bindSharedLogic(message, messageText, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
 
-            // --- QUY TẮC 1: TÊN HIỆN Ở TIN ĐẦU NHÓM ---
-            if (isFirstInGroup) {
+            // Xử lý Tên (Hiện ở tin đầu nhóm)
+            if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
                 String uid = message.getSenderId();
                 senderName.setTag(uid);
                 senderName.setTextColor(getConsistentColor(uid));
 
-                db.collection("users").document(uid).get()
-                        .addOnSuccessListener(documentSnapshot -> {
-                            if (documentSnapshot.exists() && uid.equals(senderName.getTag())) {
-                                senderName.setText(documentSnapshot.getString("username"));
-                            }
-                        });
-            } else {
+                db.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && uid.equals(senderName.getTag())) {
+                        senderName.setText(documentSnapshot.getString("username"));
+                    }
+                });
+            } else if (senderName != null) {
                 senderName.setVisibility(View.GONE);
             }
 
-            // --- QUY TẮC 2: GIỜ & AVATAR HIỆN Ở TIN CUỐI NHÓM ---
+            // Xử lý Giờ & Avatar (Hiện ở tin cuối nhóm)
             if (isLastInGroup) {
-                textTime.setVisibility(View.VISIBLE);
+                if (textTime != null) {
+                    textTime.setVisibility(View.VISIBLE);
+                    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                    textTime.setText(sdf.format(new Date(message.getTimestamp())));
+                }
                 if (avatarImg != null) avatarImg.setVisibility(View.VISIBLE);
-
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                textTime.setText(sdf.format(new Date(message.getTimestamp())));
             } else {
-                textTime.setVisibility(View.GONE);
-                // Dùng INVISIBLE để giữ khoảng trống cho Avatar, giúp các bong bóng chat thẳng hàng
+                if (textTime != null) textTime.setVisibility(View.GONE);
                 if (avatarImg != null) avatarImg.setVisibility(View.INVISIBLE);
             }
         }
@@ -166,4 +176,75 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             return colors[Math.abs(hash) % colors.length];
         }
     }
+
+    private static void bindSharedLogic(MessageModel msg, TextView textMessage, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
+        if (msg.isDeleted()) {
+            textMessage.setText("Tin nhắn đã bị thu hồi");
+            textMessage.setTypeface(null, Typeface.ITALIC);
+            textMessage.setTextColor(Color.GRAY);
+            if (textReaction != null) textReaction.setVisibility(View.GONE);
+            if (textRepliedTo != null) textRepliedTo.setVisibility(View.GONE);
+        } else {
+            textMessage.setText(msg.getContent());
+            textMessage.setTypeface(null, Typeface.NORMAL);
+            textMessage.setTextColor(Color.BLACK);
+
+            if (textReaction != null) {
+                if (msg.getReactionEmoji() != null && !msg.getReactionEmoji().isEmpty()) {
+                    textReaction.setText(msg.getReactionEmoji());
+                    textReaction.setVisibility(View.VISIBLE);
+                } else {
+                    textReaction.setVisibility(View.GONE);
+                }
+            }
+
+            if (textRepliedTo != null) {
+                if (msg.getRepliedToContent() != null && !msg.getRepliedToContent().isEmpty()) {
+                    String replyContent = msg.getRepliedToContent();
+                    if (replyContent.length() > 30) replyContent = replyContent.substring(0, 30) + "...";
+                    textRepliedTo.setText("Đang trả lời: " + replyContent);
+                    textRepliedTo.setVisibility(View.VISIBLE);
+                } else {
+                    textRepliedTo.setVisibility(View.GONE);
+                }
+            }
+        }
+
+        if (cardBubble != null) {
+            final long[] lastClickTime = {0};
+            cardBubble.setOnClickListener(v -> {
+                if (msg.isDeleted()) return;
+                long clickTime = System.currentTimeMillis();
+                if (clickTime - lastClickTime[0] < 300) {
+                    if ("❤️".equals(msg.getReactionEmoji())) listener.onReact(msg, "");
+                    else listener.onReact(msg, "❤️");
+                }
+                lastClickTime[0] = clickTime;
+            });
+
+            cardBubble.setOnLongClickListener(v -> {
+                if (!msg.isDeleted()) {
+                    BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(v.getContext());
+                    View sheetView = LayoutInflater.from(v.getContext()).inflate(R.layout.layout_bottom_sheet_menu, null);
+                    bottomSheetDialog.setContentView(sheetView);
+
+                    try { ((View) sheetView.getParent()).setBackgroundColor(Color.TRANSPARENT); } catch (Exception e) {}
+
+                    TextView btnDelete = sheetView.findViewById(R.id.btnDelete);
+                    TextView btnRemoveReaction = sheetView.findViewById(R.id.btnRemoveReaction);
+
+                    btnDelete.setVisibility(msg.getSenderId().equals(currentUserId) ? View.VISIBLE : View.GONE);
+                    btnRemoveReaction.setVisibility((msg.getReactionEmoji() != null && !msg.getReactionEmoji().isEmpty()) ? View.VISIBLE : View.GONE);
+
+                    sheetView.findViewById(R.id.btnReactLike).setOnClickListener(view -> { listener.onReact(msg, "👍"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactLove).setOnClickListener(view -> { listener.onReact(msg, "❤️"); bottomSheetDialog.dismiss(); });
+                    btnRemoveReaction.setOnClickListener(view -> { listener.onReact(msg, ""); bottomSheetDialog.dismiss(); });
+                    btnDelete.setOnClickListener(view -> { listener.onDelete(msg); bottomSheetDialog.dismiss(); });
+
+                    bottomSheetDialog.show();
+                }
+                return true;
+            });
+        }
     }
+}
