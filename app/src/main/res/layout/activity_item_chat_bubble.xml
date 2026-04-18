@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="4dp">
+    android:padding="2dp">
 
     <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
@@ -17,6 +17,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:background="@drawable/border_chat"
             android:paddingHorizontal="16dp"
             android:paddingVertical="10dp">
@@ -27,6 +28,17 @@
                 android:layout_height="wrap_content"
                 android:text="Chào Nhã! Code đã sẵn sàng."
                 android:textColor="@color/black" />
+
         </LinearLayout>
+
     </androidx.cardview.widget.CardView>
+    <TextView
+    android:id="@+id/textTime"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="end"
+    android:layout_marginEnd="15dp"
+    android:paddingTop="4dp"
+    android:text="12:00"
+    android:textSize="10sp" />
 </LinearLayout>

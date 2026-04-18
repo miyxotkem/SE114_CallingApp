@@ -24,6 +24,9 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.cloudinary.android.MediaManager;
+import com.cloudinary.android.callback.ErrorInfo;
+import com.cloudinary.android.callback.UploadCallback;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,7 +35,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Chat_detail extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -68,7 +73,7 @@ public class Chat_detail extends AppCompatActivity {
         imagePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
                 uri -> {
-                    if (uri != null) uploadFileToFirebase(uri, "image");
+                    if (uri != null) uploadToCloudinary(uri, "image");
                 }
         );
 
@@ -76,7 +81,7 @@ public class Chat_detail extends AppCompatActivity {
         filePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
                 uri -> {
-                    if (uri != null) uploadFileToFirebase(uri, "file");
+                    if (uri != null) uploadToCloudinary(uri, "file");
                 }
         );
 
@@ -121,6 +126,17 @@ public class Chat_detail extends AppCompatActivity {
             // Gọi lắng nghe với cái ID phòng dài này
             String groupId = getIntent().getStringExtra("CHAT_ID");
             listenForMessages(groupId);
+        }
+        // Cloudinary
+        Map config = new HashMap();
+        config.put("cloud_name", "tên_cloud_của_nhã"); // Lấy trên Dashboard Cloudinary
+        config.put("api_key", "359217744855482");     // Lấy trên Dashboard
+        config.put("api_secret", "api_secret_của_nhã"); // Lấy trên Dashboard
+
+        try {
+            MediaManager.init(this, config);
+        } catch (IllegalStateException e) {
+            // Đã khởi tạo rồi thì không cần init lại
         }
 
     }
@@ -190,65 +206,69 @@ public class Chat_detail extends AppCompatActivity {
             }
         }
     }
-    private void uploadFileToFirebase(Uri fileUri, String type) {
-        // Sử dụng ProgressDialog (Lưu ý: ProgressDialog đã bị deprecated,
-        // nhưng nếu bạn muốn dùng thì vẫn ổn)
+    private void uploadToCloudinary(Uri fileUri, String type) {
         ProgressDialog pd = new ProgressDialog(this);
-        pd.setMessage("Đang tải " + type + " lên...");
+        pd.setMessage("Đang tải " + type + " lên Cloudinary...");
         pd.setCancelable(false);
         pd.show();
 
-        String groupId = getIntent().getStringExtra("CHAT_ID");
-        if (groupId == null) {
-            pd.dismiss();
-            return;
-        }
+        // MediaManager đã được khởi tạo ở onCreate (như mình hướng dẫn ở trên)
+        MediaManager.get().upload(fileUri)
+                .option("resource_type", "auto") // Tự động nhận diện ảnh/video/file
+                .callback(new UploadCallback() {
+                    @Override
+                    public void onStart(String requestId) {
+                        // Có thể để trống hoặc log
+                    }
 
-        // 1. Tạo tên file duy nhất
-        String extension = type.equals("image") ? ".jpg" : ".file";
-        String fileName = System.currentTimeMillis() + extension;
+                    @Override
+                    public void onProgress(String requestId, long bytes, long totalBytes) {
+                        double progress = (100.0 * bytes) / totalBytes;
+                        pd.setMessage("Đang tải lên: " + (int) progress + "%");
+                    }
 
-        // 2. Sửa lỗi gọi hàm: Sử dụng hàm helper từ class Firebase của bạn
-        // Cách này sạch sẽ và đúng chuẩn Singleton bạn vừa viết
-        StorageReference storageRef = Firebase.getChatStorageRef(groupId).child(fileName);
-
-        // 3. Thực hiện Upload
-        storageRef.putFile(fileUri)
-                .addOnSuccessListener(taskSnapshot -> {
-                    // 4. Lấy URL tải về sau khi upload thành công
-                    storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                        String downloadUrl = uri.toString();
-
-                        // Gửi tin nhắn chứa link file vào Realtime Database
-                        sendMediaMessage(downloadUrl, type);
-
+                    @Override
+                    public void onSuccess(String requestId, Map resultData) {
                         if (!isFinishing()) pd.dismiss();
-                        Toast.makeText(this, "Gửi thành công!", Toast.LENGTH_SHORT).show();
-                    });
-                })
-                .addOnFailureListener(e -> {
-                    if (!isFinishing()) pd.dismiss();
-                    Toast.makeText(this, "Lỗi upload: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                })
-                .addOnProgressListener(snapshot -> {
-                    // (Tùy chọn) Bạn có thể cập nhật % tiến trình tại đây
-                    double progress = (100.0 * snapshot.getBytesTransferred()) / snapshot.getTotalByteCount();
-                    pd.setMessage("Đang tải lên: " + (int) progress + "%");
-                });
+                        String cloudinaryUrl = (String) resultData.get("secure_url");
+                        sendMediaMessage(cloudinaryUrl, type);
+                    }
+
+                    // SỬA LỖI Ở ĐÂY: Cloudinary bản mới dùng ErrorInfo error
+                    // và không có phương thức getDescription()
+                    @Override
+                    public void onError(String requestId, ErrorInfo error) {
+                        if (!isFinishing()) pd.dismiss();
+                        // Dùng error.getMsg() thay vì getDescription()
+                        String errorMessage = (error != null) ? error.getDescription() : "Lỗi không xác định";
+                        Toast.makeText(Chat_detail.this, "Lỗi Cloudinary: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onReschedule(String requestId, ErrorInfo error) {
+                        // Bắt buộc phải override phương thức này
+                    }
+                }).dispatch();
     }
 
     // --- Hàm gửi tin nhắn Media vào Database ---
     private void sendMediaMessage(String fileUrl, String type) {
-        String senderId = "znNKHjrncFBE39hu8h8V";
+        String senderId = "znNKHjrncFBE39hu8h8V"; // ID của Nhã
         String groupId = getIntent().getStringExtra("CHAT_ID");
+        if (groupId == null) return;
+
         long timestamp = System.currentTimeMillis();
 
-        // Giả sử Model của bạn có constructor: (senderId, groupId, content, timestamp, type, fileUrl)
-        // Nếu chưa có, bạn hãy cập nhật MessageModel của mình
-        MessageModel messageModel = new MessageModel(senderId, groupId, "["+type+"]", timestamp);
-        messageModel.setType(type);
-        messageModel.setFileUrl(fileUrl);
+        // Đối với ảnh/file, ta lưu URL vào content luôn cho đồng nhất
+        MessageModel messageModel = new MessageModel(senderId, groupId, fileUrl, timestamp);
+        messageModel.setType(type); // "image" hoặc "file"
 
-        Firebase.getDatabase().getReference("chats").child(groupId).push().setValue(messageModel);
+        Firebase.getDatabase().getReference("chats")
+                .child(groupId)
+                .push()
+                .setValue(messageModel)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Đã gửi " + type, Toast.LENGTH_SHORT).show();
+                });
     }
 }

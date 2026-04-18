@@ -41,7 +41,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-
+    implementation("com.cloudinary:cloudinary-android:2.5.0")
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
 
     implementation("com.google.firebase:firebase-firestore")
