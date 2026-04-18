@@ -106,9 +106,9 @@ public class Chat_detail extends AppCompatActivity {
 
     private void initCloudinary() {
         Map config = new HashMap();
-        config.put("cloud_name", "tên_cloud_của_nhã");
+        config.put("cloud_name", "dxoukp0yb");
         config.put("api_key", "359217744855482");
-        config.put("api_secret", "api_secret_của_nhã");
+        config.put("api_secret", "eTG0UvW_hdsHm4hl0r2XJCvidR0");
 
         try {
             MediaManager.init(this, config);
@@ -145,7 +145,10 @@ public class Chat_detail extends AppCompatActivity {
     }
 
     private void setupSwipeToReply() {
-        ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+        // Cho phép vuốt cả TRÁI và PHẢI
+        ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
             @Override
             public boolean onMove(@NonNull RecyclerView r, @NonNull RecyclerView.ViewHolder v, @NonNull RecyclerView.ViewHolder t) {
                 return false;
@@ -155,7 +158,6 @@ public class Chat_detail extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 showReplyUI(messageList.get(position));
-                // Quan trọng: Phải notify để item quay về vị trí cũ sau khi swipe
                 adapter.notifyItemChanged(position);
             }
 
@@ -165,37 +167,47 @@ public class Chat_detail extends AppCompatActivity {
                                     float dX, float dY, int actionState, boolean isCurrentlyActive) {
 
                 View itemView = viewHolder.itemView;
+                // Xác định xem đây là tin nhắn gửi hay nhận dựa trên ViewType của Adapter
+                int viewType = viewHolder.getItemViewType();
+                boolean isSent = (viewType == 1); // 1 là TYPE_SENT Nhã đã đặt trong Adapter
 
-                // --- LOGIC VẼ ICON REPLY KHI KÉO ---
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE && dX > 0) {
-                    // Lấy icon từ hệ thống hoặc drawable của bạn
+                // Giới hạn hướng vuốt:
+                // Nếu là tin mình gửi (bên phải) -> chỉ cho vuốt trái (dX < 0)
+                // Nếu là người ta gửi (bên trái) -> chỉ cho vuốt phải (dX > 0)
+                float limitedDX = dX;
+                if (isSent && dX > 0) limitedDX = 0; // Chặn vuốt phải cho tin gửi
+                if (!isSent && dX < 0) limitedDX = 0; // Chặn vuốt trái cho tin nhận
+
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
                     Drawable icon = ContextCompat.getDrawable(Chat_detail.this, android.R.drawable.ic_menu_revert);
                     if (icon != null) {
-                        // Tính toán vị trí icon nằm chính giữa chiều dọc của item
                         int itemHeight = itemView.getBottom() - itemView.getTop();
                         int iconHeight = icon.getIntrinsicHeight();
                         int iconWidth = icon.getIntrinsicWidth();
-
                         int iconTop = itemView.getTop() + (itemHeight - iconHeight) / 2;
                         int iconBottom = iconTop + iconHeight;
 
-                        // Hiện icon khi kéo qua một khoảng nhất định (ví dụ 40px)
-                        if (dX > 40) {
-                            int iconLeft = itemView.getLeft() + 40; // Cách lề trái 40px
+                        // Vẽ icon bên TRÁI khi vuốt PHẢI (Tin nhắn nhận)
+                        if (limitedDX > 40) {
+                            int iconLeft = itemView.getLeft() + 60;
                             int iconRight = iconLeft + iconWidth;
                             icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-
-                            // Độ mờ của icon tăng dần theo độ kéo (DX)
-                            int alpha = (int) Math.min(255, dX * 2);
-                            icon.setAlpha(alpha);
+                            icon.draw(c);
+                        }
+                        // Vẽ icon bên PHẢI khi vuốt TRÁI (Tin nhắn gửi)
+                        else if (limitedDX < -40) {
+                            int iconRight = itemView.getRight() - 60;
+                            int iconLeft = iconRight - iconWidth;
+                            icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
                             icon.draw(c);
                         }
                     }
                 }
 
-                // Giới hạn độ kéo tối đa (ví dụ 150px) để không bị kéo mất item
-                float maxSwipe = 150f;
-                float limitedDX = Math.min(dX, maxSwipe);
+                // Giới hạn độ kéo tối đa để không bị trôi quá xa
+                float maxSwipe = 180f;
+                if (limitedDX > maxSwipe) limitedDX = maxSwipe;
+                if (limitedDX < -maxSwipe) limitedDX = -maxSwipe;
 
                 super.onChildDraw(c, recyclerView, viewHolder, limitedDX, dY, actionState, isCurrentlyActive);
             }

@@ -38,15 +38,17 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"> <TextView
-                android:id="@+id/textSenderName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp"
-                android:text="User Name"
-                android:textColor="#757575"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:id="@+id/textSenderName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:text="User Name"
+                    android:textColor="#757575"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/textRepliedTo"
@@ -59,6 +61,16 @@
                     android:textColor="#555555"
                     android:textSize="12sp"
                     android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/ivMessageImage"
+                    android:layout_width="200dp"
+                    android:layout_height="250dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:background="#E0E0E0" />
 
                 <TextView
                     android:id="@+id/textMessage"

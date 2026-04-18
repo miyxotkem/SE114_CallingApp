@@ -1,15 +1,23 @@
 package com.example.se114_callingsystem;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
@@ -68,7 +76,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         // Lấy density để quy đổi dp sang px
         float density = holder.itemView.getContext().getResources().getDisplayMetrics().density;
 
-        // 1. Logic gom nhóm tin nhắn (Nhã đã viết đúng)
+        // 1. Logic gom nhóm tin nhắn
         boolean isFirstInGroup = true;
         if (position > 0) {
             MessageModel previousMsg = mMessages.get(position - 1);
@@ -87,10 +95,8 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
         // 2. Logic điều chỉnh Margin động dựa trên nhóm tin nhắn
         if (isFirstInGroup) {
-            // Nếu là tin nhắn đầu tiên của một người: giãn ra 8dp để dễ phân biệt với người trước
             params.topMargin = (int) (8 * density);
         } else {
-            // Nếu là tin nhắn tiếp theo của cùng một người: cho sát rạt 1dp hoặc 2dp
             params.topMargin = (int) (1 * density);
         }
         holder.itemView.setLayoutParams(params);
@@ -112,6 +118,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, textReaction, textRepliedTo, textTime;
+        ImageView ivMessageImage;
         View cardBubble;
 
         public SentMessageViewHolder(@NonNull View itemView) {
@@ -121,10 +128,11 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             textRepliedTo = itemView.findViewById(R.id.textRepliedTo);
             cardBubble = itemView.findViewById(R.id.cardBubble);
             textTime = itemView.findViewById(R.id.textTime);
+            ivMessageImage = itemView.findViewById(R.id.ivMessageImage);
         }
 
         void bind(MessageModel message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup) {
-            bindSharedLogic(message, messageText, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+            bindSharedLogic(message, messageText, ivMessageImage, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -138,7 +146,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, senderName, textTime, textReaction, textRepliedTo;
-        ImageView avatarImg;
+        ImageView avatarImg, ivMessageImage;
         View cardBubble;
 
         public ReceivedMessageViewHolder(@NonNull View itemView) {
@@ -150,10 +158,12 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             textRepliedTo = itemView.findViewById(R.id.textRepliedTo);
             cardBubble = itemView.findViewById(R.id.cardBubble);
             avatarImg = itemView.findViewById(R.id.imgAvatar);
+            ivMessageImage = itemView.findViewById(R.id.ivMessageImage);
         }
 
         void bind(MessageModel message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId) {
-            bindSharedLogic(message, messageText, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+            bindSharedLogic(message, messageText, ivMessageImage, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+
             // Xử lý Tên (Hiện ở tin đầu nhóm)
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
@@ -191,18 +201,83 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
     }
 
-    private static void bindSharedLogic(MessageModel msg, TextView textMessage, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
+    private static void bindSharedLogic(MessageModel msg, TextView textMessage, ImageView ivMessageImage, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
         if (msg.isDeleted()) {
+            textMessage.setVisibility(View.VISIBLE);
             textMessage.setText("Tin nhắn đã bị thu hồi");
             textMessage.setTypeface(null, Typeface.ITALIC);
             textMessage.setTextColor(Color.GRAY);
+            if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
             if (textReaction != null) textReaction.setVisibility(View.GONE);
             if (textRepliedTo != null) textRepliedTo.setVisibility(View.GONE);
         } else {
-            textMessage.setText(msg.getContent());
             textMessage.setTypeface(null, Typeface.NORMAL);
             textMessage.setTextColor(Color.BLACK);
 
+            // XỬ LÝ PHÂN LOẠI TIN NHẮN (TEXT vs IMAGE)
+            if ("image".equals(msg.getType())) {
+                textMessage.setVisibility(View.GONE);
+                if (ivMessageImage != null) {
+                    ivMessageImage.setVisibility(View.VISIBLE);
+
+                    // Cắt bo góc trực tiếp trên ảnh bằng Glide (không cần hộp background)
+                    Glide.with(ivMessageImage.getContext())
+                            .load(msg.getContent())
+                            .apply(RequestOptions.bitmapTransform(new RoundedCorners(32))) // Có thể chỉnh độ cong theo ý muốn
+                            .into(ivMessageImage);
+
+                    // Sử dụng GestureDetector để phân biệt Click, Double Click và Long Press trên ảnh
+                    GestureDetector gestureDetector = new GestureDetector(ivMessageImage.getContext(), new GestureDetector.SimpleOnGestureListener() {
+
+                        // Bắt lấy sự kiện chạm xuống đầu tiên (Cực kỳ quan trọng để không bị lỗi spam chạm)
+                        @Override
+                        public boolean onDown(MotionEvent e) {
+                            return true;
+                        }
+
+                        // Single Tap -> Mở Activity xem ảnh
+                        @Override
+                        public boolean onSingleTapConfirmed(MotionEvent e) {
+                            Context context = ivMessageImage.getContext();
+                            Intent intent = new Intent(context, Image_viewer.class); // Gọi đúng file Image_viewer của bạn
+                            intent.putExtra("IMAGE_URL", msg.getContent());
+                            context.startActivity(intent);
+                            return true;
+                        }
+
+                        // Double Tap -> Thả tim
+                        @Override
+                        public boolean onDoubleTap(MotionEvent e) {
+                            if ("❤️".equals(msg.getReactionEmoji())) {
+                                listener.onReact(msg, "");
+                            } else {
+                                listener.onReact(msg, "❤️");
+                            }
+                            return true;
+                        }
+
+                        // Long Press -> Mở menu (giống như nhấn giữ bong bóng chat)
+                        @Override
+                        public void onLongPress(MotionEvent e) {
+                            cardBubble.performLongClick(); // Tái sử dụng logic long click của bong bóng
+                        }
+                    });
+
+                    // Gắn detector vào ảnh (đã xóa v.performClick() để tránh spam chạm)
+                    ivMessageImage.setOnTouchListener((v, event) -> {
+                        return gestureDetector.onTouchEvent(event);
+                    });
+                }
+            } else {
+                // Tin nhắn văn bản bình thường
+                textMessage.setVisibility(View.VISIBLE);
+                textMessage.setText(msg.getContent());
+                if (ivMessageImage != null) {
+                    ivMessageImage.setVisibility(View.GONE);
+                }
+            }
+
+            // Xử lý Reaction Indicator
             if (textReaction != null) {
                 if (msg.getReactionEmoji() != null && !msg.getReactionEmoji().isEmpty()) {
                     textReaction.setText(msg.getReactionEmoji());
@@ -212,6 +287,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 }
             }
 
+            // Xử lý Reply Indicator
             if (textRepliedTo != null) {
                 if (msg.getRepliedToContent() != null && !msg.getRepliedToContent().isEmpty()) {
                     String replyContent = msg.getRepliedToContent();
@@ -224,12 +300,14 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             }
         }
 
+        // --- XỬ LÝ SỰ KIỆN CLICK VÀ LONG CLICK CHO BONG BÓNG CHAT ---
         if (cardBubble != null) {
             final long[] lastClickTime = {0};
             cardBubble.setOnClickListener(v -> {
                 if (msg.isDeleted()) return;
                 long clickTime = System.currentTimeMillis();
                 if (clickTime - lastClickTime[0] < 300) {
+                    // Double Click để thả tim cho văn bản
                     if ("❤️".equals(msg.getReactionEmoji())) listener.onReact(msg, "");
                     else listener.onReact(msg, "❤️");
                 }
