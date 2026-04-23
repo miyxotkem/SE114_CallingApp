@@ -3,6 +3,7 @@ package com.example.se114_callingsystem;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ public class Server_on_click extends AppCompatActivity {
 
     private FirebaseFirestore db;
     private String serverId;
+    private TextView tvServerName;
 
     // Chat Channel Variables
     private RecyclerView rvChatChannels;
@@ -56,7 +58,7 @@ public class Server_on_click extends AppCompatActivity {
             return;
         }
 
-        TextView tvServerName = findViewById(R.id.tvServerName);
+        tvServerName = findViewById(R.id.tvServerName);
         if (serverName != null) tvServerName.setText(serverName);
 
         db = FirebaseFirestore.getInstance();
@@ -80,7 +82,8 @@ public class Server_on_click extends AppCompatActivity {
         btnAddChat.setOnClickListener(v -> showAddChannelDialog(true));
         btnAddCall.setOnClickListener(v -> showAddChannelDialog(false));
 
-        // Chat Expand Logic
+        tvServerName.setOnClickListener(v -> showServerSettingsDialog());
+
         ImageView btnExpandChat = findViewById(R.id.expandChatZone);
         rvChatChannels = findViewById(R.id.rvChatChannels);
         btnExpandChat.setOnClickListener(v -> {
@@ -88,7 +91,6 @@ public class Server_on_click extends AppCompatActivity {
             toggleVisibility(rvChatChannels, btnExpandChat, isChatExpanded);
         });
 
-        // Call Expand Logic
         ImageView btnExpandCall = findViewById(R.id.expandCallZone);
         rvCallChannels = findViewById(R.id.rvCallChannels);
         btnExpandCall.setOnClickListener(v -> {
@@ -96,7 +98,6 @@ public class Server_on_click extends AppCompatActivity {
             toggleVisibility(rvCallChannels, btnExpandCall, isCallExpanded);
         });
 
-        // Default states
         btnExpandChat.setRotation(90f);
         btnExpandCall.setRotation(90f);
     }
@@ -105,6 +106,70 @@ public class Server_on_click extends AppCompatActivity {
         android.transition.TransitionManager.beginDelayedTransition((ViewGroup) view.getParent());
         view.setVisibility(expanded ? View.VISIBLE : View.GONE);
         icon.animate().rotation(expanded ? 90 : 0).setDuration(200).start();
+    }
+
+    // --- SERVER SETTINGS METHODS ---
+
+    private void showServerSettingsDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.activity_bottom_sheet_server_settings, null);
+        dialog.setContentView(view);
+
+        EditText etServerNameSettings = view.findViewById(R.id.etServerNameSettings);
+        Button btnRename = view.findViewById(R.id.btnRenameServer);
+        Button btnDelete = view.findViewById(R.id.btnDeleteServer);
+
+        etServerNameSettings.setText(tvServerName.getText().toString());
+
+        btnRename.setOnClickListener(v -> {
+            String newName = etServerNameSettings.getText().toString().trim();
+            if (newName.isEmpty()) {
+                etServerNameSettings.setError("Server name cannot be empty");
+                return;
+            }
+
+            if (newName.equals(tvServerName.getText().toString())) {
+                dialog.dismiss();
+                return;
+            }
+
+            // Make sure "Servers" and "serverName" match your Firestore exactly!
+            db.collection("servers").document(serverId)
+                    .update("serverName", newName)
+                    .addOnSuccessListener(aVoid -> {
+                        tvServerName.setText(newName);
+                        Toast.makeText(this, "Server renamed successfully", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    })
+                    // ADDED ERROR LOGGING HERE
+                    .addOnFailureListener(e -> Toast.makeText(this, "Rename failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+        });
+
+        btnDelete.setOnClickListener(v -> {
+            dialog.dismiss();
+            showServerDeleteConfirm();
+        });
+
+        dialog.show();
+        applyTransparentBackground(dialog);
+    }
+
+    private void showServerDeleteConfirm() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Delete Server")
+                .setMessage("Are you sure you want to delete this server? This action cannot be undone.")
+                .setPositiveButton("Delete", (d, w) -> {
+                    // CHANGED FROM "Servers" TO "servers" HERE:
+                    db.collection("servers").document(serverId)
+                            .delete()
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(this, "Server deleted", Toast.LENGTH_SHORT).show();
+                                finish();
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(this, "Delete failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     // --- CHAT CHANNEL METHODS ---
@@ -205,7 +270,7 @@ public class Server_on_click extends AppCompatActivity {
 
         TextView title = view.findViewById(R.id.tvBottomSheetTitle);
         EditText etName = view.findViewById(R.id.etChannelName);
-        android.widget.Button btn = view.findViewById(R.id.btnCreateConfirm);
+        Button btn = view.findViewById(R.id.btnCreateConfirm);
 
         if (title != null) title.setText(isChat ? "Create Chat Channel" : "Create Call Channel");
 
@@ -216,7 +281,6 @@ public class Server_on_click extends AppCompatActivity {
             String collection = isChat ? "Channels" : "CallChannels";
             String field = isChat ? "chatName" : "callName";
 
-            // Check for duplicate
             checkChannelNameExists(collection, field, name, exists -> {
                 if (exists) {
                     etName.setError("Channel name already exists!");
@@ -242,7 +306,6 @@ public class Server_on_click extends AppCompatActivity {
     }
 
     private void createNewCallChannel(String name) {
-        // Note: uses callList.size() for the orderIndex
         CallChannel channel = new CallChannel(name, serverId, callList.size());
         db.collection("CallChannels").add(channel)
                 .addOnSuccessListener(ref -> {
@@ -254,7 +317,6 @@ public class Server_on_click extends AppCompatActivity {
     // --- DIALOGS (RENAME/DELETE) ---
 
     private void showChatRenameDialog(ChatChannel channel) {
-        // Logic same as your previous rename but targeting "Channels" collection
         showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", true);
     }
 
@@ -269,7 +331,7 @@ public class Server_on_click extends AppCompatActivity {
 
         TextView tvTitle = view.findViewById(R.id.tvBottomSheetTitle);
         EditText etName = view.findViewById(R.id.etChannelName);
-        android.widget.Button btnConfirm = view.findViewById(R.id.btnCreateConfirm);
+        Button btnConfirm = view.findViewById(R.id.btnCreateConfirm);
 
         if (tvTitle != null) tvTitle.setText(isChat ? "Rename Chat Channel" : "Rename Call Channel");
         if (btnConfirm != null) btnConfirm.setText("Rename");
@@ -282,13 +344,11 @@ public class Server_on_click extends AppCompatActivity {
 
             if (newName.isEmpty()) return;
 
-            // If the name hasn't changed, just close the dialog
             if (newName.equalsIgnoreCase(currentName)) {
                 dialog.dismiss();
                 return;
             }
 
-            // Check for duplicate before updating
             checkChannelNameExists(collection, field, newName, exists -> {
                 if (exists) {
                     etName.setError("This name is already taken in this server");
@@ -327,18 +387,17 @@ public class Server_on_click extends AppCompatActivity {
 
     private void checkChannelNameExists(String collection, String fieldName, String name, OnValidationListener listener) {
         db.collection(collection)
-                .whereEqualTo("serverId", serverId) // Only check names in THIS server
+                .whereEqualTo("serverId", serverId)
                 .whereEqualTo(fieldName, name)
                 .get()
                 .addOnSuccessListener(snapshots -> {
-                    listener.onResult(!snapshots.isEmpty()); // True if name exists
+                    listener.onResult(!snapshots.isEmpty());
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Error checking name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
-    // Interface for the callback
     interface OnValidationListener {
         void onResult(boolean exists);
     }

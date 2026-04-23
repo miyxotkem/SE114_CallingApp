@@ -54,4 +54,5 @@ dependencies {
     implementation("com.google.firebase:firebase-storage:20.3.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
+    implementation("io.agora.rtc:full-sdk:4.2.2")
 }

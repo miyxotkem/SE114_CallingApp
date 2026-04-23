@@ -3,46 +3,61 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1A1A1A"> <LinearLayout
-    android:id="@+id/main"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="16dp"
-    android:gravity="center_vertical"
-    android:orientation="horizontal">
-
-    <ImageButton
-        android:id="@+id/btnMinimize"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/icon_expandbutton"
-        app:tint="@color/white" />
-
-    <TextView
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Group Project - Event Connect"
-        android:textColor="@color/white"
-        android:textSize="18sp"
-        android:layout_marginStart="12dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="4 participants"
-        android:textColor="#B3B3B3"
-        android:textSize="14sp" />
-</LinearLayout>
+    android:background="#1A1A1A">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvParticipants"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/controlPanel"
-        android:layout_below="@+id/callHeader"
-        android:padding="8dp" />
+        android:clipToPadding="false"
+        android:paddingTop="70dp"
+        android:paddingBottom="100dp"
+        android:paddingHorizontal="4dp"/>
+
+    <LinearLayout
+        android:id="@+id/callHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent" android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageButton
+            android:id="@+id/btnMinimize"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/icon_expandbutton"
+            android:rotation="180"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/tvCallChannelName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="Channel Name"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000" android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="3" />
+
+        <TextView
+            android:id="@+id/tvParticipantCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 participants"
+            android:textColor="#E0E0E0"
+            android:textSize="14sp"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="3" />
+    </LinearLayout>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/controlPanel"
@@ -86,14 +101,15 @@
                 android:background="@drawable/bg_call_tool"
                 android:src="@android:drawable/ic_menu_share"
                 app:tint="#4CAF50" />
+
             <ImageButton
-            android:id="@+id/btnEndCall"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="24dp"
-            android:background="@drawable/bg_circle_end_call"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:tint="@color/white" />
+                android:id="@+id/btnEndCall"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="24dp"
+                android:background="@drawable/bg_circle_end_call"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                app:tint="@color/white" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>
