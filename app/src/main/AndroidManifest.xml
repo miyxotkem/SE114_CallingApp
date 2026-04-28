@@ -4,7 +4,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -20,10 +23,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SE114_CallingSystem">
         <activity
-            android:name=".CallActivity"
+            android:name=".Call_detail"
             android:exported="false" />
         <activity
-            android:name=".item_call_participant"
+            android:name=".item_participant"
             android:exported="false" />
         <activity
             android:name=".bottom_sheet_server_settings"
@@ -35,18 +38,12 @@
             android:name=".Image_viewer"
             android:exported="false" />
         <activity
-            android:name=".activity_image_viewer"
-            android:exported="false" />
-        <activity
             android:name=".item_chat_bubble_receive"
             android:exported="false" />
         <activity
             android:name=".Chat_detail"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".Call_detail"
-            android:exported="false" />
         <activity
             android:name=".list_item_chat_channels"
             android:exported="false" />

@@ -50,7 +50,7 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
             int currentPos = holder.getAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION) {
                 Intent intent = new Intent(holder.itemView.getContext(), Call_detail.class);
-
+                intent.putExtra("CALL_CHANNEL_NAME", channels.get(currentPos).getCallName());
 
                 holder.itemView.getContext().startActivity(intent);
             }

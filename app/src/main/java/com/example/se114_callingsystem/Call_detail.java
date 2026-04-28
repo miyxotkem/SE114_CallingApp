@@ -3,6 +3,7 @@ package com.example.se114_callingsystem;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -32,13 +33,15 @@ import io.agora.rtc2.RtcEngine;
 import io.agora.rtc2.RtcEngineConfig;
 
 public class Call_detail extends AppCompatActivity {
-    private final String appId = "f2aab838c1c24eb8b03ae0129d1044ed";
+    private final String appId = "11d7dad414d2475094923765e9ac9213";
     private RtcEngine mRtcEngine;
+
+    // NHÃ ƠI: Nhớ chỉnh UID này khác nhau trên 2 máy để không bị đá nhau nhé!
+    int uid = 400;
 
     private String channelName = "TestChannel";
     private boolean isUiVisible = true;
 
-    // UI Elements
     private RecyclerView rvParticipants;
     private LinearLayout callHeader;
     private CardView controlPanel;
@@ -47,11 +50,11 @@ public class Call_detail extends AppCompatActivity {
     private ParticipantAdapter adapter;
     private List<Participant> participantList = new ArrayList<>();
 
-    // Permissions
     private static final int PERMISSION_REQ_ID = 22;
     private static final String[] REQUESTED_PERMISSIONS = {
             Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.CAMERA
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_PHONE_STATE // Thêm quyền này để fix SecurityException
     };
 
     @Override
@@ -70,7 +73,8 @@ public class Call_detail extends AppCompatActivity {
         setupTapToHide();
 
         if (checkSelfPermission(REQUESTED_PERMISSIONS[0], PERMISSION_REQ_ID) &&
-                checkSelfPermission(REQUESTED_PERMISSIONS[1], PERMISSION_REQ_ID)) {
+                checkSelfPermission(REQUESTED_PERMISSIONS[1], PERMISSION_REQ_ID) &&
+                checkSelfPermission(REQUESTED_PERMISSIONS[2], PERMISSION_REQ_ID)) {
             initAgoraAndJoinChannel();
         }
     }
@@ -92,39 +96,44 @@ public class Call_detail extends AppCompatActivity {
         btnMinimize.setOnClickListener(v -> finish());
     }
 
+    private void showUserJoinedAlert(String displayId) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Thông báo hệ thống")
+                .setMessage("Bạn đang join với UID: " + displayId)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
+    }
+
     private void initAgoraAndJoinChannel() {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
             config.mContext = getBaseContext();
             config.mAppId = appId;
             config.mEventHandler = mRtcEventHandler;
+            // 1. Ép vùng kết nối là Toàn cầu để máy thật và máy ảo gặp nhau dễ hơn // Thêm chữ AL ở cuối
             mRtcEngine = RtcEngine.create(config);
 
+            // 2. Thiết lập cấu hình Video trước khi Join
+            mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_COMMUNICATION); // Chế độ gọi điện
             mRtcEngine.enableVideo();
-            mRtcEngine.startPreview();
-
-            // ---> CAMERA OFF BY DEFAULT HERE <---
+//            mRtcEngine.startPreview();
             mRtcEngine.muteLocalVideoStream(true);
 
-            // Tells Agora to report volume every 200ms
-            mRtcEngine.enableAudioVolumeIndication(200, 3, true);
+            // 3. THÊM DÒNG NÀY: Ép SDK sử dụng giao thức kết nối mạnh nhất
+            mRtcEngine.setParameters("{\"rtc.force_unified_communication_mode\":true}");
 
+            setupRecyclerView();
+
+            // 4. Join Channel - Dùng UID đã sửa thủ công
+            int res = mRtcEngine.joinChannel(null, channelName, "", uid);
+            setupControls();
+            if (res != 0) {
+                Log.e("AgoraCheck", "Join failed với mã: " + res);
+            }
         } catch (Exception e) {
-            Toast.makeText(this, "Failed to initialize Agora", Toast.LENGTH_LONG).show();
-            return;
+            Log.e("AgoraCheck", "Lỗi khởi tạo: " + e.getMessage());
         }
-
-        // ---> SET LOCAL USER DATA TO CAMERA OFF <---
-        Participant localUser = new Participant(0, "Me");
-        localUser.isVideoOff = true;
-        participantList.add(localUser);
-
-        setupRecyclerView();
-        updateParticipantCount();
-
-        mRtcEngine.joinChannel(null, channelName, "", 0);
-
-        setupControls();
     }
 
     private void setupRecyclerView() {
@@ -135,14 +144,14 @@ public class Call_detail extends AppCompatActivity {
 
     private void updateGridLayout() {
         int count = participantList.size();
-        int spanCount;
+        int spanCount = (count <= 2) ? 1 : (count <= 4 ? 2 : 3);
 
-        if (count <= 2) spanCount = 1;
-        else if (count <= 4) spanCount = 2;
-        else spanCount = 3;
-
-        GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
-        rvParticipants.setLayoutManager(layoutManager);
+        if (rvParticipants.getLayoutManager() instanceof GridLayoutManager) {
+            ((GridLayoutManager) rvParticipants.getLayoutManager()).setSpanCount(spanCount);
+        } else {
+            GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
+            rvParticipants.setLayoutManager(layoutManager);
+        }
     }
 
     private void updateParticipantCount() {
@@ -153,10 +162,34 @@ public class Call_detail extends AppCompatActivity {
         @Override
         public void onUserJoined(int uid, int elapsed) {
             runOnUiThread(() -> {
-                participantList.add(new Participant(uid, "User " + uid));
+                // Nhã ơi dùng Alert ở đây nếu muốn báo người khác vào
+                Toast.makeText(Call_detail.this, "User " + uid + " đã vào phòng!", Toast.LENGTH_SHORT).show();
+                Participant newUser = new Participant(uid, "User " + uid);
+                newUser.isVideoOff = true;
+
+                participantList.add(newUser);
                 updateGridLayout();
-                adapter.notifyItemInserted(participantList.size() - 1);
+                adapter.notifyDataSetChanged();
                 updateParticipantCount();
+            });
+        }
+
+        @Override
+        public void onJoinChannelSuccess(String channel, int uid, int elapsed) {
+            runOnUiThread(() -> {
+                boolean exists = false;
+                for (Participant p : participantList) {
+                    if (p.uid == uid) { exists = true; break; }
+                }
+
+                if (!exists) {
+                    Participant me = new Participant(uid, "Me (" + uid + ")");
+                    me.isVideoOff = true;
+                    participantList.add(0, me);
+                    updateGridLayout();
+                    adapter.notifyItemInserted(0);
+                    updateParticipantCount();
+                }
             });
         }
 
@@ -175,21 +208,30 @@ public class Call_detail extends AppCompatActivity {
             });
         }
 
-        // --- TRACK REMOTE USER MUTES ---
         @Override
-        public void onUserMuteAudio(int uid, boolean muted) {
+        public void onAudioVolumeIndication(AudioVolumeInfo[] speakers, int totalVolume) {
             runOnUiThread(() -> {
+                List<Integer> activeSpeakers = new ArrayList<>();
+                for (AudioVolumeInfo speaker : speakers) {
+                    if (speaker.volume > 0) {
+                        activeSpeakers.add(speaker.uid);
+                    }
+                }
+
                 for (int i = 0; i < participantList.size(); i++) {
-                    if (participantList.get(i).uid == uid) {
-                        participantList.get(i).isMuted = muted;
-                        adapter.notifyItemChanged(i, "state_update");
-                        break;
+                    Participant p = participantList.get(i);
+                    // Local user (index 0) luôn báo volume với ID 0
+                    int checkUid = (i == 0) ? 0 : p.uid;
+
+                    boolean isNowSpeaking = activeSpeakers.contains(checkUid);
+                    if (p.isSpeaking != isNowSpeaking) {
+                        p.isSpeaking = isNowSpeaking;
+                        adapter.notifyItemChanged(i, "border_update");
                     }
                 }
             });
         }
 
-        // --- TRACK REMOTE USER CAMERA ---
         @Override
         public void onUserMuteVideo(int uid, boolean muted) {
             runOnUiThread(() -> {
@@ -202,29 +244,20 @@ public class Call_detail extends AppCompatActivity {
                 }
             });
         }
-
         @Override
-        public void onAudioVolumeIndication(AudioVolumeInfo[] speakers, int totalVolume) {
+        public void onRemoteVideoStateChanged(int uid, int state, int reason, int elapsed) {
             runOnUiThread(() -> {
-                List<Integer> activeSpeakers = new ArrayList<>();
-                for (AudioVolumeInfo speaker : speakers) {
-                    // <--- CHANGED FROM > 3 to > 0
-                    // This forces the border to trigger on the quietest emulator noises
-                    if (speaker.volume > 0) {
-                        activeSpeakers.add(speaker.uid);
-                    }
-                }
-
                 for (int i = 0; i < participantList.size(); i++) {
-                    Participant p = participantList.get(i);
-                    // In Agora, your local user is always reported as UID 0 in this callback
-                    int checkUid = (i == 0) ? 0 : p.uid;
+                    if (participantList.get(i).uid == uid) {
+                        // state == 0 nghĩa là STOPPED (Tắt cam)
+                        // state == 1 hoặc 2 nghĩa là STARTING/DECODING (Bật cam)
+                        boolean isOff = (state == 0);
 
-                    boolean isNowSpeaking = activeSpeakers.contains(checkUid);
-
-                    if (p.isSpeaking != isNowSpeaking) {
-                        p.isSpeaking = isNowSpeaking;
-                        adapter.notifyItemChanged(i, "border_update");
+                        if (participantList.get(i).isVideoOff != isOff) {
+                            participantList.get(i).isVideoOff = isOff;
+                            adapter.notifyItemChanged(i, "state_update");
+                        }
+                        break;
                     }
                 }
             });
@@ -236,7 +269,6 @@ public class Call_detail extends AppCompatActivity {
         ImageButton btnToggleVideo = findViewById(R.id.btnToggleVideo);
         ImageButton btnEndCall = findViewById(R.id.btnEndCall);
 
-        // Make the UI match the default "Camera OFF" state
         btnToggleVideo.setSelected(true);
         btnToggleVideo.setAlpha(0.5f);
 
@@ -245,10 +277,10 @@ public class Call_detail extends AppCompatActivity {
             v.setSelected(isMuted);
             mRtcEngine.muteLocalAudioStream(isMuted);
             v.setAlpha(isMuted ? 0.5f : 1.0f);
-
-            // --- FIXED: Uses state_update payload to prevent freezing ---
-            participantList.get(0).isMuted = isMuted;
-            adapter.notifyItemChanged(0, "state_update");
+            if (!participantList.isEmpty()) {
+                participantList.get(0).isMuted = isMuted;
+                adapter.notifyItemChanged(0, "state_update");
+            }
         });
 
         btnToggleVideo.setOnClickListener(v -> {
@@ -256,10 +288,10 @@ public class Call_detail extends AppCompatActivity {
             v.setSelected(isVideoOff);
             mRtcEngine.muteLocalVideoStream(isVideoOff);
             v.setAlpha(isVideoOff ? 0.5f : 1.0f);
-
-            // --- FIXED: Uses state_update payload to prevent freezing ---
-            participantList.get(0).isVideoOff = isVideoOff;
-            adapter.notifyItemChanged(0, "state_update");
+            if (!participantList.isEmpty()) {
+                participantList.get(0).isVideoOff = isVideoOff;
+                adapter.notifyItemChanged(0, "state_update");
+            }
         });
 
         btnEndCall.setOnClickListener(v -> finish());
@@ -292,19 +324,6 @@ public class Call_detail extends AppCompatActivity {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQ_ID) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                initAgoraAndJoinChannel();
-            } else {
-                Toast.makeText(this, "Camera & Mic permissions required", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
     }
 
     @Override

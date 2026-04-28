@@ -36,28 +36,23 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     @Override
     public CallViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.activity_item_call_participant, parent, false);
+
+        // Tính toán chiều cao để các ô video chia đều màn hình
+        int totalItems = participantList.size();
+        int rows = getRowsCount(totalItems);
+
         ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-        layoutParams.height = parent.getHeight() / getRowsCount(participantList.size());
+        if (parent.getHeight() > 0) {
+            layoutParams.height = parent.getHeight() / rows;
+        } else {
+            // Backup nếu parent chưa kịp tính height
+            layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
+        }
         view.setLayoutParams(layoutParams);
         return new CallViewHolder(view);
     }
-//    @NonNull
-//    @Override
-//    public CallViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//        View view = LayoutInflater.from(context).inflate(R.layout.activity_item_call_participant, parent, false);
-//
-//        // Convert 220dp into exact screen pixels so it looks the same on all phones
-//        int boxHeight = (int) (220 * context.getResources().getDisplayMetrics().density);
-//
-//        // Force the height to stay small
-//        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-//        layoutParams.height = boxHeight;
-//        view.setLayoutParams(layoutParams);
-//
-//        return new CallViewHolder(view);
-//    }
 
-    // --- PAYLOAD HANDLER: Prevents video from freezing when clicking mute/camera ---
+    // --- 1. Hàm hỗ trợ cập nhật nhanh khi click nút (Payload) ---
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position, @NonNull List<Object> payloads) {
         if (!payloads.isEmpty()) {
@@ -66,40 +61,44 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
 
             if (payload.equals("border_update")) {
                 updateSpeakingBorder(holder, participant.isSpeaking);
-                return; // Stop here so video doesn't rebuild
+                return; // Chỉ cập nhật viền, không vẽ lại video
             }
             else if (payload.equals("state_update")) {
-                // Hides video container completely so the profile picture can show
+                // Cập nhật ngay lập tức trạng thái ẩn/hiện cam và mic mà không làm giật hình
                 holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
                 holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
                 holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
-                return; // Stop here so video doesn't rebuild
+                return;
             }
         }
-        // If no payload, do a full heavy bind
+        // Nếu không có payload, thực hiện bind đầy đủ như bên dưới
         super.onBindViewHolder(holder, position, payloads);
     }
 
+    // --- 2. Hàm Bind đầy đủ (Chạy khi mới vào phòng hoặc lướt danh sách) ---
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position) {
         Participant participant = participantList.get(position);
         holder.tvUserName.setText(participant.name);
 
-        // Heavy video setup
+        // Dọn dẹp và khởi tạo lại SurfaceView để tránh chồng lấp hình ảnh
         holder.videoContainer.removeAllViews();
         SurfaceView surfaceView = new SurfaceView(context);
-        surfaceView.setZOrderMediaOverlay(true);
+        surfaceView.setZOrderMediaOverlay(true); // Đảm bảo video không đè lên thanh điều khiển
         holder.videoContainer.addView(surfaceView);
 
         if (rtcEngine != null) {
-            if (participant.uid == 0) {
+            // NHÃ LƯU Ý: Phân biệt Local (mình) và Remote (người khác)
+            if (participant.name.contains("Me")) {
+                // Local Video: Luôn dùng UID = 0 cho chính mình
                 rtcEngine.setupLocalVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
             } else {
+                // Remote Video: Dùng đúng UID nhận được từ onUserJoined (ví dụ: 400, 496)
                 rtcEngine.setupRemoteVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, participant.uid));
             }
         }
 
-        // Set initial visibility states
+        // Thiết lập trạng thái hiển thị ban đầu dựa trên biến trong Participant
         holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
         holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
         holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
@@ -109,10 +108,10 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
 
     private void updateSpeakingBorder(CallViewHolder holder, boolean isSpeaking) {
         if (isSpeaking) {
-            holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // Bright Green
-            holder.cardView.setStrokeWidth(15); // <--- INCREASED TO 15 PIXELS
+            holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // Màu xanh lá sáng
+            holder.cardView.setStrokeWidth(12);
         } else {
-            holder.cardView.setStrokeColor(Color.parseColor("#3A3A3A")); // Dark Grey
+            holder.cardView.setStrokeColor(Color.parseColor("#3A3A3A")); // Màu xám tối
             holder.cardView.setStrokeWidth(2);
         }
     }
@@ -123,7 +122,8 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     }
 
     private int getRowsCount(int totalItems) {
-        if (totalItems <= 2) return totalItems;
+        if (totalItems <= 1) return 1;
+        if (totalItems <= 2) return 2;
         if (totalItems <= 4) return 2;
         return 3;
     }
