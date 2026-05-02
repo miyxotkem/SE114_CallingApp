@@ -18,9 +18,17 @@ import androidx.fragment.app.DialogFragment;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
+import java.util.Random;
+
 public class Server_on_create extends DialogFragment {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+    // BẢNG 10 MÀU XỊN XÒ ĐỂ RANDOM (Giống hệt ở bảng chọn màu)
+    private final String[] palette = {
+            "#7289DA", "#F44336", "#E91E63", "#9C27B0", "#673AB7",
+            "#2196F3", "#00BCD4", "#4CAF50", "#FF9800", "#795548"
+    };
 
     @Nullable
     @Override
@@ -50,16 +58,20 @@ public class Server_on_create extends DialogFragment {
             db.collection("servers").get().addOnSuccessListener(queryDocumentSnapshots -> {
                 int currentOrder = queryDocumentSnapshots.size();
 
-                // 2. Create Server object using your Model
+                // 2. TỰ ĐỘNG RANDOM MÀU ACCENT TẠI ĐÂY
+                String randomAccentColor = palette[new Random().nextInt(palette.length)];
+
+                // 3. Create Server object using your Model
                 Server newServer = new Server(
                         etName.getText().toString().trim(),
                         "L2j7rDA0Y0cmsO0XNcaW", // ownerId
                         "default_icon_url",
-                        etPurpose.getText().toString().trim()
+                        etPurpose.getText().toString().trim(),
+                        randomAccentColor // Thay màu cứng thành màu ngẫu nhiên vừa bốc được
                 );
                 newServer.setOrderIndex(currentOrder);
 
-                // 3. Save to Firestore
+                // 4. Save to Firestore
                 db.collection("servers")
                         .add(newServer)
                         .addOnSuccessListener(documentReference -> {

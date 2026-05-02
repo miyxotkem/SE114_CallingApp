@@ -1,44 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:id="@+id/main"
     android:padding="24dp"
     android:background="@color/bg_alter">
 
+    <!-- Cục gạch nhỏ ở trên cùng (Drag handle - tạo cảm giác kéo thả) -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="40dp"
+        android:layout_height="5dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp"
+        app:cardBackgroundColor="#BDBDBD"
+        app:cardCornerRadius="2.5dp"
+        app:cardElevation="0dp"/>
+
+    <!-- Tiêu đề -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Server Settings"
         android:textColor="@color/tint_default"
-        android:textSize="20sp"
+        android:textSize="22sp"
         android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
-
-    <EditText
-        android:id="@+id/etServerNameSettings"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter new server name"
-        android:inputType="text"
-        android:textColor="@color/tint_default"
-        android:textColorHint="@color/tint_default"
         android:layout_marginBottom="24dp"/>
 
-    <Button
-        android:id="@+id/btnRenameServer"
-        android:layout_width="match_parent"
+    <!-- KHU VỰC ĐỔI TÊN SERVER -->
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Rename Server"
+        android:text="SERVER NAME"
+        android:textColor="#888888"
+        android:textSize="12sp"
+        android:textStyle="bold"
         android:layout_marginBottom="8dp"/>
 
-    <Button
-        android:id="@+id/btnDeleteServer"
+    <!-- Nhóm Ô nhập chữ và Nút Save nằm ngang hàng -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
+
+        <EditText
+            android:id="@+id/etServerNameSettings"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/edittext_background"
+            android:hint="Enter new name"
+            android:paddingHorizontal="16dp"
+            android:inputType="text"
+            android:textColor="@color/tint_default"
+            android:textColorHint="#888888"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRenameServer"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_marginStart="12dp"
+            android:text="Save"
+            app:cornerRadius="12dp"/>
+    </LinearLayout>
+
+    <!-- Đường kẻ ngang phân cách nhẹ nhàng -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1A888888"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- KHU VỰC MENU TÍNH NĂNG -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnManageMembers"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Manage Members"
+        android:textColor="@color/tint_default"
+        android:textSize="16sp"
+        android:gravity="start|center_vertical"
+        app:icon="@drawable/icon_user"
+        app:iconTint="@color/tint_default"
+        app:iconPadding="16dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnChangeColor"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Change Accent Color"
+        android:textColor="@color/tint_default"
+        android:textSize="16sp"
+        android:gravity="start|center_vertical"
+        app:icon="@drawable/icon_palette"
+        app:iconTint="@color/tint_default"
+        app:iconPadding="16dp"
+        android:layout_marginBottom="12dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1A888888"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- NÚT XÓA (Viền đỏ) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDeleteServer"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
         android:text="Delete Server"
-        android:backgroundTint="#D32F2F"
-        android:textColor="@android:color/white"/>
+        android:textColor="#F44336"
+        app:strokeColor="#F44336"
+        app:strokeWidth="1.5dp"
+        app:cornerRadius="12dp"
+        android:layout_marginBottom="8dp"/>
 
 </LinearLayout>

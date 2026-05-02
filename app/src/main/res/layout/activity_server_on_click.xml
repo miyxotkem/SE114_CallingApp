@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_default">
@@ -30,20 +31,33 @@
                 android:src="@drawable/icon_backbutton"
                 app:tint="@color/tint_default" />
 
+            <!-- Nút 3 chấm nằm ở góc phải -->
+            <ImageView
+                android:id="@+id/btnServerSettings"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/icon_more_vert"
+                app:tint="@color/tint_default" />
+
+            <!-- Tên server đẩy sang trái của nút 3 chấm -->
             <TextView
                 android:id="@+id/tvServerName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
+                android:layout_toStartOf="@id/btnServerSettings"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="16dp"
+                android:layout_marginEnd="12dp"
                 android:text="Server Name"
                 android:textColor="@color/tint_default"
                 android:textSize="20sp" />
+
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/mainBackgroundCard"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/topBar"

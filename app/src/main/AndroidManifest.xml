@@ -30,6 +30,12 @@
             android:enabled="true"
             android:exported="false" />
         <activity
+            android:name=".ChangeColorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ManageMembersActivity"
+            android:exported="false" />
+        <activity
             android:name=".Call_detail"
             android:exported="false" />
         <activity
