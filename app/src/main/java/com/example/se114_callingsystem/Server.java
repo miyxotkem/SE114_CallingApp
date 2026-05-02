@@ -10,13 +10,15 @@ public class Server {
     private String iconUrl;
     private String purpose;
     private int orderIndex;
+    private String accentColor;
 
     public Server() {}
-    public Server(String serverName, String ownerId, String iconUrl, String purpose) {
+    public Server(String serverName, String ownerId, String iconUrl, String purpose, String accentColor) {
         this.serverName = serverName;
         this.ownerId = ownerId;
         this.iconUrl = iconUrl;
         this.purpose = purpose;
+        this.accentColor = accentColor;
     }
 
     public String getServerId() { return serverId; }
@@ -31,4 +33,6 @@ public class Server {
     public void setPurpose(String purpose) { this.purpose = purpose; }
     public int getOrderIndex() { return orderIndex; }
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
+    public String getAccentColor() { return accentColor; }
+    public void setAccentColor(String accentColor) { this.accentColor = accentColor; }
 }
