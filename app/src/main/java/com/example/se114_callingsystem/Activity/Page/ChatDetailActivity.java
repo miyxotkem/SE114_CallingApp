@@ -1,14 +1,12 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Activity.Page;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -31,6 +29,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
+import com.example.se114_callingsystem.Adapter.ChatAdapter;
+import com.example.se114_callingsystem.Model.Firebase;
+import com.example.se114_callingsystem.Model.Message;
+import com.example.se114_callingsystem.R;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -41,10 +43,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Chat_detail extends AppCompatActivity {
+public class ChatDetailActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private Chat_adapter adapter;
-    private List<MessageModel> messageList = new ArrayList<>();
+    private ChatAdapter adapter;
+    private List<Message> messageList = new ArrayList<>();
     private ImageButton btnAttachImage, btnAttachFile;
     private ActivityResultLauncher<String> imagePickerLauncher;
     private ActivityResultLauncher<String> filePickerLauncher;
@@ -55,7 +57,7 @@ public class Chat_detail extends AppCompatActivity {
 
     private View tvReplyingToLayout;
     private TextView tvReplyingToText;
-    private MessageModel messageToReply = null;
+    private Message messageToReply = null;
 
     private String groupId;
     private DatabaseReference groupChatRef;
@@ -118,19 +120,19 @@ public class Chat_detail extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        adapter = new Chat_adapter(messageList, new Chat_adapter.OnChatInteractListener() {
+        adapter = new ChatAdapter(messageList, new ChatAdapter.OnChatInteractListener() {
             @Override
-            public void onReply(MessageModel message) { showReplyUI(message); }
+            public void onReply(Message message) { showReplyUI(message); }
 
             @Override
-            public void onDelete(MessageModel message) {
+            public void onDelete(Message message) {
                 if (groupChatRef != null && message.getMessageId() != null) {
                     groupChatRef.child(message.getMessageId()).child("deleted").setValue(true);
                 }
             }
 
             @Override
-            public void onReact(MessageModel message, String emoji) {
+            public void onReact(Message message, String emoji) {
                 if (groupChatRef != null && message.getMessageId() != null) {
                     groupChatRef.child(message.getMessageId()).child("reactionEmoji").setValue(emoji);
                 }
@@ -179,7 +181,7 @@ public class Chat_detail extends AppCompatActivity {
                 if (!isSent && dX < 0) limitedDX = 0; // Chặn vuốt trái cho tin nhận
 
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                    Drawable icon = ContextCompat.getDrawable(Chat_detail.this, android.R.drawable.ic_menu_revert);
+                    Drawable icon = ContextCompat.getDrawable(ChatDetailActivity.this, android.R.drawable.ic_menu_revert);
                     if (icon != null) {
                         int itemHeight = itemView.getBottom() - itemView.getTop();
                         int iconHeight = icon.getIntrinsicHeight();
@@ -229,7 +231,7 @@ public class Chat_detail extends AppCompatActivity {
     private void sendMessage() {
         String msg = edtMessage.getText().toString().trim();
         if (!msg.isEmpty() && groupChatRef != null) {
-            MessageModel messageModel = new MessageModel(senderId, groupId, msg, System.currentTimeMillis());
+            Message messageModel = new Message(senderId, groupId, msg, System.currentTimeMillis());
             if (messageToReply != null) {
                 messageModel.setRepliedToContent(messageToReply.getContent());
                 messageToReply = null;
@@ -255,7 +257,7 @@ public class Chat_detail extends AppCompatActivity {
                     }
                     @Override public void onError(String requestId, ErrorInfo error) {
                         pd.dismiss();
-                        Toast.makeText(Chat_detail.this, "Lỗi: " + error.getDescription(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ChatDetailActivity.this, "Lỗi: " + error.getDescription(), Toast.LENGTH_SHORT).show();
                     }
                     @Override public void onReschedule(String requestId, ErrorInfo error) {}
                 }).dispatch();
@@ -263,7 +265,7 @@ public class Chat_detail extends AppCompatActivity {
 
     private void sendMediaMessage(String fileUrl, String type) {
         if (groupChatRef == null) return;
-        MessageModel model = new MessageModel(senderId, groupId, fileUrl, System.currentTimeMillis());
+        Message model = new Message(senderId, groupId, fileUrl, System.currentTimeMillis());
         model.setType(type);
 
         if (messageToReply != null) {
@@ -280,7 +282,7 @@ public class Chat_detail extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 messageList.clear();
                 for (DataSnapshot data : snapshot.getChildren()) {
-                    MessageModel model = data.getValue(MessageModel.class);
+                    Message model = data.getValue(Message.class);
                     if(model != null) {
                         model.setMessageId(data.getKey());
                         messageList.add(model);
@@ -293,7 +295,7 @@ public class Chat_detail extends AppCompatActivity {
         });
     }
 
-    private void showReplyUI(MessageModel message) {
+    private void showReplyUI(Message message) {
         if(message.isDeleted()) return;
         messageToReply = message;
         tvReplyingToLayout.setVisibility(View.VISIBLE);

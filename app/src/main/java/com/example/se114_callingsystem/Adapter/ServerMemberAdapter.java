@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,6 +10,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.se114_callingsystem.Model.ServerMember;
+import com.example.se114_callingsystem.R;
 
 import java.util.List;
 

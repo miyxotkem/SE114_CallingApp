@@ -30,44 +30,44 @@
             android:enabled="true"
             android:exported="false" />
         <activity
-            android:name=".ChangeColorActivity"
+            android:name=".Activity.Page.ChangeColorActivity"
             android:exported="false" />
         <activity
-            android:name=".ManageMembersActivity"
+            android:name=".Activity.Page.ManageMembersActivity"
             android:exported="false" />
         <activity
-            android:name=".Call_detail"
+            android:name=".Activity.Page.CallDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".item_participant"
+            android:name=".Activity.Component.item_participant"
             android:exported="false" />
         <activity
-            android:name=".bottom_sheet_server_settings"
+            android:name=".Activity.Component.bottom_sheet_server_settings"
             android:exported="false" />
         <activity
-            android:name=".Document_viewer"
+            android:name=".Activity.Page.DocumentViewerActivity"
             android:exported="false" />
         <activity
-            android:name=".Image_viewer"
+            android:name=".Activity.Page.ImageViewerActivity"
             android:exported="false" />
         <activity
-            android:name=".item_chat_bubble_receive"
+            android:name=".Activity.Component.item_chat_bubble_receive"
             android:exported="false" />
         <activity
-            android:name=".Chat_detail"
+            android:name=".Activity.Page.ChatDetailActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".list_item_chat_channels"
+            android:name=".Activity.Component.list_item_chat_channels"
             android:exported="false" />
         <activity
-            android:name=".list_item_servers"
+            android:name=".Activity.Component.list_item_servers"
             android:exported="false" />
         <activity
-            android:name=".Server_on_click"
+            android:name=".Activity.Page.ServerViewerActivity"
             android:exported="false" />
         <activity
-            android:name=".Default_page"
+            android:name=".Activity.Page.HomePageActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

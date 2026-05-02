@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Activity.Component;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -15,12 +15,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.example.se114_callingsystem.Model.Server;
+import com.example.se114_callingsystem.R;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 
 import java.util.Random;
 
-public class Server_on_create extends DialogFragment {
+public class create_server extends DialogFragment {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -36,7 +37,7 @@ public class Server_on_create extends DialogFragment {
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-        return inflater.inflate(R.layout.activity_server_on_create, container, false);
+        return inflater.inflate(R.layout.activity_create_server, container, false);
     }
 
     @Override

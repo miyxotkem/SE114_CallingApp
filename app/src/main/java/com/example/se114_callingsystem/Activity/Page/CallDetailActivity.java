@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Activity.Page;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -24,6 +24,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.se114_callingsystem.Model.Participant;
+import com.example.se114_callingsystem.Adapter.ParticipantAdapter;
+import com.example.se114_callingsystem.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,12 +38,12 @@ import io.agora.rtc2.RtcEngineConfig;
 import io.agora.rtc2.ScreenCaptureParameters;
 import io.agora.rtc2.video.VideoEncoderConfiguration;
 
-public class Call_detail extends AppCompatActivity {
+public class CallDetailActivity extends AppCompatActivity {
     private final String appId = "11d7dad414d2475094923765e9ac9213";
     private RtcEngine mRtcEngine;
 
     // NHÃ ƠI: Nhớ chỉnh UID này khác nhau trên 2 máy để không bị đá nhau nhé!
-    int uid = 500;
+    int uid = 400;
 
     private String channelName = "TestChannel";
     private boolean isUiVisible = true;
@@ -165,7 +169,7 @@ public class Call_detail extends AppCompatActivity {
         public void onUserJoined(int uid, int elapsed) {
             runOnUiThread(() -> {
                 // Nhã ơi dùng Alert ở đây nếu muốn báo người khác vào
-                Toast.makeText(Call_detail.this, "User " + uid + " đã vào phòng!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(CallDetailActivity.this, "User " + uid + " đã vào phòng!", Toast.LENGTH_SHORT).show();
                 Participant newUser = new Participant(uid, "User " + uid);
                 newUser.isVideoOff = true;
                 mRtcEngine.setEnableSpeakerphone(true);

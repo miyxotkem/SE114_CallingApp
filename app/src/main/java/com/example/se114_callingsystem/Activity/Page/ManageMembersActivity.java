@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Activity.Page;
 
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -8,6 +8,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Model.ServerMember;
+import com.example.se114_callingsystem.Adapter.ServerMemberAdapter;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 

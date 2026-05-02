@@ -1,10 +1,9 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -19,6 +18,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.se114_callingsystem.Activity.Page.DocumentViewerActivity;
+import com.example.se114_callingsystem.Activity.Page.ImageViewerActivity;
+import com.example.se114_callingsystem.Model.Message;
+import com.example.se114_callingsystem.R;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
@@ -26,23 +29,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
 
-    private List<MessageModel> mMessages;
+    private List<Message> mMessages;
     private static FirebaseFirestore db;
     private String currentUserId = "L2j7rDA0Y0cmsO0XNcaW"; // ID của Nhã
     private OnChatInteractListener listener;
 
     public interface OnChatInteractListener {
-        void onReply(MessageModel message);
-        void onDelete(MessageModel message);
-        void onReact(MessageModel message, String emoji);
+        void onReply(Message message);
+        void onDelete(Message message);
+        void onReact(Message message, String emoji);
     }
 
-    public Chat_adapter(List<MessageModel> messages, OnChatInteractListener listener) {
+    public ChatAdapter(List<Message> messages, OnChatInteractListener listener) {
         this.mMessages = messages;
         this.listener = listener;
         this.db = FirebaseFirestore.getInstance();
@@ -71,7 +74,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        MessageModel message = mMessages.get(position);
+        Message message = mMessages.get(position);
         RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) holder.itemView.getLayoutParams();
 
         // Lấy density để quy đổi dp sang px
@@ -80,7 +83,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         // 1. Logic gom nhóm tin nhắn
         boolean isFirstInGroup = true;
         if (position > 0) {
-            MessageModel previousMsg = mMessages.get(position - 1);
+            Message previousMsg = mMessages.get(position - 1);
             if (previousMsg.getSenderId().equals(message.getSenderId())) {
                 isFirstInGroup = false;
             }
@@ -88,7 +91,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
         boolean isLastInGroup = true;
         if (position < mMessages.size() - 1) {
-            MessageModel nextMsg = mMessages.get(position + 1);
+            Message nextMsg = mMessages.get(position + 1);
             if (nextMsg.getSenderId().equals(message.getSenderId())) {
                 isLastInGroup = false;
             }
@@ -135,7 +138,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             tvFileName = itemView.findViewById(R.id.tvFileName);
         }
 
-        void bind(MessageModel message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup) {
+        void bind(Message message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup) {
             bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
 
             if (isLastInGroup && textTime != null) {
@@ -168,7 +171,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             tvFileName = itemView.findViewById(R.id.tvFileName);
         }
 
-        void bind(MessageModel message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId) {
+        void bind(Message message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId) {
             bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
 
             // Xử lý Tên (Hiện ở tin đầu nhóm)
@@ -208,7 +211,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
     }
 
-    private static void bindSharedLogic(MessageModel msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
+    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
         if (msg.isDeleted()) {
             textMessage.setVisibility(View.VISIBLE);
             textMessage.setText("Tin nhắn đã bị thu hồi");
@@ -243,7 +246,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                         @Override
                         public boolean onSingleTapConfirmed(MotionEvent e) {
                             Context context = ivMessageImage.getContext();
-                            Intent intent = new Intent(context, Image_viewer.class);
+                            Intent intent = new Intent(context, ImageViewerActivity.class);
                             intent.putExtra("IMAGE_URL", msg.getContent());
                             context.startActivity(intent);
                             return true;
@@ -298,7 +301,7 @@ public class Chat_adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                         public boolean onSingleTapConfirmed(MotionEvent e) {
                             // Mở trình xem trước tài liệu thay vì tải ngay
                             Context context = layoutFile.getContext();
-                            Intent intent = new Intent(context, Document_viewer.class);
+                            Intent intent = new Intent(context, DocumentViewerActivity.class);
                             intent.putExtra("FILE_URL", fileUrl);
                             intent.putExtra("FILE_NAME", fileName);
                             context.startActivity(intent);

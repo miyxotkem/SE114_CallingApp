@@ -1,26 +1,23 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Activity.Page;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Intent;
 import android.util.Log;
-import android.view.View;
+
+import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Model.Server;
+import com.example.se114_callingsystem.Adapter.ServerAdapter;
+import com.example.se114_callingsystem.Activity.Component.create_server;
 import com.google.android.material.card.MaterialCardView;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-public class Default_page extends AppCompatActivity {
+public class HomePageActivity extends AppCompatActivity {
 
     private ServerAdapter adapter;
     private List<Server> serverList;
@@ -29,7 +26,7 @@ public class Default_page extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_default_page);
+        setContentView(R.layout.activity_home_page);
 
         db = FirebaseFirestore.getInstance();
         serverList = new ArrayList<>();
@@ -43,7 +40,7 @@ public class Default_page extends AppCompatActivity {
 
         MaterialCardView cardServerCreate = findViewById(R.id.mcvServerCreate);
         cardServerCreate.setOnClickListener(v -> {
-            Server_on_create dialog = new Server_on_create();
+            create_server dialog = new create_server();
             dialog.show(getSupportFragmentManager(), "Server_on_create");
         });
     }

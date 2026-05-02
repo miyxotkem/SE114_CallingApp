@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Adapter;
 
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -8,6 +8,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.se114_callingsystem.Activity.Page.ServerViewerActivity;
+import com.example.se114_callingsystem.Model.Server;
+import com.example.se114_callingsystem.R;
 
 import java.util.List;
 
@@ -31,7 +35,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
         holder.nameText.setText(server.getServerName());
 
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), Server_on_click.class);
+            Intent intent = new Intent(v.getContext(), ServerViewerActivity.class);
 
             intent.putExtra("SERVER_NAME", server.getServerName());
             intent.putExtra("SERVER_ID", server.getServerId());

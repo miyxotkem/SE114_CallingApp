@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Activity.Page;
 
 import android.app.DownloadManager;
 import android.content.Context;
@@ -17,9 +17,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.se114_callingsystem.R;
+
 import java.net.URLEncoder;
 
-public class Document_viewer extends AppCompatActivity {
+public class DocumentViewerActivity extends AppCompatActivity {
 
     private WebView webView;
     private ProgressBar progressBar;

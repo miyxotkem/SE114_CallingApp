@@ -1,6 +1,6 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Model;
 
-public class MessageModel {
+public class Message {
     private String messageId;
     private String senderId;
     private String receiverId;
@@ -15,14 +15,14 @@ public class MessageModel {
     private String repliedToContent;
 
     // Constructor trống để Firebase mapping
-    public MessageModel() {
+    public Message() {
         this.isDeleted = false;
         this.reactionEmoji = "";
         this.repliedToContent = "";
     }
 
     // Constructor đầy đủ cho Text
-    public MessageModel(String senderId, String receiverId, String content, long timestamp) {
+    public Message(String senderId, String receiverId, String content, long timestamp) {
         this.senderId = senderId;
         this.receiverId = receiverId;
         this.content = content;
@@ -34,7 +34,7 @@ public class MessageModel {
     }
 
     // Constructor đầy đủ cho Media
-    public MessageModel(String senderId, String receiverId, String content, long timestamp, String type, String fileUrl) {
+    public Message(String senderId, String receiverId, String content, long timestamp, String type, String fileUrl) {
         this.senderId = senderId;
         this.receiverId = receiverId;
         this.content = content;

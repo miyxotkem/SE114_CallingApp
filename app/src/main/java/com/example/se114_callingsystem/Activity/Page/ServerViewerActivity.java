@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Activity.Page;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -18,6 +18,12 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.se114_callingsystem.Adapter.CallAdapter;
+import com.example.se114_callingsystem.Adapter.ChatZoneAdapter;
+import com.example.se114_callingsystem.Model.CallChannel;
+import com.example.se114_callingsystem.Model.ChatChannel;
+import com.example.se114_callingsystem.Model.Server;
+import com.example.se114_callingsystem.R;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -30,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Server_on_click extends AppCompatActivity {
+public class ServerViewerActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
     private String serverId;
@@ -40,7 +46,7 @@ public class Server_on_click extends AppCompatActivity {
 
     // Chat Channel Variables
     private RecyclerView rvChatChannels;
-    private ChatAdapter chatAdapter;
+    private ChatZoneAdapter chatAdapter;
     private List<ChatChannel> chatList = new ArrayList<>();
     private boolean isChatExpanded = true;
 
@@ -53,7 +59,7 @@ public class Server_on_click extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_server_on_click);
+        setContentView(R.layout.activity_server_viewer);
 
         serverId = getIntent().getStringExtra("SERVER_ID");
         String serverName = getIntent().getStringExtra("SERVER_NAME");
@@ -265,7 +271,7 @@ public class Server_on_click extends AppCompatActivity {
         if (btnManageMembers != null) {
             btnManageMembers.setOnClickListener(v -> {
                 dialog.dismiss();
-                Intent intent = new Intent(Server_on_click.this, ManageMembersActivity.class);
+                Intent intent = new Intent(ServerViewerActivity.this, ManageMembersActivity.class);
                 intent.putExtra("SERVER_ID", serverId);
                 startActivity(intent);
             });
@@ -274,7 +280,7 @@ public class Server_on_click extends AppCompatActivity {
         if (btnChangeColor != null) {
             btnChangeColor.setOnClickListener(v -> {
                 dialog.dismiss();
-                Intent intent = new Intent(Server_on_click.this, ChangeColorActivity.class);
+                Intent intent = new Intent(ServerViewerActivity.this, ChangeColorActivity.class);
                 intent.putExtra("SERVER_ID", serverId);
                 intent.putExtra("CURRENT_COLOR", currentAccentColor);
                 startActivity(intent);
@@ -304,7 +310,7 @@ public class Server_on_click extends AppCompatActivity {
 
     // --- CHAT & CALL CHANNELS METHODS ---
     private void setupChatRecyclerView() {
-        chatAdapter = new ChatAdapter(chatList, new ChatAdapter.OnChannelActionListener() {
+        chatAdapter = new ChatZoneAdapter(chatList, new ChatZoneAdapter.OnChannelActionListener() {
             @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", true); }
             @Override public void onRemove(ChatChannel channel) { db.collection("Channels").document(channel.getChatId()).delete().addOnSuccessListener(a -> loadChatData()); }
         });

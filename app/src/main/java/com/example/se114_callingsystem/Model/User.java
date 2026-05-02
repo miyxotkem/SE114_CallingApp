@@ -1,6 +1,6 @@
-package com.example.se114_callingsystem;
+package com.example.se114_callingsystem.Model;
 
-public class UserModel {
+public class User {
     private String userId;      // ID duy nhất từ Firebase Auth
     private String username;    // Tên hiển thị
     private String email;       // Địa chỉ email
@@ -8,11 +8,11 @@ public class UserModel {
     private String status;      // Trạng thái: "online" hoặc "offline"
 
     // Constructor trống bắt buộc phải có để Firebase mapping dữ liệu
-    public UserModel() {
+    public User() {
     }
 
     // Constructor đầy đủ để tạo user mới khi đăng ký
-    public UserModel(String userId, String username, String email) {
+    public User(String userId, String username, String email) {
         this.userId = userId;
         this.username = username;
         this.email = email;
