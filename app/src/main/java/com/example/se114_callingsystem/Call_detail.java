@@ -31,13 +31,15 @@ import io.agora.rtc2.Constants;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcEngine;
 import io.agora.rtc2.RtcEngineConfig;
+import io.agora.rtc2.ScreenCaptureParameters;
+import io.agora.rtc2.video.VideoEncoderConfiguration;
 
 public class Call_detail extends AppCompatActivity {
     private final String appId = "11d7dad414d2475094923765e9ac9213";
     private RtcEngine mRtcEngine;
 
     // NHÃ ƠI: Nhớ chỉnh UID này khác nhau trên 2 máy để không bị đá nhau nhé!
-    int uid = 400;
+    int uid = 500;
 
     private String channelName = "TestChannel";
     private boolean isUiVisible = true;
@@ -119,7 +121,7 @@ public class Call_detail extends AppCompatActivity {
             mRtcEngine.enableVideo();
 //            mRtcEngine.startPreview();
             mRtcEngine.muteLocalVideoStream(true);
-
+            mRtcEngine.enableAudioVolumeIndication(200, 3, true);
             // 3. THÊM DÒNG NÀY: Ép SDK sử dụng giao thức kết nối mạnh nhất
             mRtcEngine.setParameters("{\"rtc.force_unified_communication_mode\":true}");
 
@@ -166,7 +168,7 @@ public class Call_detail extends AppCompatActivity {
                 Toast.makeText(Call_detail.this, "User " + uid + " đã vào phòng!", Toast.LENGTH_SHORT).show();
                 Participant newUser = new Participant(uid, "User " + uid);
                 newUser.isVideoOff = true;
-
+                mRtcEngine.setEnableSpeakerphone(true);
                 participantList.add(newUser);
                 updateGridLayout();
                 adapter.notifyDataSetChanged();
@@ -263,7 +265,59 @@ public class Call_detail extends AppCompatActivity {
             });
         }
     };
+    private void startScreenShare() {
+        if (mRtcEngine == null || participantList.isEmpty()) return;
 
+        ScreenCaptureParameters params = new ScreenCaptureParameters();
+        params.captureVideo = true;
+        params.captureAudio = true;
+
+        // Nếu không nhận videoParams, ta thiết lập qua Engine
+        VideoEncoderConfiguration videoConfig = new VideoEncoderConfiguration(
+                VideoEncoderConfiguration.VD_1280x720,
+                VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15,
+                VideoEncoderConfiguration.STANDARD_BITRATE,
+                VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
+        );
+        mRtcEngine.setVideoEncoderConfiguration(videoConfig);
+
+        // Gọi lệnh share
+        int res = mRtcEngine.startScreenCapture(params);
+
+        if (res == 0) {
+            participantList.get(0).isSharingScreen = true;
+            // Tạm thời comment dòng muteLocalVideoStream lại để test xem có hết crash không
+            // mRtcEngine.muteLocalVideoStream(true);
+
+            Toast.makeText(this, "Đang chia sẻ màn hình...", Toast.LENGTH_SHORT).show();
+            adapter.notifyItemChanged(0, "state_update");
+            updateShareButtonUI();
+        } else {
+            Log.e("AgoraError", "Lỗi startScreenCapture: " + res);
+        }
+    }
+
+    private void stopScreenShare() {
+        if (mRtcEngine != null && !participantList.isEmpty()) {
+            mRtcEngine.stopScreenCapture();
+
+            // Cập nhật trạng thái cho chính mình
+            participantList.get(0).isSharingScreen = false;
+            mRtcEngine.muteLocalVideoStream(false);
+
+            adapter.notifyItemChanged(0, "state_update");
+            updateShareButtonUI();
+        }
+    }
+
+    private void updateShareButtonUI() {
+        ImageButton btnShareScreen = findViewById(R.id.btnShareScreen);
+        if (btnShareScreen != null && !participantList.isEmpty()) {
+            boolean sharing = participantList.get(0).isSharingScreen;
+            btnShareScreen.setSelected(sharing);
+            btnShareScreen.setAlpha(sharing ? 1.0f : 0.5f);
+        }
+    }
     private void setupControls() {
         ImageButton btnMute = findViewById(R.id.btnMute);
         ImageButton btnToggleVideo = findViewById(R.id.btnToggleVideo);
@@ -295,6 +349,22 @@ public class Call_detail extends AppCompatActivity {
         });
 
         btnEndCall.setOnClickListener(v -> finish());
+
+        ImageButton btnShareScreen = findViewById(R.id.btnShareScreen);
+        if (btnShareScreen != null) {
+            btnShareScreen.setOnClickListener(v -> {
+                if (participantList.isEmpty()) return;
+
+                // Kiểm tra trạng thái share từ đối tượng Participant của chính mình
+                if (!participantList.get(0).isSharingScreen) {
+                    startScreenShare();
+                } else {
+                    stopScreenShare();
+                }
+            });
+        }
+
+        findViewById(R.id.btnEndCall).setOnClickListener(v -> finish());
     }
 
     private void setupTapToHide() {

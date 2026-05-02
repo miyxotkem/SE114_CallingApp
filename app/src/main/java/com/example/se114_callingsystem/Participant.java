@@ -6,6 +6,7 @@ public class Participant {
     public boolean isMuted;
     public boolean isVideoOff;
     public boolean isSpeaking; // <-- ADD THIS NEW VARIABLE
+    public boolean isSharingScreen;
 
     public Participant(int uid, String name) {
         this.uid = uid;
@@ -13,5 +14,6 @@ public class Participant {
         this.isMuted = false;
         this.isVideoOff = false;
         this.isSpeaking = false; // Default to false
+        this.isSharingScreen=false;
     }
 }
