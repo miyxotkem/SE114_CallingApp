@@ -1,7 +1,11 @@
 package com.example.se114_callingsystem.Activity.Page;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.projection.MediaProjectionManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -14,6 +18,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
@@ -31,6 +36,7 @@ import com.example.se114_callingsystem.R;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.agora.rtc2.ChannelMediaOptions;
 import io.agora.rtc2.Constants;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcEngine;
@@ -39,13 +45,16 @@ import io.agora.rtc2.ScreenCaptureParameters;
 import io.agora.rtc2.video.VideoEncoderConfiguration;
 
 public class CallDetailActivity extends AppCompatActivity {
-    private final String appId = "11d7dad414d2475094923765e9ac9213";
+    private final String appId = "54381d815bd74264923f243e5a1f0660";
     private RtcEngine mRtcEngine;
 
     // NHÃ ƠI: Nhớ chỉnh UID này khác nhau trên 2 máy để không bị đá nhau nhé!
     int uid = 400;
 
     private String channelName = "TestChannel";
+    private boolean isSharingScreen = false;
+    private static final int SCREEN_SHARE_REQUEST_CODE = 1001;
+    private MediaProjectionManager mProjectionManager;
     private boolean isUiVisible = true;
 
     private RecyclerView rvParticipants;
@@ -68,7 +77,7 @@ public class CallDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_call_detail);
-
+        setupVideoSDKEngine();
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rvParticipants), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top + 180, systemBars.right, systemBars.bottom + 250);
@@ -111,6 +120,24 @@ public class CallDetailActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void setupVideoSDKEngine() {
+        try {
+            RtcEngineConfig config = new RtcEngineConfig();
+            config.mContext = getBaseContext();
+            config.mAppId = appId; // PHẢI CÓ APP ID Ở ĐÂY
+            config.mEventHandler = mRtcEventHandler;
+            mRtcEngine = RtcEngine.create(config);
+
+            if (mRtcEngine != null) {
+                mRtcEngine.enableVideo();
+                Log.d("AGORA_DEBUG", "Engine đã khởi tạo thành công!");
+            } else {
+                Log.e("AGORA_DEBUG", "Engine khởi tạo thất bại (null)");
+            }
+        } catch (Exception e) {
+            Log.e("AGORA_DEBUG", "Lỗi khởi tạo: " + e.getMessage());
+        }
+    }
     private void initAgoraAndJoinChannel() {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
@@ -269,49 +296,75 @@ public class CallDetailActivity extends AppCompatActivity {
             });
         }
     };
+    // 1. Hàm bắt đầu quá trình share màn hình
     private void startScreenShare() {
-        if (mRtcEngine == null || participantList.isEmpty()) return;
+        if (mRtcEngine == null) return;
 
+        // 1. Chạy Service
+        Intent serviceIntent = new Intent(this, MyScreenShareService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+
+        // 2. Chờ 100ms rồi mới xin quyền (Để Android 14 kịp nhận diện FGS)
+        new android.os.Handler().postDelayed(() -> {
+            mProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+            if (mProjectionManager != null) {
+                Intent intent = mProjectionManager.createScreenCaptureIntent();
+                startActivityForResult(intent, SCREEN_SHARE_REQUEST_CODE);
+            }
+        }, 100);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == SCREEN_SHARE_REQUEST_CODE) {
+            if (resultCode == RESULT_OK && data != null) {
+                // Đã có quyền, tiến hành share
+                startAgoraScreenCapture(data);
+            } else {
+                // Nếu người dùng nhấn "Hủy", phải dừng Service ngay để không bị lỗi
+                stopScreenShare();
+                Toast.makeText(this, "Đã hủy chia sẻ màn hình", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+    private void startAgoraScreenCapture(Intent data) {
         ScreenCaptureParameters params = new ScreenCaptureParameters();
         params.captureVideo = true;
         params.captureAudio = true;
+        mRtcEngine.startScreenCapture(params);
 
-        // Nếu không nhận videoParams, ta thiết lập qua Engine
-        VideoEncoderConfiguration videoConfig = new VideoEncoderConfiguration(
-                VideoEncoderConfiguration.VD_1280x720,
-                VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15,
-                VideoEncoderConfiguration.STANDARD_BITRATE,
-                VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
-        );
-        mRtcEngine.setVideoEncoderConfiguration(videoConfig);
+        ChannelMediaOptions options = new ChannelMediaOptions();
+        options.publishCameraTrack = false;
+        options.publishScreenCaptureVideo = true;
+        mRtcEngine.updateChannelMediaOptions(options);
 
-        // Gọi lệnh share
-        int res = mRtcEngine.startScreenCapture(params);
-
-        if (res == 0) {
-            participantList.get(0).isSharingScreen = true;
-            // Tạm thời comment dòng muteLocalVideoStream lại để test xem có hết crash không
-            // mRtcEngine.muteLocalVideoStream(true);
-
-            Toast.makeText(this, "Đang chia sẻ màn hình...", Toast.LENGTH_SHORT).show();
-            adapter.notifyItemChanged(0, "state_update");
-            updateShareButtonUI();
-        } else {
-            Log.e("AgoraError", "Lỗi startScreenCapture: " + res);
-        }
+        isSharingScreen = true;
+        updateShareButtonUI();
     }
 
+
+
+    // 4. Hàm dừng share màn hình
     private void stopScreenShare() {
-        if (mRtcEngine != null && !participantList.isEmpty()) {
-            mRtcEngine.stopScreenCapture();
+        mRtcEngine.stopScreenCapture();
 
-            // Cập nhật trạng thái cho chính mình
-            participantList.get(0).isSharingScreen = false;
-            mRtcEngine.muteLocalVideoStream(false);
+        // Quay lại dùng camera
+        ChannelMediaOptions options = new ChannelMediaOptions();
+        options.publishCameraTrack = true;
+        options.publishScreenCaptureVideo = false;
+        mRtcEngine.updateChannelMediaOptions(options);
 
-            adapter.notifyItemChanged(0, "state_update");
-            updateShareButtonUI();
-        }
+        // Dừng service
+        Intent serviceIntent = new Intent(this, MyScreenShareService.class);
+        stopService(serviceIntent);
+
+        isSharingScreen = false;
     }
 
     private void updateShareButtonUI() {
