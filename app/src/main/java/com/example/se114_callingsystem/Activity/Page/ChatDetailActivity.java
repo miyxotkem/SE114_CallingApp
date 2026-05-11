@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,6 +58,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     private View tvReplyingToLayout;
     private TextView tvReplyingToText;
+    private ImageView ivReplyPreview;
     private Message messageToReply = null;
 
     private String groupId;
@@ -234,6 +236,7 @@ public class ChatDetailActivity extends AppCompatActivity {
             Message messageModel = new Message(senderId, groupId, msg, System.currentTimeMillis());
             if (messageToReply != null) {
                 messageModel.setRepliedToContent(messageToReply.getContent());
+                messageModel.setRepliedToType(messageToReply.getType());
                 messageToReply = null;
                 tvReplyingToLayout.setVisibility(View.GONE);
             }
@@ -270,6 +273,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         if (messageToReply != null) {
             model.setRepliedToContent(messageToReply.getContent());
+            model.setRepliedToType(messageToReply.getType());
             messageToReply = null;
             tvReplyingToLayout.setVisibility(View.GONE);
         }
@@ -299,8 +303,28 @@ public class ChatDetailActivity extends AppCompatActivity {
         if(message.isDeleted()) return;
         messageToReply = message;
         tvReplyingToLayout.setVisibility(View.VISIBLE);
-        String content = message.getContent();
-        tvReplyingToText.setText("Đang trả lời: " + (content.length() > 40 ? content.substring(0, 40) + "..." : content));
+
+        String type = message.getType();
+        if ("image".equals(type)) {
+            tvReplyingToText.setText("Đang trả lời: 📷 Hình ảnh");
+            ivReplyPreview.setVisibility(View.VISIBLE);
+            com.bumptech.glide.Glide.with(this)
+                    .load(message.getContent())
+                    .centerCrop()
+                    .into(ivReplyPreview);
+        } else if ("file".equals(type)) {
+            String fileName = "Tài liệu đính kèm";
+            try {
+                fileName = message.getContent().substring(message.getContent().lastIndexOf('/') + 1);
+            } catch (Exception e) {}
+            tvReplyingToText.setText("Đang trả lời: 📎 " + fileName);
+            ivReplyPreview.setVisibility(View.GONE);
+        } else {
+            String content = message.getContent();
+            tvReplyingToText.setText("Đang trả lời: " + (content.length() > 40 ? content.substring(0, 40) + "..." : content));
+            ivReplyPreview.setVisibility(View.GONE);
+        }
+
         edtMessage.requestFocus();
     }
 
@@ -314,5 +338,6 @@ public class ChatDetailActivity extends AppCompatActivity {
         btnAttachFile = findViewById(R.id.btnAttachFile);
         tvReplyingToLayout = findViewById(R.id.tvReplyingToLayout);
         tvReplyingToText = findViewById(R.id.tvReplyingToText);
+        ivReplyPreview = findViewById(R.id.ivReplyPreview);
     }
 }

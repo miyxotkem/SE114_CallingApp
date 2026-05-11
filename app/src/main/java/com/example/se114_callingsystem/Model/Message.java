@@ -13,12 +13,14 @@ public class Message {
     private boolean isDeleted;
     private String reactionEmoji;
     private String repliedToContent;
+    private String repliedToType; // "image", "file", or null/"Message" for text
 
     // Constructor trống để Firebase mapping
     public Message() {
         this.isDeleted = false;
         this.reactionEmoji = "";
         this.repliedToContent = "";
+        this.repliedToType = "";
     }
 
     // Constructor đầy đủ cho Text
@@ -31,6 +33,7 @@ public class Message {
         this.isDeleted = false;
         this.reactionEmoji = "";
         this.repliedToContent = "";
+        this.repliedToType = "";
     }
 
     // Constructor đầy đủ cho Media
@@ -44,6 +47,7 @@ public class Message {
         this.isDeleted = false;
         this.reactionEmoji = "";
         this.repliedToContent = "";
+        this.repliedToType = "";
     }
 
     // --- Original Getters & Setters ---
@@ -69,4 +73,6 @@ public class Message {
     public void setReactionEmoji(String reactionEmoji) { this.reactionEmoji = reactionEmoji; }
     public String getRepliedToContent() { return repliedToContent; }
     public void setRepliedToContent(String repliedToContent) { this.repliedToContent = repliedToContent; }
+    public String getRepliedToType() { return repliedToType; }
+    public void setRepliedToType(String repliedToType) { this.repliedToType = repliedToType; }
 }

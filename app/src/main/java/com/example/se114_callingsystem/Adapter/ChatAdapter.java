@@ -122,7 +122,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, textReaction, textRepliedTo, textTime, tvFileName;
-        ImageView ivMessageImage;
+        ImageView ivMessageImage, ivRepliedImage;
         LinearLayout layoutFile;
         View cardBubble;
 
@@ -134,12 +134,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             cardBubble = itemView.findViewById(R.id.cardBubble);
             textTime = itemView.findViewById(R.id.textTime);
             ivMessageImage = itemView.findViewById(R.id.ivMessageImage);
+            ivRepliedImage = itemView.findViewById(R.id.ivRepliedImage);
             layoutFile = itemView.findViewById(R.id.layoutFile);
             tvFileName = itemView.findViewById(R.id.tvFileName);
         }
 
         void bind(Message message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, listener, currentUserId);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -153,7 +154,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, senderName, textTime, textReaction, textRepliedTo, tvFileName;
-        ImageView avatarImg, ivMessageImage;
+        ImageView avatarImg, ivMessageImage, ivRepliedImage;
         LinearLayout layoutFile;
         View cardBubble;
 
@@ -167,12 +168,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             cardBubble = itemView.findViewById(R.id.cardBubble);
             avatarImg = itemView.findViewById(R.id.imgAvatar);
             ivMessageImage = itemView.findViewById(R.id.ivMessageImage);
+            ivRepliedImage = itemView.findViewById(R.id.ivRepliedImage);
             layoutFile = itemView.findViewById(R.id.layoutFile);
             tvFileName = itemView.findViewById(R.id.tvFileName);
         }
 
         void bind(Message message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, cardBubble, listener, currentUserId);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, listener, currentUserId);
 
             // Xử lý Tên (Hiện ở tin đầu nhóm)
             if (isFirstInGroup && senderName != null) {
@@ -211,7 +213,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, View cardBubble, OnChatInteractListener listener, String currentUserId) {
+    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, OnChatInteractListener listener, String currentUserId) {
         if (msg.isDeleted()) {
             textMessage.setVisibility(View.VISIBLE);
             textMessage.setText("Tin nhắn đã bị thu hồi");
@@ -221,6 +223,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (layoutFile != null) layoutFile.setVisibility(View.GONE);
             if (textReaction != null) textReaction.setVisibility(View.GONE);
             if (textRepliedTo != null) textRepliedTo.setVisibility(View.GONE);
+            if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
         } else {
             textMessage.setTypeface(null, Typeface.NORMAL);
             textMessage.setTextColor(Color.BLACK);
@@ -350,18 +353,46 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
 
-            // Xử lý Reply Indicator
+            // Xử lý Reply Indicator - hỗ trợ hiển ảnh khi reply tin nhắn ảnh
             if (textRepliedTo != null) {
                 if (msg.getRepliedToContent() != null && !msg.getRepliedToContent().isEmpty()) {
+                    String repliedType = msg.getRepliedToType();
                     String replyContent = msg.getRepliedToContent();
-                    if (replyContent.length() > 30) replyContent = replyContent.substring(0, 30) + "...";
-                    textRepliedTo.setText("Đang trả lời: " + replyContent);
-                    textRepliedTo.setVisibility(View.VISIBLE);
+
+                    if ("image".equals(repliedType)) {
+                        // Reply to image - show thumbnail
+                        textRepliedTo.setText("Đang trả lời: 📷 Hình ảnh");
+                        textRepliedTo.setVisibility(View.VISIBLE);
+                        if (ivRepliedImage != null) {
+                            ivRepliedImage.setVisibility(View.VISIBLE);
+                            Glide.with(ivRepliedImage.getContext())
+                                    .load(replyContent)
+                                    .apply(RequestOptions.bitmapTransform(new RoundedCorners(16)))
+                                    .into(ivRepliedImage);
+                        }
+                    } else if ("file".equals(repliedType)) {
+                        // Reply to file - show file name with icon
+                        String fileName = "Tài liệu đính kèm";
+                        try {
+                            fileName = replyContent.substring(replyContent.lastIndexOf('/') + 1);
+                        } catch (Exception e) {}
+                        textRepliedTo.setText("Đang trả lời: 📎 " + fileName);
+                        textRepliedTo.setVisibility(View.VISIBLE);
+                        if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
+                    } else {
+                        // Reply to text
+                        if (replyContent.length() > 30) replyContent = replyContent.substring(0, 30) + "...";
+                        textRepliedTo.setText("Đang trả lời: " + replyContent);
+                        textRepliedTo.setVisibility(View.VISIBLE);
+                        if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
+                    }
                 } else {
                     textRepliedTo.setVisibility(View.GONE);
+                    if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
                 }
             }
         }
+
 
         // --- XỬ LÝ SỰ KIỆN CLICK VÀ LONG CLICK CHO BONG BÓNG CHAT ---
         if (cardBubble != null) {

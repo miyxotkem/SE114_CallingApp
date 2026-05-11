@@ -80,27 +80,33 @@
                 android:id="@+id/btnToggleVideo"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:background="@drawable/bg_call_tool"
-                android:src="@android:drawable/ic_menu_camera"
-                app:tint="@color/white" />
+                android:background="@drawable/bg_call_tool_inactive"
+                android:src="@drawable/ic_videocam_off"
+                android:scaleType="centerInside"
+                android:padding="10dp"
+                android:contentDescription="Toggle camera" />
 
             <ImageButton
                 android:id="@+id/btnMute"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="12dp"
-                android:background="@drawable/bg_call_tool"
-                android:src="@android:drawable/ic_btn_speak_now"
-                app:tint="@color/white" />
+                android:background="@drawable/bg_call_tool_active"
+                android:src="@drawable/ic_mic_on"
+                android:scaleType="centerInside"
+                android:padding="10dp"
+                android:contentDescription="Toggle microphone" />
 
             <ImageButton
                 android:id="@+id/btnShareScreen"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="12dp"
-                android:background="@drawable/bg_call_tool"
-                android:src="@android:drawable/ic_menu_share"
-                app:tint="#4CAF50" />
+                android:background="@drawable/bg_call_tool_inactive"
+                android:src="@drawable/ic_screen_share_off"
+                android:scaleType="centerInside"
+                android:padding="10dp"
+                android:contentDescription="Share screen" />
 
             <ImageButton
                 android:id="@+id/btnEndCall"
@@ -109,7 +115,10 @@
                 android:layout_marginStart="24dp"
                 android:background="@drawable/bg_circle_end_call"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
-                app:tint="@color/white" />
+                android:scaleType="centerInside"
+                android:padding="10dp"
+                app:tint="@color/white"
+                android:contentDescription="End call" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

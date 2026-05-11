@@ -133,13 +133,20 @@ public class CallDetailActivity extends AppCompatActivity {
             // 1. Ép vùng kết nối là Toàn cầu để máy thật và máy ảo gặp nhau dễ hơn // Thêm chữ AL ở cuối
             mRtcEngine = RtcEngine.create(config);
 
-            // 2. Thiết lập cấu hình Video trước khi Join
+            // 2. Thiết lập cấu hình Audio + Video trước khi Join
             mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_COMMUNICATION); // Chế độ gọi điện
+
+            // === FIX AUDIO: Bật audio engine + chống echo + chống ồn ===
+            mRtcEngine.enableAudio();
+            mRtcEngine.setDefaultAudioRoutetoSpeakerphone(false); // Mặc định tai nghe, tránh echo
+            mRtcEngine.setParameters("{\"che.audio.enable.aec\":true}");  // Echo cancellation
+            mRtcEngine.setParameters("{\"che.audio.enable.ans\":true}");  // Noise suppression
+            mRtcEngine.setParameters("{\"che.audio.enable.agc\":true}");  // Auto gain control
+
             mRtcEngine.enableVideo();
-//            mRtcEngine.startPreview();
             mRtcEngine.muteLocalVideoStream(true);
             mRtcEngine.enableAudioVolumeIndication(200, 3, true);
-            // 3. THÊM DÒNG NÀY: Ép SDK sử dụng giao thức kết nối mạnh nhất
+            // 3. Ép SDK sử dụng giao thức kết nối mạnh nhất
             mRtcEngine.setParameters("{\"rtc.force_unified_communication_mode\":true}");
 
             setupRecyclerView();
@@ -194,7 +201,6 @@ public class CallDetailActivity extends AppCompatActivity {
                 Toast.makeText(CallDetailActivity.this, "User " + uid + " đã vào phòng!", Toast.LENGTH_SHORT).show();
                 Participant newUser = new Participant(uid, "User " + uid);
                 newUser.isVideoOff = true;
-                mRtcEngine.setEnableSpeakerphone(true);
                 participantList.add(newUser);
                 updateGridLayout();
                 adapter.notifyDataSetChanged();
@@ -422,25 +428,59 @@ private void setupScreenShareExConnection() {
 
     private void updateShareButtonUI() {
         ImageButton btnShareScreen = findViewById(R.id.btnShareScreen);
-        if (btnShareScreen != null && !participantList.isEmpty()) {
-            boolean sharing = participantList.get(0).isSharingScreen;
-            btnShareScreen.setSelected(sharing);
-            btnShareScreen.setAlpha(sharing ? 1.0f : 0.5f);
+        if (btnShareScreen != null) {
+            if (isSharingScreen) {
+                // Đang share: nền sáng + icon trắng
+                btnShareScreen.setBackgroundResource(R.drawable.bg_call_tool_active);
+                btnShareScreen.setImageResource(R.drawable.ic_screen_share_on);
+            } else {
+                // Không share: nền tối + icon xám
+                btnShareScreen.setBackgroundResource(R.drawable.bg_call_tool_inactive);
+                btnShareScreen.setImageResource(R.drawable.ic_screen_share_off);
+            }
         }
     }
+
+    // === Hàm cập nhật icon Mic ===
+    private void updateMuteButtonUI(ImageButton btnMute, boolean isMuted) {
+        if (isMuted) {
+            // Đã tắt mic: nền tối + icon đỏ gạch chéo
+            btnMute.setBackgroundResource(R.drawable.bg_call_tool_inactive);
+            btnMute.setImageResource(R.drawable.ic_mic_off);
+        } else {
+            // Mic đang bật: nền sáng + icon trắng
+            btnMute.setBackgroundResource(R.drawable.bg_call_tool_active);
+            btnMute.setImageResource(R.drawable.ic_mic_on);
+        }
+    }
+
+    // === Hàm cập nhật icon Camera ===
+    private void updateVideoButtonUI(ImageButton btnVideo, boolean isVideoOff) {
+        if (isVideoOff) {
+            // Đã tắt cam: nền tối + icon đỏ gạch chéo
+            btnVideo.setBackgroundResource(R.drawable.bg_call_tool_inactive);
+            btnVideo.setImageResource(R.drawable.ic_videocam_off);
+        } else {
+            // Cam đang bật: nền sáng + icon trắng
+            btnVideo.setBackgroundResource(R.drawable.bg_call_tool_active);
+            btnVideo.setImageResource(R.drawable.ic_videocam_on);
+        }
+    }
+
     private void setupControls() {
         ImageButton btnMute = findViewById(R.id.btnMute);
         ImageButton btnToggleVideo = findViewById(R.id.btnToggleVideo);
         ImageButton btnEndCall = findViewById(R.id.btnEndCall);
 
-        btnToggleVideo.setSelected(true);
-        btnToggleVideo.setAlpha(0.5f);
+        // Trạng thái ban đầu: Camera TẮT, Mic BẬT
+        updateVideoButtonUI(btnToggleVideo, true);   // cam tắt ban đầu
+        updateMuteButtonUI(btnMute, false);           // mic bật ban đầu
 
         btnMute.setOnClickListener(v -> {
             boolean isMuted = !v.isSelected();
             v.setSelected(isMuted);
             mRtcEngine.muteLocalAudioStream(isMuted);
-            v.setAlpha(isMuted ? 0.5f : 1.0f);
+            updateMuteButtonUI(btnMute, isMuted);
             if (!participantList.isEmpty()) {
                 participantList.get(0).isMuted = isMuted;
                 adapter.notifyItemChanged(0, "state_update");
@@ -451,7 +491,7 @@ private void setupScreenShareExConnection() {
             boolean isVideoOff = !v.isSelected();
             v.setSelected(isVideoOff);
             mRtcEngine.muteLocalVideoStream(isVideoOff);
-            v.setAlpha(isVideoOff ? 0.5f : 1.0f);
+            updateVideoButtonUI(btnToggleVideo, isVideoOff);
             if (!participantList.isEmpty()) {
                 participantList.get(0).isVideoOff = isVideoOff;
                 adapter.notifyItemChanged(0, "state_update");
@@ -463,9 +503,8 @@ private void setupScreenShareExConnection() {
         ImageButton btnShareScreen = findViewById(R.id.btnShareScreen);
         if (btnShareScreen != null) {
             btnShareScreen.setOnClickListener(v -> {
-                // Logic khi Nhã bấm vào nút Share Screen
                 if (!isSharingScreen) {
-                    // 1. Chạy Service của bạn LÊN TRƯỚC làm "lá chắn" bảo mật
+                    // 1. Chạy Service LÊN TRƯỚC làm "lá chắn" bảo mật
                     Intent intent = new Intent(CallDetailActivity.this, MyScreenShareService.class);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         startForegroundService(intent);
@@ -487,8 +526,6 @@ private void setupScreenShareExConnection() {
                 }
             });
         }
-
-        findViewById(R.id.btnEndCall).setOnClickListener(v -> finish());
     }
 
     private void setupTapToHide() {

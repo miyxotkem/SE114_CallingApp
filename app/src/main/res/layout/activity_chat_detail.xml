@@ -82,6 +82,14 @@
             android:ellipsize="end"/>
 
         <ImageView
+            android:id="@+id/ivReplyPreview"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <ImageView
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
