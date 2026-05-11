@@ -5,11 +5,8 @@ plugins {
 
 android {
     namespace = "com.example.se114_callingsystem"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
+
 
     defaultConfig {
         applicationId = "com.example.se114_callingsystem"
@@ -54,5 +51,5 @@ dependencies {
     implementation("com.google.firebase:firebase-storage:20.3.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
-    implementation("io.agora.rtc:full-sdk:4.2.2")
+    implementation("io.agora.rtc:full-sdk:4.6.3")
 }

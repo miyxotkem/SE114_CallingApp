@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -14,22 +15,25 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:enableOnBackInvokedCallback="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SE114_CallingSystem">
+        android:theme="@style/Theme.SE114_CallingSystem"
+        tools:targetApi="31"
+        tools:replace="android:allowBackup, android:label, android:supportsRtl, android:theme">
         <service
             android:name=".Activity.Page.MyScreenShareService"
-            android:enabled="true"
-            android:exported="false"
-            tools:node="replace"
-            android:foregroundServiceType="mediaProjection"> </service>
+            android:foregroundServiceType="mediaProjection"
+            tools:node="merge"
+            android:exported="false">
+        </service>
         <activity
             android:name=".Activity.Page.ChangeColorActivity"
             android:exported="false" />

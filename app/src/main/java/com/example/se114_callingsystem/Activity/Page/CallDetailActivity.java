@@ -40,6 +40,8 @@ import io.agora.rtc2.ChannelMediaOptions;
 import io.agora.rtc2.Constants;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcEngine;
+import io.agora.rtc2.RtcEngineEx;
+import io.agora.rtc2.RtcConnection;
 import io.agora.rtc2.RtcEngineConfig;
 import io.agora.rtc2.ScreenCaptureParameters;
 import io.agora.rtc2.video.VideoEncoderConfiguration;
@@ -49,9 +51,11 @@ public class CallDetailActivity extends AppCompatActivity {
     private RtcEngine mRtcEngine;
 
     // NHÃ ƠI: Nhớ chỉnh UID này khác nhau trên 2 máy để không bị đá nhau nhé!
-    int uid = 400;
+    int uid = 500;
 
     private String channelName = "TestChannel";
+    private RtcConnection screenShareConnection;
+    private final int SCREEN_SHARE_UID_OFFSET = 1000; // UID của màn hình sẽ = UID của bạn + 1000
     private boolean isSharingScreen = false;
     private static final int SCREEN_SHARE_REQUEST_CODE = 1001;
     private MediaProjectionManager mProjectionManager;
@@ -77,7 +81,6 @@ public class CallDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_call_detail);
-        setupVideoSDKEngine();
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rvParticipants), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top + 180, systemBars.right, systemBars.bottom + 250);
@@ -120,24 +123,7 @@ public class CallDetailActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void setupVideoSDKEngine() {
-        try {
-            RtcEngineConfig config = new RtcEngineConfig();
-            config.mContext = getBaseContext();
-            config.mAppId = appId; // PHẢI CÓ APP ID Ở ĐÂY
-            config.mEventHandler = mRtcEventHandler;
-            mRtcEngine = RtcEngine.create(config);
 
-            if (mRtcEngine != null) {
-                mRtcEngine.enableVideo();
-                Log.d("AGORA_DEBUG", "Engine đã khởi tạo thành công!");
-            } else {
-                Log.e("AGORA_DEBUG", "Engine khởi tạo thất bại (null)");
-            }
-        } catch (Exception e) {
-            Log.e("AGORA_DEBUG", "Lỗi khởi tạo: " + e.getMessage());
-        }
-    }
     private void initAgoraAndJoinChannel() {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
@@ -195,6 +181,15 @@ public class CallDetailActivity extends AppCompatActivity {
         @Override
         public void onUserJoined(int uid, int elapsed) {
             runOnUiThread(() -> {
+                if (uid == (CallDetailActivity.this.uid + SCREEN_SHARE_UID_OFFSET)) {
+                    Log.d("AGORA", "Phát hiện luồng màn hình của chính mình, chặn render Remote.");
+
+                    // Ép SDK không tải luồng video/audio này từ server về để tiết kiệm băng thông mạng
+                    // (vì màn hình này mình đã tự vẽ ở dạng LocalVideo rồi)
+                    mRtcEngine.muteRemoteVideoStream(uid, true);
+                    mRtcEngine.muteRemoteAudioStream(uid, true);
+                    return; // Lệnh return giúp thoát hàm ngay, không add thêm ô lưới thứ 2 nữa
+                }
                 // Nhã ơi dùng Alert ở đây nếu muốn báo người khác vào
                 Toast.makeText(CallDetailActivity.this, "User " + uid + " đã vào phòng!", Toast.LENGTH_SHORT).show();
                 Participant newUser = new Participant(uid, "User " + uid);
@@ -229,6 +224,9 @@ public class CallDetailActivity extends AppCompatActivity {
         @Override
         public void onUserOffline(int uid, int reason) {
             runOnUiThread(() -> {
+                if (uid == (CallDetailActivity.this.uid + SCREEN_SHARE_UID_OFFSET)) {
+                    return;
+                }
                 for (int i = 0; i < participantList.size(); i++) {
                     if (participantList.get(i).uid == uid) {
                         participantList.remove(i);
@@ -295,76 +293,131 @@ public class CallDetailActivity extends AppCompatActivity {
                 }
             });
         }
+
+        @Override
+        public void onLocalVideoStateChanged(io.agora.rtc2.Constants.VideoSourceType source, int state, int error) {
+            super.onLocalVideoStateChanged(source, state, error);
+
+            // Nếu đây là sự kiện của luồng quay màn hình
+            if (source == io.agora.rtc2.Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY) {
+
+                // Trạng thái CAPTURING: Người dùng đã bấm "Bắt đầu ngay" ở Popup thành công
+                if (state == io.agora.rtc2.Constants.LOCAL_VIDEO_STREAM_STATE_CAPTURING) {
+                    runOnUiThread(() -> {
+                        // Lúc này mới được phép join luồng màn hình vào phòng
+                        setupScreenShareExConnection();
+                        isSharingScreen = true;
+                        updateShareButtonUI();
+                    });
+                }
+                // Trạng thái FAILED: Người dùng bấm "Hủy" không cho quay màn hình
+                else if (state == io.agora.rtc2.Constants.LOCAL_VIDEO_STREAM_STATE_FAILED) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(CallDetailActivity.this, "Đã hủy chia sẻ màn hình", Toast.LENGTH_SHORT).show();
+                        stopScreenShare(); // Gọi hàm này để tắt cái Service đang chạy lỡ dở đi
+                    });
+                }
+            }
+        }
     };
     // 1. Hàm bắt đầu quá trình share màn hình
     private void startScreenShare() {
         if (mRtcEngine == null) return;
-
-        // 1. Chạy Service
-        Intent serviceIntent = new Intent(this, MyScreenShareService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
-        }
-
-        // 2. Chờ 100ms rồi mới xin quyền (Để Android 14 kịp nhận diện FGS)
-        new android.os.Handler().postDelayed(() -> {
-            mProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-            if (mProjectionManager != null) {
-                Intent intent = mProjectionManager.createScreenCaptureIntent();
-                startActivityForResult(intent, SCREEN_SHARE_REQUEST_CODE);
-            }
-        }, 100);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == SCREEN_SHARE_REQUEST_CODE) {
-            if (resultCode == RESULT_OK && data != null) {
-                // Đã có quyền, tiến hành share
-                startAgoraScreenCapture(data);
-            } else {
-                // Nếu người dùng nhấn "Hủy", phải dừng Service ngay để không bị lỗi
-                stopScreenShare();
-                Toast.makeText(this, "Đã hủy chia sẻ màn hình", Toast.LENGTH_SHORT).show();
-            }
+        mRtcEngine.muteLocalVideoStream(true);
+        mProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+        if (mProjectionManager != null) {
+            Intent intent = mProjectionManager.createScreenCaptureIntent();
+            startActivityForResult(intent, SCREEN_SHARE_REQUEST_CODE);
         }
     }
-    private void startAgoraScreenCapture(Intent data) {
-        ScreenCaptureParameters params = new ScreenCaptureParameters();
-        params.captureVideo = true;
-        params.captureAudio = true;
-        mRtcEngine.startScreenCapture(params);
 
-        ChannelMediaOptions options = new ChannelMediaOptions();
-        options.publishCameraTrack = false;
-        options.publishScreenCaptureVideo = true;
-        mRtcEngine.updateChannelMediaOptions(options);
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (requestCode == SCREEN_SHARE_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+//            // 1. Phải gán 'data' (MediaProjection Intent) cho Agora trước khi start service
+//            ScreenCaptureParameters params = new ScreenCaptureParameters();
+//            params.captureVideo = true;
+//            params.captureAudio = true;
+//            params.videoCaptureParameters.width = 720;
+//            params.videoCaptureParameters.height = 1280;
+//
+//            // Truyền 'data' vào đây để Agora giữ Token của hệ thống
+//            mRtcEngine.startScreenCapture(params);
+//
+//            // 2. Sau đó mới start Service để giữ app không bị kill
+//            Intent intent = new Intent(this, MyScreenShareService.class);
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                startForegroundService(intent);
+//            } else {
+//                startService(intent);
+//            }
+//
+//            // 3. Thực hiện joinChannelEx (như code mình đã hướng dẫn trước đó)
+//            setupScreenShareExConnection();
+//
+//            isSharingScreen = true;
+//            updateShareButtonUI();
+//        }
+//    }
+// Hàm nối luồng phụ
+private void setupScreenShareExConnection() {
+    if (mRtcEngine == null) return;
+    io.agora.rtc2.RtcEngineEx engineEx = (io.agora.rtc2.RtcEngineEx) mRtcEngine;
+    screenShareConnection = new io.agora.rtc2.RtcConnection();
+    screenShareConnection.channelId = channelName;
+    screenShareConnection.localUid = uid + 1000; // UID màn hình (ví dụ 1400)
 
-        isSharingScreen = true;
-        updateShareButtonUI();
-    }
+    io.agora.rtc2.ChannelMediaOptions options = new io.agora.rtc2.ChannelMediaOptions();
+    options.publishCameraTrack = false;
+    options.publishMicrophoneTrack = false;
+    options.publishScreenCaptureVideo = true;
+    options.publishScreenCaptureAudio = true;
+    options.clientRoleType = io.agora.rtc2.Constants.CLIENT_ROLE_BROADCASTER;
 
+    engineEx.joinChannelEx(null, screenShareConnection, options, new io.agora.rtc2.IRtcEngineEventHandler() {});
 
+    // Hiện thêm 1 ô màn hình vào UI của máy mình
+    Participant myScreen = new Participant(screenShareConnection.localUid, "Màn hình của tôi");
+    myScreen.isVideoOff = false;
+    participantList.add(myScreen);
+    updateGridLayout();
+    adapter.notifyItemInserted(participantList.size() - 1);
+    updateParticipantCount();
+}
 
-    // 4. Hàm dừng share màn hình
+    // Hàm dừng share
     private void stopScreenShare() {
+        // 0. Dừng preview của luồng screen để tránh leak
+        mRtcEngine.stopPreview(Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY);
+        // 1. Tắt quay màn hình của Agora
         mRtcEngine.stopScreenCapture();
 
-        // Quay lại dùng camera
-        ChannelMediaOptions options = new ChannelMediaOptions();
-        options.publishCameraTrack = true;
-        options.publishScreenCaptureVideo = false;
-        mRtcEngine.updateChannelMediaOptions(options);
+        // 2. Rời luồng phụ
+        if (screenShareConnection != null) {
+            io.agora.rtc2.RtcEngineEx engineEx = (io.agora.rtc2.RtcEngineEx) mRtcEngine;
+            engineEx.leaveChannelEx(screenShareConnection);
+            screenShareConnection = null;
+        }
 
-        // Dừng service
+        // 3. Xóa ô màn hình khỏi UI
+        for (int i = 0; i < participantList.size(); i++) {
+            if (participantList.get(i).name.equals("Màn hình của tôi")) {
+                participantList.remove(i);
+                updateGridLayout();
+                adapter.notifyItemRemoved(i);
+                updateParticipantCount();
+                break;
+            }
+        }
+
+        // 4. Dừng cái Service của bạn lại để tắt Notification
         Intent serviceIntent = new Intent(this, MyScreenShareService.class);
         stopService(serviceIntent);
 
         isSharingScreen = false;
+        updateShareButtonUI();
     }
 
     private void updateShareButtonUI() {
@@ -410,11 +463,25 @@ public class CallDetailActivity extends AppCompatActivity {
         ImageButton btnShareScreen = findViewById(R.id.btnShareScreen);
         if (btnShareScreen != null) {
             btnShareScreen.setOnClickListener(v -> {
-                if (participantList.isEmpty()) return;
+                // Logic khi Nhã bấm vào nút Share Screen
+                if (!isSharingScreen) {
+                    // 1. Chạy Service của bạn LÊN TRƯỚC làm "lá chắn" bảo mật
+                    Intent intent = new Intent(CallDetailActivity.this, MyScreenShareService.class);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent);
+                    } else {
+                        startService(intent);
+                    }
 
-                // Kiểm tra trạng thái share từ đối tượng Participant của chính mình
-                if (!participantList.get(0).isSharingScreen) {
-                    startScreenShare();
+                    // 2. Gọi Agora mở Popup xin quyền quay màn hình
+                    io.agora.rtc2.ScreenCaptureParameters params = new io.agora.rtc2.ScreenCaptureParameters();
+                    params.captureVideo = true;
+                    params.captureAudio = true;
+                    params.videoCaptureParameters.width = 720;
+                    params.videoCaptureParameters.height = 1280;
+
+                    mRtcEngine.startScreenCapture(params);
+                    // Lưu ý: Tuyệt đối dừng ở đây, không gọi setupScreenShareExConnection() vội.
                 } else {
                     stopScreenShare();
                 }

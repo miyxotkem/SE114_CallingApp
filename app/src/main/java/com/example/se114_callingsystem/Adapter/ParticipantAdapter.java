@@ -19,6 +19,7 @@ import com.google.android.material.card.MaterialCardView;
 
 import java.util.List;
 
+import io.agora.rtc2.Constants;
 import io.agora.rtc2.RtcEngine;
 import io.agora.rtc2.video.VideoCanvas;
 
@@ -81,26 +82,42 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position) {
         Participant participant = participantList.get(position);
-        holder.tvUserName.setText(participant.name);
 
-        // Dọn dẹp và khởi tạo lại SurfaceView để tránh chồng lấp hình ảnh
+        // 1. Dọn dẹp container để tránh chồng chéo khi cuộn RecyclerView
         holder.videoContainer.removeAllViews();
+
+        // 2. Tạo SurfaceView mới
         SurfaceView surfaceView = new SurfaceView(context);
-        surfaceView.setZOrderMediaOverlay(true); // Đảm bảo video không đè lên thanh điều khiển
         holder.videoContainer.addView(surfaceView);
 
+        // 3. Thiết lập video từ Agora
         if (rtcEngine != null) {
-            // NHÃ LƯU Ý: Phân biệt Local (mình) và Remote (người khác)
-            if (participant.name.contains("Me")) {
-                // Local Video: Luôn dùng UID = 0 cho chính mình
+            if (participant.name.equals("Màn hình của tôi")) {
+                // ĐÂY LÀ Ô CỦA SCREEN SHARE (Cục bộ): Cần chỉ định nguồn là màn hình thay vì camera
+                // Không set ZOrderMediaOverlay cho screen share để tránh xung đột render
+                VideoCanvas canvas = new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_FIT, 0);
+                canvas.sourceType = Constants.VIDEO_SOURCE_SCREEN_PRIMARY;
+                rtcEngine.setupLocalVideo(canvas);
+                // QUAN TRỌNG: Phải gọi startPreview với nguồn SCREEN để SDK bắt đầu vẽ khung hình
+                rtcEngine.startPreview(Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY);
+
+            } else if (participant.name.contains("Me")) {
+                // ĐÂY LÀ Ô CAMERA CỦA BẠN (Cục bộ)
+                surfaceView.setZOrderMediaOverlay(true);
                 rtcEngine.setupLocalVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
+
             } else {
-                // Remote Video: Dùng đúng UID nhận được từ onUserJoined (ví dụ: 400, 496)
-                rtcEngine.setupRemoteVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, participant.uid));
+                // ĐÂY LÀ Ô CỦA NGƯỜI KHÁC (Bao gồm cả camera người khác và màn hình người khác)
+                surfaceView.setZOrderMediaOverlay(true);
+                // Dùng RENDER_MODE_FIT cho luồng screen share (UID > 1000), RENDER_MODE_HIDDEN cho camera
+                int renderMode = (participant.uid >= 1000) ? VideoCanvas.RENDER_MODE_FIT : VideoCanvas.RENDER_MODE_HIDDEN;
+                rtcEngine.setupRemoteVideo(new VideoCanvas(surfaceView, renderMode, participant.uid));
             }
         }
 
-        // Thiết lập trạng thái hiển thị ban đầu dựa trên biến trong Participant
+        holder.tvUserName.setText(participant.name);
+
+        // 4. Thiết lập trạng thái hiển thị ban đầu (ẩn/hiện mic, cam)
         holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
         holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
         holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
