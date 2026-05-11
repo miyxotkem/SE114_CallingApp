@@ -34,6 +34,8 @@ import com.example.se114_callingsystem.Adapter.ChatAdapter;
 import com.example.se114_callingsystem.Model.Firebase;
 import com.example.se114_callingsystem.Model.Message;
 import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Util.ThemeHelper;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -63,11 +65,13 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     private String groupId;
     private DatabaseReference groupChatRef;
-    private String senderId = "L2j7rDA0Y0cmsO0XNcaW"; // ID của Nhã
+    private String senderId = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "UNKNOWN";
+    private String serverColor = "#6C63FF";
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_chat_detail);
@@ -94,6 +98,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         String channelName = getIntent().getStringExtra("CHAT_NAME");
         groupId = getIntent().getStringExtra("CHAT_ID");
+        if (getIntent().hasExtra("SERVER_COLOR")) {
+            serverColor = getIntent().getStringExtra("SERVER_COLOR");
+        }
 
         if (groupId != null) {
             groupChatRef = Firebase.getDatabase().getReference("chats").child(groupId);
@@ -104,8 +111,23 @@ public class ChatDetailActivity extends AppCompatActivity {
             tvChannelName.setText("# " + channelName);
         }
 
+        applyServerColor();
         setupRecyclerView();
         setupClickListeners();
+    }
+
+    private void applyServerColor() {
+        try {
+            int color = android.graphics.Color.parseColor(serverColor);
+            com.google.android.material.card.MaterialCardView header = findViewById(R.id.header);
+            if (header != null) {
+                header.setStrokeColor(color);
+                header.setStrokeWidth(2);
+            }
+            if (btnSend != null) {
+                btnSend.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+            }
+        } catch (Exception e) {}
     }
 
     private void initCloudinary() {
@@ -122,7 +144,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        adapter = new ChatAdapter(messageList, new ChatAdapter.OnChatInteractListener() {
+        adapter = new ChatAdapter(messageList, serverColor, new ChatAdapter.OnChatInteractListener() {
             @Override
             public void onReply(Message message) { showReplyUI(message); }
 
@@ -227,6 +249,15 @@ public class ChatDetailActivity extends AppCompatActivity {
         tvReplyingToLayout.setOnClickListener(v -> {
             messageToReply = null;
             tvReplyingToLayout.setVisibility(View.GONE);
+        });
+
+        // Nhấn vào tên channel → mở trang quản lí đoạn chat
+        tvChannelName.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(ChatDetailActivity.this, ChatInfoActivity.class);
+            intent.putExtra("CHAT_ID", groupId);
+            String name = getIntent().getStringExtra("CHAT_NAME");
+            intent.putExtra("CHAT_NAME", name);
+            startActivity(intent);
         });
     }
 

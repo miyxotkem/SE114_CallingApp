@@ -6,15 +6,15 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:background="@color/bg_alter">
+    android:background="@color/bg_secondary">
 
-    <!-- Cục gạch nhỏ ở trên cùng (Drag handle - tạo cảm giác kéo thả) -->
+    <!-- Drag handle -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="40dp"
         android:layout_height="5dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="24dp"
-        app:cardBackgroundColor="#BDBDBD"
+        app:cardBackgroundColor="@color/handle_bar"
         app:cardCornerRadius="2.5dp"
         app:cardElevation="0dp"/>
 
@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Server Settings"
-        android:textColor="@color/tint_default"
+        android:textColor="@color/text_primary"
         android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginBottom="24dp"/>
@@ -33,12 +33,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SERVER NAME"
-        android:textColor="#888888"
+        android:textColor="@color/text_secondary"
         android:textSize="12sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp"/>
 
-    <!-- Nhóm Ô nhập chữ và Nút Save nằm ngang hàng -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -55,8 +54,8 @@
             android:hint="Enter new name"
             android:paddingHorizontal="16dp"
             android:inputType="text"
-            android:textColor="@color/tint_default"
-            android:textColorHint="#888888"/>
+            android:textColor="@color/text_black_white"
+            android:textColorHint="@color/text_hint"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRenameServer"
@@ -64,14 +63,15 @@
             android:layout_height="50dp"
             android:layout_marginStart="12dp"
             android:text="Save"
-            app:cornerRadius="12dp"/>
+            app:cornerRadius="12dp"
+            android:backgroundTint="@color/accent"
+            android:textColor="@color/text_on_accent"/>
     </LinearLayout>
 
-    <!-- Đường kẻ ngang phân cách nhẹ nhàng -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#1A888888"
+        android:background="@color/divider"
         android:layout_marginBottom="12dp"/>
 
     <!-- KHU VỰC MENU TÍNH NĂNG -->
@@ -79,44 +79,75 @@
         android:id="@+id/btnManageMembers"
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="56dp"
         android:text="Manage Members"
-        android:textColor="@color/tint_default"
-        android:textSize="16sp"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
         android:gravity="start|center_vertical"
         app:icon="@drawable/icon_user"
-        app:iconTint="@color/tint_default"
+        app:iconTint="@color/icon_tint"
         app:iconPadding="16dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnChangeColor"
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="56dp"
         android:text="Change Accent Color"
-        android:textColor="@color/tint_default"
-        android:textSize="16sp"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
         android:gravity="start|center_vertical"
         app:icon="@drawable/icon_palette"
-        app:iconTint="@color/tint_default"
-        app:iconPadding="16dp"
-        android:layout_marginBottom="12dp"/>
+        app:iconTint="@color/icon_tint"
+        app:iconPadding="16dp"/>
+
+    <!-- Dark Mode Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp"
+        android:paddingHorizontal="12dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_menu_day"
+            app:tint="@color/icon_tint" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:text="Dark Mode"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchDarkMode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:thumbTint="@color/accent"
+            app:trackTintMode="src_in" />
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#1A888888"
+        android:background="@color/divider"
         android:layout_marginBottom="24dp"/>
 
-    <!-- NÚT XÓA (Viền đỏ) -->
+    <!-- NÚT XÓA -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDeleteServer"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="Delete Server"
-        android:textColor="#F44336"
-        app:strokeColor="#F44336"
+        android:textColor="@color/danger"
+        app:strokeColor="@color/danger"
         app:strokeWidth="1.5dp"
         app:cornerRadius="12dp"
         android:layout_marginBottom="8dp"/>

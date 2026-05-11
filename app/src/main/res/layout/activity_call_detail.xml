@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1A1A1A">
+    android:background="@color/call_bg">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvParticipants"
@@ -19,7 +19,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:background="@android:color/transparent" android:gravity="center_vertical"
+        android:background="@android:color/transparent"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="16dp">
 
@@ -41,22 +42,15 @@
             android:text="Channel Name"
             android:textColor="@color/white"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:shadowColor="#80000000" android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="3" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvParticipantCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0 participants"
-            android:textColor="#E0E0E0"
-            android:textSize="14sp"
-            android:shadowColor="#80000000"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="3" />
+            android:textColor="#B0B0C8"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <androidx.cardview.widget.CardView
@@ -66,7 +60,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="32dp"
-        app:cardBackgroundColor="#2D2D2D"
+        app:cardBackgroundColor="@color/call_control_bg"
         app:cardCornerRadius="30dp"
         app:cardElevation="8dp">
 
@@ -84,6 +78,7 @@
                 android:src="@drawable/ic_videocam_off"
                 android:scaleType="centerInside"
                 android:padding="10dp"
+                app:tint="#B0B0C8"
                 android:contentDescription="Toggle camera" />
 
             <ImageButton
@@ -95,6 +90,7 @@
                 android:src="@drawable/ic_mic_on"
                 android:scaleType="centerInside"
                 android:padding="10dp"
+                app:tint="#B0B0C8"
                 android:contentDescription="Toggle microphone" />
 
             <ImageButton
@@ -106,6 +102,7 @@
                 android:src="@drawable/ic_screen_share_off"
                 android:scaleType="centerInside"
                 android:padding="10dp"
+                app:tint="#B0B0C8"
                 android:contentDescription="Share screen" />
 
             <ImageButton

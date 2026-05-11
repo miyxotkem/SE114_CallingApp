@@ -24,6 +24,7 @@ import com.example.se114_callingsystem.Model.CallChannel;
 import com.example.se114_callingsystem.Model.ChatChannel;
 import com.example.se114_callingsystem.Model.Server;
 import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Util.ThemeHelper;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -58,6 +59,7 @@ public class ServerViewerActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_viewer);
 
@@ -113,6 +115,13 @@ public class ServerViewerActivity extends AppCompatActivity {
             com.google.android.material.card.MaterialCardView topBar = findViewById(R.id.topBar);
             if (topBar != null) {
                 topBar.setCardBackgroundColor(color);
+            }
+
+            if (chatAdapter != null) {
+                chatAdapter.setServerColor(currentAccentColor);
+            }
+            if (callAdapter != null) {
+                callAdapter.setServerColor(currentAccentColor);
             }
 
             if (tvServerName != null) tvServerName.setTextColor(Color.WHITE);
@@ -212,15 +221,6 @@ public class ServerViewerActivity extends AppCompatActivity {
         try {
             int color = Color.parseColor(currentAccentColor);
 
-            // Sửa nền "đen thui" thành màu xám nhạt bo góc cho thanh lịch
-            if (etServerNameSettings != null) {
-                GradientDrawable gd = new GradientDrawable();
-                gd.setColor(Color.parseColor("#1A000000")); // Xám nhạt 10%
-                gd.setCornerRadius(30f);
-                etServerNameSettings.setBackground(gd);
-                etServerNameSettings.setTextColor(Color.BLACK); // Set chữ đen cho dễ đọc
-            }
-
             // Nhuộm nút Save
             if (btnRename != null) {
                 btnRename.setBackgroundTintList(ColorStateList.valueOf(color));
@@ -284,6 +284,15 @@ public class ServerViewerActivity extends AppCompatActivity {
                 intent.putExtra("SERVER_ID", serverId);
                 intent.putExtra("CURRENT_COLOR", currentAccentColor);
                 startActivity(intent);
+            });
+        }
+
+        // Dark Mode Toggle
+        com.google.android.material.switchmaterial.SwitchMaterial switchDarkMode = view.findViewById(R.id.switchDarkMode);
+        if (switchDarkMode != null) {
+            switchDarkMode.setChecked(ThemeHelper.isDarkMode(this));
+            switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                ThemeHelper.setDarkMode(this, isChecked);
             });
         }
 

@@ -18,10 +18,16 @@ import java.util.List;
 public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
     private List<CallChannel> channels;
     private OnCallActionListener listener;
+    private String serverColor = "#6C63FF";
 
     public interface OnCallActionListener {
         void onRename(CallChannel channel);
         void onRemove(CallChannel channel);
+    }
+
+    public void setServerColor(String color) {
+        this.serverColor = color;
+        notifyDataSetChanged();
     }
 
     public CallAdapter(List<CallChannel> channels, OnCallActionListener listener) {
@@ -56,6 +62,7 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
             if (currentPos != RecyclerView.NO_POSITION) {
                 Intent intent = new Intent(holder.itemView.getContext(), CallDetailActivity.class);
                 intent.putExtra("CALL_CHANNEL_NAME", channels.get(currentPos).getCallName());
+                intent.putExtra("SERVER_COLOR", serverColor);
 
                 holder.itemView.getContext().startActivity(intent);
             }

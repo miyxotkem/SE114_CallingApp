@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="200dp"
     android:layout_margin="4dp"
-    app:cardBackgroundColor="#3D3D3D"
-    app:cardCornerRadius="12dp">
+    app:cardBackgroundColor="@color/call_surface"
+    app:cardCornerRadius="16dp">
 
     <FrameLayout
         android:layout_width="match_parent"

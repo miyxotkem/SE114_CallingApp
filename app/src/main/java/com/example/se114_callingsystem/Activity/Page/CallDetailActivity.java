@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.Model.Participant;
 import com.example.se114_callingsystem.Adapter.ParticipantAdapter;
 import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Util.ThemeHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,12 +76,20 @@ public class CallDetailActivity extends AppCompatActivity {
             Manifest.permission.CAMERA,
             Manifest.permission.READ_PHONE_STATE // Thêm quyền này để fix SecurityException
     };
+    
+    private String serverColor = "#6C63FF";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_call_detail);
+        
+        if (getIntent().hasExtra("SERVER_COLOR")) {
+            serverColor = getIntent().getStringExtra("SERVER_COLOR");
+        }
+        
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.rvParticipants), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top + 180, systemBars.right, systemBars.bottom + 250);
@@ -430,40 +439,53 @@ private void setupScreenShareExConnection() {
         ImageButton btnShareScreen = findViewById(R.id.btnShareScreen);
         if (btnShareScreen != null) {
             if (isSharingScreen) {
-                // Đang share: nền sáng + icon trắng
                 btnShareScreen.setBackgroundResource(R.drawable.bg_call_tool_active);
                 btnShareScreen.setImageResource(R.drawable.ic_screen_share_on);
+                try {
+                    int color = android.graphics.Color.parseColor(serverColor);
+                    btnShareScreen.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+                    btnShareScreen.setColorFilter(android.graphics.Color.WHITE);
+                } catch (Exception e) {}
             } else {
-                // Không share: nền tối + icon xám
+                btnShareScreen.setBackgroundTintList(null);
                 btnShareScreen.setBackgroundResource(R.drawable.bg_call_tool_inactive);
                 btnShareScreen.setImageResource(R.drawable.ic_screen_share_off);
+                btnShareScreen.setColorFilter(android.graphics.Color.parseColor("#B0B0C8"));
             }
         }
     }
 
-    // === Hàm cập nhật icon Mic ===
     private void updateMuteButtonUI(ImageButton btnMute, boolean isMuted) {
         if (isMuted) {
-            // Đã tắt mic: nền tối + icon đỏ gạch chéo
+            btnMute.setBackgroundTintList(null);
             btnMute.setBackgroundResource(R.drawable.bg_call_tool_inactive);
             btnMute.setImageResource(R.drawable.ic_mic_off);
+            btnMute.setColorFilter(android.graphics.Color.parseColor("#B0B0C8"));
         } else {
-            // Mic đang bật: nền sáng + icon trắng
             btnMute.setBackgroundResource(R.drawable.bg_call_tool_active);
             btnMute.setImageResource(R.drawable.ic_mic_on);
+            try {
+                int color = android.graphics.Color.parseColor(serverColor);
+                btnMute.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+                btnMute.setColorFilter(android.graphics.Color.WHITE);
+            } catch (Exception e) {}
         }
     }
 
-    // === Hàm cập nhật icon Camera ===
     private void updateVideoButtonUI(ImageButton btnVideo, boolean isVideoOff) {
         if (isVideoOff) {
-            // Đã tắt cam: nền tối + icon đỏ gạch chéo
+            btnVideo.setBackgroundTintList(null);
             btnVideo.setBackgroundResource(R.drawable.bg_call_tool_inactive);
             btnVideo.setImageResource(R.drawable.ic_videocam_off);
+            btnVideo.setColorFilter(android.graphics.Color.parseColor("#B0B0C8"));
         } else {
-            // Cam đang bật: nền sáng + icon trắng
             btnVideo.setBackgroundResource(R.drawable.bg_call_tool_active);
             btnVideo.setImageResource(R.drawable.ic_videocam_on);
+            try {
+                int color = android.graphics.Color.parseColor(serverColor);
+                btnVideo.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+                btnVideo.setColorFilter(android.graphics.Color.WHITE);
+            } catch (Exception e) {}
         }
     }
 

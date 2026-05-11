@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
-    app:cardBackgroundColor="@color/bg_alter"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="0dp"
-    app:strokeColor="@color/accent_border"
-    app:strokeWidth="1dp">
+    app:cardBackgroundColor="@color/bg_secondary"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="2dp"
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="0.5dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -35,21 +35,21 @@
                     android:text="Create a Server"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@color/tint_default"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="16dp"/>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
-                    app:hintTextColor="@color/tint_default"
-                    app:boxStrokeColor="@color/accent_border"
+                    app:hintTextColor="@color/accent"
+                    app:boxStrokeColor="@color/accent"
                     android:hint="Server Name">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etServerName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/tint_default"/>
+                        android:textColor="@color/text_primary"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.button.MaterialButton
@@ -57,9 +57,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:text="Next"
-                    app:cornerRadius="12dp"
-                    android:backgroundTint="@color/tint_alter"
-                    android:textColor="@color/white"/>
+                    app:cornerRadius="14dp"
+                    android:backgroundTint="@color/accent"
+                    android:textColor="@color/text_on_accent"/>
             </LinearLayout>
 
             <LinearLayout
@@ -73,21 +73,21 @@
                     android:text="Server Purpose"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@color/tint_default"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="16dp"/>
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
-                    app:hintTextColor="@color/tint_default"
-                    app:boxStrokeColor="@color/accent_border"
+                    app:hintTextColor="@color/accent"
+                    app:boxStrokeColor="@color/accent"
                     android:hint="Tell us more about it">
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/etPurpose"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/tint_default"/>
+                        android:textColor="@color/text_primary"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <LinearLayout
@@ -101,9 +101,9 @@
                         android:layout_weight="1"
                         android:layout_height="56dp"
                         android:text="Back"
-                        app:cornerRadius="12dp"
-                        app:strokeColor="@color/accent_border"
-                        android:textColor="@color/tint_alter"
+                        app:cornerRadius="14dp"
+                        app:strokeColor="@color/card_stroke"
+                        android:textColor="@color/text_secondary"
                         android:layout_marginEnd="8dp"/>
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnNext2"
@@ -111,9 +111,9 @@
                         android:layout_weight="1"
                         android:layout_height="56dp"
                         android:text="Next"
-                        app:cornerRadius="12dp"
-                        android:backgroundTint="@color/tint_alter"
-                        android:textColor="@color/white"
+                        app:cornerRadius="14dp"
+                        android:backgroundTint="@color/accent"
+                        android:textColor="@color/text_on_accent"
                         android:layout_marginStart="8dp"/>
                 </LinearLayout>
             </LinearLayout>
@@ -129,7 +129,7 @@
                     android:text="Invite Friends"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@color/tint_default"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="16dp"/>
 
                 <com.google.android.material.button.MaterialButton
@@ -138,9 +138,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:text="Share Invite Link"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/accent_border"
-                    android:textColor="@color/tint_alter"
+                    app:cornerRadius="14dp"
+                    app:strokeColor="@color/accent"
+                    android:textColor="@color/accent"
                     android:layout_marginBottom="24dp"/>
 
                 <LinearLayout
@@ -154,9 +154,9 @@
                         android:layout_weight="1"
                         android:layout_height="56dp"
                         android:text="Back"
-                        app:cornerRadius="12dp"
-                        app:strokeColor="@color/accent_border"
-                        android:textColor="@color/tint_alter"
+                        app:cornerRadius="14dp"
+                        app:strokeColor="@color/card_stroke"
+                        android:textColor="@color/text_secondary"
                         android:layout_marginEnd="8dp"/>
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnFinish"
@@ -164,9 +164,9 @@
                         android:layout_weight="1"
                         android:layout_height="56dp"
                         android:text="Create"
-                        app:cornerRadius="12dp"
-                        android:backgroundTint="@color/tint_alter"
-                        android:textColor="@color/white"
+                        app:cornerRadius="14dp"
+                        android:backgroundTint="@color/accent"
+                        android:textColor="@color/text_on_accent"
                         android:layout_marginStart="8dp"/>
                 </LinearLayout>
             </LinearLayout>

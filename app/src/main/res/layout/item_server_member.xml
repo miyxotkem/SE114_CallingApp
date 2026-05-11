@@ -6,15 +6,24 @@
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:padding="12dp"
-    android:layout_marginBottom="8dp"
-    android:background="@drawable/edittext_background">
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_member_item">
 
-    <!-- Avatar mặc định -->
-    <ImageView
+    <!-- Avatar -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/icon_user"
-        app:tint="@color/tint_default" />
+        app:cardCornerRadius="20dp"
+        app:cardBackgroundColor="@color/accent_surface"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:src="@drawable/icon_user"
+            app:tint="@color/accent" />
+    </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
         android:layout_width="0dp"
@@ -28,8 +37,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="User Name"
-            android:textColor="@color/tint_default"
-            android:textSize="16sp"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
@@ -37,7 +46,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="ADMIN"
-            android:textColor="#F44336"
+            android:textColor="@color/accent"
             android:textSize="10sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -48,5 +57,5 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:src="@drawable/icon_more_vert"
-        app:tint="@color/tint_default" />
+        app:tint="@color/icon_tint" />
 </LinearLayout>

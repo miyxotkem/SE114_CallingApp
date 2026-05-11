@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5">
+    android:background="@color/bg_primary">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp">
+        android:background="@color/bg_secondary"
+        android:elevation="2dp">
 
         <ImageButton
             android:id="@+id/btnBackFromDoc"
@@ -18,7 +18,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_back_modern"
-            app:tint="#333333"
+            app:tint="@color/icon_tint"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -32,7 +32,7 @@
             android:ellipsize="end"
             android:singleLine="true"
             android:text="Loading..."
-            android:textColor="#000000"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -46,7 +46,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/stat_sys_download"
-            app:tint="#333333"
+            app:tint="@color/accent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
@@ -58,7 +58,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="-6dp"
-        android:indeterminateTint="@color/black"
+        android:indeterminateTint="@color/accent"
         style="?android:attr/progressBarStyleHorizontal" />
 
     <WebView

@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Util.ThemeHelper;
 import com.example.se114_callingsystem.Model.ServerMember;
 import com.example.se114_callingsystem.Adapter.ServerMemberAdapter;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -27,6 +28,7 @@ public class ManageMembersActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manage_members);
 

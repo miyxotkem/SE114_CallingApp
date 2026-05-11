@@ -12,14 +12,14 @@
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="24dp"
-        android:background="#D1D1D1" />
+        android:background="@color/handle_bar" />
 
     <TextView
         android:id="@+id/tvBottomSheetTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Create Channel"
-        android:textColor="@color/tint_default"
+        android:textColor="@color/text_primary"
         android:textSize="22sp"
         android:textStyle="bold" />
 
@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="Channels are where your team communicates."
-        android:textColor="#80000000"
+        android:textColor="@color/text_secondary"
         android:textSize="14sp" />
 
     <com.google.android.material.textfield.TextInputLayout
@@ -39,15 +39,15 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:hint="Channel Name"
-        app:boxStrokeColor="@color/accent_border"
-        app:hintTextColor="@color/tint_default">
+        app:boxStrokeColor="@color/accent"
+        app:hintTextColor="@color/accent">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etChannelName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
-            android:textColor="@color/tint_default" />
+            android:textColor="@color/text_primary" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -57,9 +57,9 @@
         android:layout_marginTop="24dp"
         android:text="Create Channel"
         android:textAllCaps="false"
-        android:textColor="@color/white"
+        android:textColor="@color/text_on_accent"
         android:textSize="16sp"
-        app:backgroundTint="@color/accent_nav"
-        app:cornerRadius="12dp" />
+        app:backgroundTint="@color/accent"
+        app:cornerRadius="14dp" />
 
 </LinearLayout>

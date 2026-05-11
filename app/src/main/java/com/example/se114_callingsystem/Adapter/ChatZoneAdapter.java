@@ -18,10 +18,16 @@ import java.util.List;
 public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHolder> {
     private List<ChatChannel> channels;
     private OnChannelActionListener listener;
+    private String serverColor = "#6C63FF";
 
     public interface OnChannelActionListener {
         void onRename(ChatChannel channel);
         void onRemove(ChatChannel channel);
+    }
+
+    public void setServerColor(String color) {
+        this.serverColor = color;
+        notifyDataSetChanged();
     }
 
     public ChatZoneAdapter(List<ChatChannel> channels, OnChannelActionListener listener) {
@@ -64,6 +70,7 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
                 // Pass the name and ID to the next activity
                 intent.putExtra("CHAT_NAME", currentChannel.getChatName());
                 intent.putExtra("CHAT_ID", currentChannel.getChatId());
+                intent.putExtra("SERVER_COLOR", serverColor);
 
                 holder.itemView.getContext().startActivity(intent);
             }

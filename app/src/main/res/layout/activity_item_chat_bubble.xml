@@ -11,8 +11,8 @@
         android:id="@+id/cardBubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/bg_alter"
-        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="0dp"
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -22,16 +22,19 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/border_chat"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="10dp">
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:maxWidth="280dp">
 
             <TextView
                 android:id="@+id/textRepliedTo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:background="@drawable/bg_quote"
+                android:layout_marginBottom="6dp"
+                android:background="@color/bubble_sent"
                 android:padding="6dp"
+                android:textColor="@color/bubble_text_sent"
+                android:alpha="0.8"
                 android:textSize="12sp"
                 android:visibility="gone" />
 
@@ -49,9 +52,8 @@
                 android:layout_height="250dp"
                 android:scaleType="centerCrop"
                 android:visibility="gone"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp"
-                android:background="#E0E0E0" />
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp" />
 
             <LinearLayout
                 android:id="@+id/layoutFile"
@@ -59,16 +61,17 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:background="#1A000000"
+                android:background="@color/file_bg"
                 android:padding="8dp"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp"
                 android:visibility="gone">
 
                 <ImageView
                     android:layout_width="28dp"
                     android:layout_height="28dp"
-                    android:src="@drawable/ic_file_modern" />
+                    android:src="@drawable/ic_file_modern"
+                    app:tint="@color/bubble_text_sent" />
 
                 <TextView
                     android:id="@+id/tvFileName"
@@ -76,7 +79,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Tài liệu đính kèm"
-                    android:textColor="#333333"
+                    android:textColor="@color/bubble_text_sent"
                     android:textStyle="bold"
                     android:maxWidth="160dp"
                     android:ellipsize="middle"
@@ -87,7 +90,9 @@
                 android:id="@+id/textMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black" />
+                android:textColor="@color/bubble_text_sent"
+                android:textSize="15sp"
+                android:lineSpacingExtra="2dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
@@ -95,9 +100,9 @@
         android:id="@+id/textReaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/border_chat"
+        android:background="@drawable/bg_reaction_bubble"
         android:elevation="4dp"
-        android:padding="3dp"
+        android:padding="4dp"
         android:text="❤️"
         android:textSize="12sp"
         android:visibility="gone"
@@ -111,6 +116,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        android:textColor="@color/text_secondary"
         android:textSize="10sp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@id/cardBubble"

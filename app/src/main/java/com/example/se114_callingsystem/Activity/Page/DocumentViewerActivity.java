@@ -18,6 +18,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Util.ThemeHelper;
 
 import java.net.URLEncoder;
 
@@ -30,6 +31,7 @@ public class DocumentViewerActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_document_viewer);
 

@@ -18,7 +18,7 @@
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:scaleType="centerCrop"
-            android:layout_marginEnd="5dp"
+            android:layout_marginEnd="6dp"
             android:src="@drawable/ic_launcher_background"
             app:shapeAppearanceOverlay="@style/CircleImage"/>
 
@@ -33,7 +33,8 @@
                 android:background="@drawable/bg_chat_left"
                 android:maxWidth="260dp"
                 android:orientation="vertical"
-                android:padding="12dp"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="10dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -44,9 +45,9 @@
                     android:id="@+id/textSenderName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="2dp"
+                    android:layout_marginBottom="3dp"
                     android:text="User Name"
-                    android:textColor="#757575"
+                    android:textColor="@color/accent"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
@@ -54,11 +55,11 @@
                     android:id="@+id/textRepliedTo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
-                    android:background="#E0E0E0"
-                    android:paddingHorizontal="6dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@color/overlay"
+                    android:paddingHorizontal="8dp"
                     android:paddingVertical="4dp"
-                    android:textColor="#555555"
+                    android:textColor="@color/text_secondary"
                     android:textSize="12sp"
                     android:visibility="gone" />
 
@@ -76,9 +77,8 @@
                     android:layout_height="250dp"
                     android:scaleType="centerCrop"
                     android:visibility="gone"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"
-                    android:background="#E0E0E0" />
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="2dp" />
 
                 <LinearLayout
                     android:id="@+id/layoutFile"
@@ -86,16 +86,17 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:background="#1A000000"
+                    android:background="@color/file_bg"
                     android:padding="8dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="4dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="2dp"
                     android:visibility="gone">
 
                     <ImageView
                         android:layout_width="28dp"
                         android:layout_height="28dp"
-                        android:src="@drawable/ic_file_modern" />
+                        android:src="@drawable/ic_file_modern"
+                        app:tint="@color/icon_tint" />
 
                     <TextView
                         android:id="@+id/tvFileName"
@@ -103,7 +104,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:text="Tài liệu đính kèm"
-                        android:textColor="#333333"
+                        android:textColor="@color/text_primary"
                         android:textStyle="bold"
                         android:maxWidth="160dp"
                         android:ellipsize="middle"
@@ -115,16 +116,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Tin nhắn người nhận"
-                    android:textColor="#000000"
-                    android:textSize="16sp" />
+                    android:textColor="@color/bubble_text_received"
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="2dp" />
             </LinearLayout>
 
             <TextView
                 android:id="@+id/textReaction"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/border_chat"
-                android:backgroundTint="@color/white"
+                android:background="@drawable/bg_reaction_bubble"
                 android:elevation="2dp"
                 android:padding="4dp"
                 android:text="❤️"
@@ -145,5 +146,6 @@
         android:layout_marginStart="44dp"
         android:paddingTop="4dp"
         android:text="12:00"
+        android:textColor="@color/text_secondary"
         android:textSize="10sp" />
 </LinearLayout>

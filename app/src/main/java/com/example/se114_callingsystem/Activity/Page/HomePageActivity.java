@@ -8,11 +8,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 
 import com.example.se114_callingsystem.R;
+import com.example.se114_callingsystem.Util.ThemeHelper;
 import com.example.se114_callingsystem.Model.Server;
 import com.example.se114_callingsystem.Adapter.ServerAdapter;
 import com.example.se114_callingsystem.Activity.Component.create_server;
 import com.google.android.material.card.MaterialCardView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import android.content.Intent;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +30,7 @@ public class HomePageActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
@@ -43,6 +49,18 @@ public class HomePageActivity extends AppCompatActivity {
             create_server dialog = new create_server();
             dialog.show(getSupportFragmentManager(), "Server_on_create");
         });
+
+        MaterialCardView btnLogout = findViewById(R.id.btnLogout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> {
+                FirebaseAuth.getInstance().signOut();
+                GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
     }
 
     private void fetchServers() {

@@ -4,18 +4,20 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_default"
+    android:background="@color/bg_primary"
     android:orientation="vertical"
     android:fitsSystemWindows="true">
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_margin="12dp"
-        app:cardBackgroundColor="@color/bg_search"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp">
+        app:cardBackgroundColor="@color/bg_secondary"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/card_stroke"
+        app:strokeWidth="0.5dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -27,7 +29,8 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_centerVertical="true"
-                android:src="@drawable/icon_backbutton"/>
+                android:src="@drawable/icon_backbutton"
+                app:tint="@color/icon_tint" />
 
             <TextView
                 android:id="@+id/tvChannelName"
@@ -36,18 +39,19 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:text="Channel Name"
-                android:textColor="@color/black"
-                android:textSize="18sp" />
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
         </RelativeLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginHorizontal="12dp"
-        android:background="@color/bg_alter"
+        android:layout_marginHorizontal="8dp"
+        android:background="@color/bg_primary"
         android:padding="8dp" />
 
     <LinearLayout
@@ -66,7 +70,7 @@
         <View
             android:layout_width="4dp"
             android:layout_height="match_parent"
-            android:background="#007AFF" />
+            android:background="@color/accent" />
 
         <TextView
             android:id="@+id/tvReplyingToText"
@@ -76,7 +80,7 @@
             android:layout_marginStart="10dp"
             android:paddingVertical="10dp"
             android:text="Đang trả lời: ..."
-            android:textColor="#555555"
+            android:textColor="@color/quote_text"
             android:textSize="13sp"
             android:maxLines="1"
             android:ellipsize="end"/>
@@ -93,16 +97,16 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:tint="#888888" />
+            app:tint="@color/text_secondary" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/inputArea"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@color/bg_secondary"
         android:orientation="horizontal"
-        android:gravity="bottom"
+        android:gravity="center_vertical"
         android:padding="8dp">
 
         <ImageButton
@@ -111,7 +115,7 @@
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_gallery"
-            app:tint="@color/black" />
+            app:tint="@color/icon_tint" />
 
         <ImageButton
             android:id="@+id/btnAttachFile"
@@ -120,14 +124,14 @@
             android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_save"
-            app:tint="@color/black" />
+            app:tint="@color/icon_tint" />
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            app:cardBackgroundColor="@color/bg_search"
-            app:cardCornerRadius="20dp"
+            app:cardBackgroundColor="@color/bg_input"
+            app:cardCornerRadius="22dp"
             app:cardElevation="0dp">
 
             <EditText
@@ -136,19 +140,23 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:hint="Type a message..."
+                android:textColorHint="@color/text_hint"
+                android:textColor="@color/text_primary"
                 android:maxLines="4"
-                android:padding="10dp"
+                android:padding="12dp"
                 android:textSize="14sp" />
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <ImageButton
             android:id="@+id/btnSend"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:layout_marginStart="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/bg_send_button"
             android:src="@android:drawable/ic_menu_send"
-            app:tint="@color/black" />
+            android:padding="10dp"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
     </LinearLayout>
 
 </LinearLayout>
