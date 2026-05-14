@@ -8,60 +8,60 @@
     <!-- ========== LIGHT THEME ========== -->
 
     <!-- Backgrounds -->
-    <color name="bg_primary">#F8F9FE</color>
-    <color name="bg_secondary">#FFFFFF</color>
-    <color name="bg_tertiary">#F0F1FA</color>
-    <color name="bg_input">#EEEEF6</color>
+    <color name="bg_primary">#FFFFFF</color>
+    <color name="bg_secondary">#F5F5F5</color>
+    <color name="bg_tertiary">#EFEFEF</color>
+    <color name="bg_input">#F0F0F0</color>
 
     <!-- Text -->
-    <color name="text_primary">#1A1A2E</color>
-    <color name="text_secondary">#6B6B80</color>
+    <color name="text_primary">#2C2C2C</color> <!-- Requested Dark Gray -->
+    <color name="text_secondary">#522546</color> <!-- Requested Dark Plum -->
     <color name="text_on_accent">#FFFFFF</color>
-    <color name="text_hint">#9999AA</color>
+    <color name="text_hint">#88304E</color> <!-- Requested Deep Red-Purple (muted context) -->
 
-    <!-- Accent (Indigo) -->
-    <color name="accent">#6C63FF</color>
-    <color name="accent_light">#8B83FF</color>
-    <color name="accent_surface">#EEEDFF</color>
+    <!-- Accent (Requested vibrant pink-red) -->
+    <color name="accent">#F7374F</color> <!-- Requested Vibrant Red-Pink -->
+    <color name="accent_light">#FF6B7A</color>
+    <color name="accent_surface">#FFE5E8</color>
 
     <!-- Chat Bubbles -->
-    <color name="bubble_sent">#6C63FF</color>
-    <color name="bubble_received">#F0F1FA</color>
+    <color name="bubble_sent">#F7374F</color> <!-- Vibrant Red-Pink -->
+    <color name="bubble_received">#F0F0F0</color>
     <color name="bubble_text_sent">#FFFFFF</color>
-    <color name="bubble_text_received">#1A1A2E</color>
+    <color name="bubble_text_received">#2C2C2C</color>
 
     <!-- UI Elements -->
-    <color name="divider">#E8E8F0</color>
-    <color name="icon_tint">#4A4A60</color>
-    <color name="danger">#FF4757</color>
-    <color name="overlay">#0D000000</color>
-    <color name="card_stroke">#E0E0EE</color>
+    <color name="divider">#EAEAEA</color>
+    <color name="icon_tint">#88304E</color>
+    <color name="danger">#F7374F</color>
+    <color name="overlay">#1A000000</color>
+    <color name="card_stroke">#EAEAEA</color>
 
     <!-- Nav & Status -->
-    <color name="nav_active">#6C63FF</color>
-    <color name="nav_inactive">#B0B0C0</color>
+    <color name="nav_active">#F7374F</color>
+    <color name="nav_inactive">#88304E</color>
 
     <!-- Quote / Reply -->
-    <color name="quote_bg">#EEEEF6</color>
-    <color name="quote_bar">#6C63FF</color>
-    <color name="quote_text">#555566</color>
+    <color name="quote_bg">#F5F5F5</color>
+    <color name="quote_bar">#F7374F</color>
+    <color name="quote_text">#522546</color>
 
     <!-- Call Screen (always dark) -->
-    <color name="call_bg">#0F0F1A</color>
-    <color name="call_surface">#1A1A2E</color>
-    <color name="call_control_bg">#22223A</color>
-    <color name="call_end">#FF4757</color>
+    <color name="call_bg">#2C2C2C</color>
+    <color name="call_surface">#522546</color>
+    <color name="call_control_bg">#88304E</color>
+    <color name="call_end">#F7374F</color>
 
     <!-- Reaction Bubble -->
     <color name="reaction_bg">#FFFFFF</color>
-    <color name="reaction_stroke">#E8E8F0</color>
+    <color name="reaction_stroke">#EAEAEA</color>
 
     <!-- File attachment -->
-    <color name="file_bg">#1A6C63FF</color>
-    <color name="file_text">#4A4A60</color>
+    <color name="file_bg">#1AF7374F</color>
+    <color name="file_text">#88304E</color>
 
     <!-- Bottom Sheet Handle -->
-    <color name="handle_bar">#CCCCDD</color>
+    <color name="handle_bar">#DCDCDC</color>
 
     <!-- Legacy compat aliases -->
     <color name="bg_default">@color/bg_primary</color>

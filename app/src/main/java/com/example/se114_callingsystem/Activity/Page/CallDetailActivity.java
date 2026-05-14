@@ -52,7 +52,7 @@ public class CallDetailActivity extends AppCompatActivity {
     private RtcEngine mRtcEngine;
 
     // NHÃ ƠI: Nhớ chỉnh UID này khác nhau trên 2 máy để không bị đá nhau nhé!
-    int uid = 500;
+    int uid = 300;
 
     private String channelName = "TestChannel";
     private RtcConnection screenShareConnection;

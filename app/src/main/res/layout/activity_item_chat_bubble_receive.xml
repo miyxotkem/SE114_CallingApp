@@ -33,8 +33,8 @@
                 android:background="@drawable/bg_chat_left"
                 android:maxWidth="260dp"
                 android:orientation="vertical"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="10dp"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -45,11 +45,11 @@
                     android:id="@+id/textSenderName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="3dp"
+                    android:layout_marginBottom="4dp"
                     android:text="User Name"
                     android:textColor="@color/accent"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-black" />
 
                 <TextView
                     android:id="@+id/textRepliedTo"
@@ -61,6 +61,7 @@
                     android:paddingVertical="4dp"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium"
                     android:visibility="gone" />
 
                 <ImageView
@@ -105,7 +106,7 @@
                         android:layout_marginStart="8dp"
                         android:text="Tài liệu đính kèm"
                         android:textColor="@color/text_primary"
-                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-black"
                         android:maxWidth="160dp"
                         android:ellipsize="middle"
                         android:singleLine="true"/>
@@ -117,7 +118,8 @@
                     android:layout_height="wrap_content"
                     android:text="Tin nhắn người nhận"
                     android:textColor="@color/bubble_text_received"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium"
                     android:lineSpacingExtra="2dp" />
             </LinearLayout>
 
@@ -147,5 +149,6 @@
         android:paddingTop="4dp"
         android:text="12:00"
         android:textColor="@color/text_secondary"
-        android:textSize="10sp" />
+        android:fontFamily="sans-serif-medium"
+        android:textSize="11sp" />
 </LinearLayout>

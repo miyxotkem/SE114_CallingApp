@@ -4,58 +4,56 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary">
+    android:background="@color/bg_primary"
+    android:animateLayoutChanges="true">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/topBar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="72dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="36dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="16dp"
         app:cardBackgroundColor="@color/bg_secondary"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="0dp"
+        app:cardCornerRadius="36dp"
+        app:cardElevation="4dp"
         app:strokeColor="@color/card_stroke"
-        app:strokeWidth="0.5dp">
+        app:strokeWidth="1dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="24dp">
 
             <ImageView
                 android:id="@+id/btnBack"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
                 android:src="@drawable/icon_backbutton"
                 app:tint="@color/icon_tint" />
 
-            <!-- Nút 3 chấm nằm ở góc phải -->
             <ImageView
                 android:id="@+id/btnServerSettings"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="16dp"
                 android:src="@drawable/icon_more_vert"
                 app:tint="@color/icon_tint" />
 
-            <!-- Tên server đẩy sang trái của nút 3 chấm -->
             <TextView
                 android:id="@+id/tvServerName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/btnServerSettings"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="16dp"
                 android:text="Server Name"
                 android:textColor="@color/text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textSize="22sp"
+                android:fontFamily="sans-serif-black" />
 
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -65,38 +63,40 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/topBar"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginBottom="-20dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginBottom="-32dp"
         app:cardBackgroundColor="@color/bg_secondary"
-        app:cardCornerRadius="24dp"
+        app:cardCornerRadius="40dp"
         app:cardElevation="0dp">
 
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
-            android:scrollbars="vertical">
+            android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp"
+                android:animateLayoutChanges="true">
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/chatCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="16dp"
                     app:cardBackgroundColor="@color/bg_tertiary"
-                    app:cardCornerRadius="16dp"
+                    app:cardCornerRadius="24dp"
                     app:cardElevation="0dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp">
+                        android:padding="16dp"
+                        android:animateLayoutChanges="true">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -106,25 +106,26 @@
 
                             <ImageView
                                 android:id="@+id/expandChatZone"
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:src="@drawable/icon_expandbutton"
                                 app:tint="@color/icon_tint" />
 
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
+                                android:layout_marginStart="12dp"
                                 android:layout_weight="1"
                                 android:text="Chat Zone"
                                 android:textColor="@color/text_primary"
-                                android:textSize="17sp"
-                                android:textStyle="bold" />
+                                android:textSize="18sp"
+                                android:fontFamily="sans-serif-black" />
 
                             <ImageView
                                 android:id="@+id/btnAddChannel"
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
                                 android:src="@drawable/icon_add"
                                 app:tint="@color/accent" />
 
@@ -134,7 +135,7 @@
                             android:id="@+id/rvChatChannels"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:visibility="visible" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -144,14 +145,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardBackgroundColor="@color/bg_tertiary"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp">
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    android:layout_marginBottom="64dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp">
+                        android:padding="16dp"
+                        android:animateLayoutChanges="true">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -161,25 +164,26 @@
 
                             <ImageView
                                 android:id="@+id/expandCallZone"
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:src="@drawable/icon_expandbutton"
                                 app:tint="@color/icon_tint" />
 
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="10dp"
+                                android:layout_marginStart="12dp"
                                 android:layout_weight="1"
                                 android:text="Call Zone"
                                 android:textColor="@color/text_primary"
-                                android:textSize="17sp"
-                                android:textStyle="bold" />
+                                android:textSize="18sp"
+                                android:fontFamily="sans-serif-black" />
 
                             <ImageView
                                 android:id="@+id/btnAddCallChannel"
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
                                 android:src="@drawable/icon_add"
                                 app:tint="@color/accent" />
                         </LinearLayout>
@@ -188,7 +192,7 @@
                             android:id="@+id/rvCallChannels"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="12dp"
                             android:visibility="visible" />
 
                     </LinearLayout>
