@@ -10,7 +10,7 @@
     <LinearLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="56dp"
         android:layout_alignParentTop="true"
         android:layout_marginTop="24dp"
         android:orientation="horizontal"
@@ -21,7 +21,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             app:cardBackgroundColor="@color/bg_input"
-            app:cardCornerRadius="32dp"
+            app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:strokeWidth="1dp"
             app:strokeColor="@color/card_stroke">
@@ -31,7 +31,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="24dp">
+                android:paddingHorizontal="16dp">
 
                 <ImageView
                     android:layout_width="24dp"
@@ -43,7 +43,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
+                    android:layout_marginStart="12dp"
                     android:text="Search servers..."
                     android:textColor="@color/text_hint"
                     android:fontFamily="sans-serif-medium"
@@ -57,17 +57,17 @@
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/mcvServerCreate"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             app:cardBackgroundColor="@color/accent_surface"
-            app:cardCornerRadius="32dp"
+            app:cardCornerRadius="16dp"
             app:cardElevation="0dp"
             app:strokeWidth="1dp"
             app:strokeColor="@color/accent_light">
 
             <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:contentDescription="Add Server"
                 android:src="@android:drawable/ic_input_add"
@@ -81,10 +81,10 @@
         android:layout_height="match_parent"
         android:layout_above="@id/bottomBar"
         android:layout_below="@id/topBar"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
         app:cardBackgroundColor="@color/bg_secondary"
-        app:cardCornerRadius="32dp"
+        app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
         app:strokeColor="@color/card_stroke"
         app:strokeWidth="1dp">
@@ -100,10 +100,10 @@
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="72dp"
         android:layout_alignParentBottom="true"
         app:cardBackgroundColor="@color/bg_secondary"
-        app:cardCornerRadius="40dp"
+        app:cardCornerRadius="24dp"
         app:cardElevation="8dp"
         app:strokeColor="@color/card_stroke"
         app:strokeWidth="1dp">
@@ -116,10 +116,10 @@
             android:paddingHorizontal="24dp">
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 app:cardBackgroundColor="@color/nav_inactive"
-                app:cardCornerRadius="28dp"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp" />
 
             <Space
@@ -128,10 +128,10 @@
                 android:layout_weight="1" />
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 app:cardBackgroundColor="@color/nav_inactive"
-                app:cardCornerRadius="28dp"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp" />
 
             <Space
@@ -140,10 +140,10 @@
                 android:layout_weight="1" />
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 app:cardBackgroundColor="@color/accent"
-                app:cardCornerRadius="28dp"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp" />
 
             <Space
@@ -152,10 +152,10 @@
                 android:layout_weight="1" />
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 app:cardBackgroundColor="@color/nav_inactive"
-                app:cardCornerRadius="28dp"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp" />
 
             <Space
@@ -165,15 +165,15 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnLogout"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 app:cardBackgroundColor="@color/danger"
-                app:cardCornerRadius="28dp"
+                app:cardCornerRadius="14dp"
                 app:cardElevation="0dp">
-                
+
                 <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:layout_gravity="center"
                     android:src="@android:drawable/ic_lock_power_off"
                     app:tint="@color/white" />
