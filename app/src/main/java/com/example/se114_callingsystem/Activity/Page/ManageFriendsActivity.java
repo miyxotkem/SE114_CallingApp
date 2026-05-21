@@ -159,26 +159,25 @@ public class ManageFriendsActivity extends AppCompatActivity {
     }
 
     private void loadUserAndAddToList(String uid, List<User> list, FriendAdapter adapter) {
-        Firebase.getUsersRef().child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                User user = snapshot.getValue(User.class);
-                if (user != null) {
-                    // Check if already in list to avoid duplicates due to async
-                    boolean exists = false;
-                    for(User u : list) {
-                        if(u.getUserId().equals(user.getUserId())) {
-                            exists = true; break;
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    User user = documentSnapshot.toObject(User.class);
+                    if (user != null) {
+                        user.setUserId(documentSnapshot.getId());
+                        // Check if already in list to avoid duplicates due to async
+                        boolean exists = false;
+                        for(User u : list) {
+                            if(u.getUserId() != null && u.getUserId().equals(user.getUserId())) {
+                                exists = true; break;
+                            }
+                        }
+                        if(!exists) {
+                            list.add(user);
+                            adapter.notifyDataSetChanged();
                         }
                     }
-                    if(!exists) {
-                        list.add(user);
-                        adapter.notifyDataSetChanged();
-                    }
                 }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+            });
     }
 }

@@ -61,17 +61,17 @@ public class add_server_member extends DialogFragment {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
             if (currentUser == null) return;
 
-            // Search user by email
-            Firebase.getUsersRef().orderByChild("email").equalTo(email).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.exists()) {
-                        for (DataSnapshot userSnap : snapshot.getChildren()) {
-                            User friendUser = userSnap.getValue(User.class);
-                            if (friendUser != null) {
-                                String friendUid = friendUser.getUserId();
-                                String friendName = friendUser.getUsername() != null ? friendUser.getUsername() : "Unknown";
-                                
+            // Search user by email in Firestore
+            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                .whereEqualTo("email", email)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        for (com.google.firebase.firestore.DocumentSnapshot userSnap : queryDocumentSnapshots) {
+                            String friendUid = userSnap.getString("uid");
+                            String friendName = userSnap.getString("username") != null ? userSnap.getString("username") : "Unknown";
+                            
+                            if (friendUid != null) {
                                 // Check if they are friend
                                 Firebase.getUserFriendsRef(currentUser.getUid()).child(friendUid).addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
@@ -116,14 +116,11 @@ public class add_server_member extends DialogFragment {
                         Toast.makeText(getContext(), "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
                         btnAddConfirm.setEnabled(true);
                     }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(getContext(), "Lỗi: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     btnAddConfirm.setEnabled(true);
-                }
-            });
+                });
         });
     }
 
