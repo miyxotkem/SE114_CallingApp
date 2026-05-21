@@ -3,14 +3,16 @@ package com.example.se114_callingsystem.Activity.Page;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +37,8 @@ import com.example.se114_callingsystem.Model.Firebase;
 import com.example.se114_callingsystem.Model.Message;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.Util.ThemeHelper;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -52,23 +56,29 @@ public class ChatDetailActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ChatAdapter adapter;
     private List<Message> messageList = new ArrayList<>();
-    private ImageButton btnAttachImage, btnAttachFile;
+
+    // Nút đính kèm Gen Z (gom 2 nút cũ thành 1)
+    private ImageButton btnAttachHome;
+    private MaterialCardView messageCard; // Thẻ bao quanh ô nhập liệu
+
     private ActivityResultLauncher<String> imagePickerLauncher;
     private ActivityResultLauncher<String> filePickerLauncher;
     private EditText edtMessage;
     private ImageButton btnSend;
     private ImageView btnBack;
     private TextView tvChannelName;
+    private TextView tvChannelHash; // Dấu # cách điệu
 
     private View tvReplyingToLayout;
     private TextView tvReplyingToText;
     private ImageView ivReplyPreview;
+    private MaterialCardView cardReplyPreviewImage;
     private Message messageToReply = null;
 
     private String groupId;
     private DatabaseReference groupChatRef;
     private String senderId = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "UNKNOWN";
-    private String serverColor = "#6C63FF";
+    private String serverColor = "#FF007F"; // Mặc định là màu Cyber Magenta
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -78,7 +88,6 @@ public class ChatDetailActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_chat_detail);
 
-        // Khởi tạo Cloudinary (Nên điền đủ Key vào đây)
         initCloudinary();
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -88,7 +97,6 @@ public class ChatDetailActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Launcher chọn Ảnh & File gửi lên Cloudinary
         imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) uploadToCloudinary(uri, "image");
         });
@@ -110,7 +118,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         }
 
         if (channelName != null) {
-            tvChannelName.setText("# " + channelName);
+            tvChannelName.setText(channelName.toUpperCase()); // Ép in hoa cho đúng vibe HUD
         }
 
         applyServerColor();
@@ -132,16 +140,43 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     private void applyServerColor() {
         try {
-            int color = android.graphics.Color.parseColor(serverColor);
-            com.google.android.material.card.MaterialCardView header = findViewById(R.id.header);
+            int color = Color.parseColor(serverColor);
+
+            // 1. Viền Neon cho Header
+            MaterialCardView header = findViewById(R.id.header);
             if (header != null) {
                 header.setStrokeColor(color);
-                header.setStrokeWidth(2);
             }
+
+            // 2. Chữ "#" cách điệu
+            if (tvChannelHash != null) {
+                tvChannelHash.setTextColor(color);
+            }
+
+            // 3. Chấm Online
+            ImageView ivOnlineStatus = findViewById(R.id.ivOnlineStatus);
+            if (ivOnlineStatus != null) {
+                ivOnlineStatus.setColorFilter(color);
+            }
+
+            // 4. Viền ô nhập liệu Console
+            if (messageCard != null) {
+                messageCard.setStrokeColor(color);
+            }
+
+            // 5. Nút Gửi (Tô màu nền rực rỡ)
             if (btnSend != null) {
                 btnSend.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
             }
-        } catch (Exception e) {}
+
+            // 6. Trạng thái thanh Status Bar (Chuyển sang nền tối để app nhìn sâu hơn)
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Color.parseColor("#121212"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void initCloudinary() {
@@ -149,26 +184,21 @@ public class ChatDetailActivity extends AppCompatActivity {
         config.put("cloud_name", "dxoukp0yb");
         config.put("api_key", "359217744855482");
         config.put("api_secret", "eTG0UvW_hdsHm4hl0r2XJCvidR0");
-
         try {
             MediaManager.init(this, config);
-        } catch (IllegalStateException e) {
-            // Đã init trước đó
-        }
+        } catch (IllegalStateException e) {}
     }
 
     private void setupRecyclerView() {
         adapter = new ChatAdapter(messageList, serverColor, new ChatAdapter.OnChatInteractListener() {
             @Override
             public void onReply(Message message) { showReplyUI(message); }
-
             @Override
             public void onDelete(Message message) {
                 if (groupChatRef != null && message.getMessageId() != null) {
                     groupChatRef.child(message.getMessageId()).child("deleted").setValue(true);
                 }
             }
-
             @Override
             public void onReact(Message message, String emoji) {
                 if (groupChatRef != null && message.getMessageId() != null) {
@@ -179,76 +209,28 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
-
-        // Vuốt để reply
         setupSwipeToReply();
     }
 
     private void setupSwipeToReply() {
-        // Cho phép vuốt cả TRÁI và PHẢI
         ItemTouchHelper.SimpleCallback swipeCallback = new ItemTouchHelper.SimpleCallback(0,
                 ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
-            @Override
-            public boolean onMove(@NonNull RecyclerView r, @NonNull RecyclerView.ViewHolder v, @NonNull RecyclerView.ViewHolder t) {
-                return false;
-            }
-
+            @Override public boolean onMove(@NonNull RecyclerView r, @NonNull RecyclerView.ViewHolder v, @NonNull RecyclerView.ViewHolder t) { return false; }
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getAdapterPosition();
                 showReplyUI(messageList.get(position));
                 adapter.notifyItemChanged(position);
             }
-
             @Override
-            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView,
-                                    @NonNull RecyclerView.ViewHolder viewHolder,
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder,
                                     float dX, float dY, int actionState, boolean isCurrentlyActive) {
-
                 View itemView = viewHolder.itemView;
-                // Xác định xem đây là tin nhắn gửi hay nhận dựa trên ViewType của Adapter
                 int viewType = viewHolder.getItemViewType();
-                boolean isSent = (viewType == 1); // 1 là TYPE_SENT Nhã đã đặt trong Adapter
-
-                // Giới hạn hướng vuốt:
-                // Nếu là tin mình gửi (bên phải) -> chỉ cho vuốt trái (dX < 0)
-                // Nếu là người ta gửi (bên trái) -> chỉ cho vuốt phải (dX > 0)
+                boolean isSent = (viewType == 1);
                 float limitedDX = dX;
-                if (isSent && dX > 0) limitedDX = 0; // Chặn vuốt phải cho tin gửi
-                if (!isSent && dX < 0) limitedDX = 0; // Chặn vuốt trái cho tin nhận
-
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-                    Drawable icon = ContextCompat.getDrawable(ChatDetailActivity.this, android.R.drawable.ic_menu_revert);
-                    if (icon != null) {
-                        int itemHeight = itemView.getBottom() - itemView.getTop();
-                        int iconHeight = icon.getIntrinsicHeight();
-                        int iconWidth = icon.getIntrinsicWidth();
-                        int iconTop = itemView.getTop() + (itemHeight - iconHeight) / 2;
-                        int iconBottom = iconTop + iconHeight;
-
-                        // Vẽ icon bên TRÁI khi vuốt PHẢI (Tin nhắn nhận)
-                        if (limitedDX > 40) {
-                            int iconLeft = itemView.getLeft() + 60;
-                            int iconRight = iconLeft + iconWidth;
-                            icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-                            icon.draw(c);
-                        }
-                        // Vẽ icon bên PHẢI khi vuốt TRÁI (Tin nhắn gửi)
-                        else if (limitedDX < -40) {
-                            int iconRight = itemView.getRight() - 60;
-                            int iconLeft = iconRight - iconWidth;
-                            icon.setBounds(iconLeft, iconTop, iconRight, iconBottom);
-                            icon.draw(c);
-                        }
-                    }
-                }
-
-                // Giới hạn độ kéo tối đa để không bị trôi quá xa
-                float maxSwipe = 180f;
-                if (limitedDX > maxSwipe) limitedDX = maxSwipe;
-                if (limitedDX < -maxSwipe) limitedDX = -maxSwipe;
-
+                if (isSent && dX > 0) limitedDX = 0;
+                if (!isSent && dX < 0) limitedDX = 0;
                 super.onChildDraw(c, recyclerView, viewHolder, limitedDX, dY, actionState, isCurrentlyActive);
             }
         };
@@ -256,8 +238,20 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        btnAttachImage.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
-        btnAttachFile.setOnClickListener(v -> filePickerLauncher.launch("*/*"));
+        // Mở popup menu khi bấm nút Attach (Gen Z Style)
+        if (btnAttachHome != null) {
+            btnAttachHome.setOnClickListener(v -> {
+                String[] options = {"📷 Gửi Hình ảnh", "📎 Gửi Tập tin"};
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("Tải tệp lên hệ thống")
+                        .setItems(options, (dialog, which) -> {
+                            if (which == 0) imagePickerLauncher.launch("image/*");
+                            else filePickerLauncher.launch("*/*");
+                        })
+                        .show();
+            });
+        }
+
         btnBack.setOnClickListener(v -> finish());
         btnSend.setOnClickListener(v -> sendMessage());
         tvReplyingToLayout.setOnClickListener(v -> {
@@ -265,7 +259,6 @@ public class ChatDetailActivity extends AppCompatActivity {
             tvReplyingToLayout.setVisibility(View.GONE);
         });
 
-        // Nhấn vào tên channel → mở trang quản lí đoạn chat
         tvChannelName.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(ChatDetailActivity.this, ChatInfoActivity.class);
             intent.putExtra("CHAT_ID", groupId);
@@ -291,31 +284,27 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     private void uploadToCloudinary(Uri fileUri, String type) {
         ProgressDialog pd = new ProgressDialog(this);
-        pd.setMessage("Đang tải " + type + "...");
+        pd.setMessage("Đang truyền dữ liệu...");
         pd.show();
-
-        MediaManager.get().upload(fileUri)
-                .option("resource_type", "auto")
-                .callback(new UploadCallback() {
-                    @Override public void onStart(String requestId) {}
-                    @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
-                    @Override public void onSuccess(String requestId, Map resultData) {
-                        pd.dismiss();
-                        sendMediaMessage((String) resultData.get("secure_url"), type);
-                    }
-                    @Override public void onError(String requestId, ErrorInfo error) {
-                        pd.dismiss();
-                        Toast.makeText(ChatDetailActivity.this, "Lỗi: " + error.getDescription(), Toast.LENGTH_SHORT).show();
-                    }
-                    @Override public void onReschedule(String requestId, ErrorInfo error) {}
-                }).dispatch();
+        MediaManager.get().upload(fileUri).option("resource_type", "auto").callback(new UploadCallback() {
+            @Override public void onStart(String requestId) {}
+            @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
+            @Override public void onSuccess(String requestId, Map resultData) {
+                pd.dismiss();
+                sendMediaMessage((String) resultData.get("secure_url"), type);
+            }
+            @Override public void onError(String requestId, ErrorInfo error) {
+                pd.dismiss();
+                Toast.makeText(ChatDetailActivity.this, "Lỗi: " + error.getDescription(), Toast.LENGTH_SHORT).show();
+            }
+            @Override public void onReschedule(String requestId, ErrorInfo error) {}
+        }).dispatch();
     }
 
     private void sendMediaMessage(String fileUrl, String type) {
         if (groupChatRef == null) return;
         Message model = new Message(senderId, groupId, fileUrl, System.currentTimeMillis());
         model.setType(type);
-
         if (messageToReply != null) {
             model.setRepliedToContent(messageToReply.getContent());
             model.setRepliedToType(messageToReply.getType());
@@ -348,28 +337,21 @@ public class ChatDetailActivity extends AppCompatActivity {
         if(message.isDeleted()) return;
         messageToReply = message;
         tvReplyingToLayout.setVisibility(View.VISIBLE);
-
         String type = message.getType();
         if ("image".equals(type)) {
             tvReplyingToText.setText("Đang trả lời: 📷 Hình ảnh");
-            ivReplyPreview.setVisibility(View.VISIBLE);
-            com.bumptech.glide.Glide.with(this)
-                    .load(message.getContent())
-                    .centerCrop()
-                    .into(ivReplyPreview);
+            if (cardReplyPreviewImage != null) cardReplyPreviewImage.setVisibility(View.VISIBLE);
+            com.bumptech.glide.Glide.with(this).load(message.getContent()).centerCrop().into(ivReplyPreview);
         } else if ("file".equals(type)) {
             String fileName = "Tài liệu đính kèm";
-            try {
-                fileName = message.getContent().substring(message.getContent().lastIndexOf('/') + 1);
-            } catch (Exception e) {}
+            try { fileName = message.getContent().substring(message.getContent().lastIndexOf('/') + 1); } catch (Exception e) {}
             tvReplyingToText.setText("Đang trả lời: 📎 " + fileName);
-            ivReplyPreview.setVisibility(View.GONE);
+            if (cardReplyPreviewImage != null) cardReplyPreviewImage.setVisibility(View.GONE);
         } else {
             String content = message.getContent();
             tvReplyingToText.setText("Đang trả lời: " + (content.length() > 40 ? content.substring(0, 40) + "..." : content));
-            ivReplyPreview.setVisibility(View.GONE);
+            if (cardReplyPreviewImage != null) cardReplyPreviewImage.setVisibility(View.GONE);
         }
-
         edtMessage.requestFocus();
     }
 
@@ -379,10 +361,15 @@ public class ChatDetailActivity extends AppCompatActivity {
         btnSend = findViewById(R.id.btnSend);
         btnBack = findViewById(R.id.btnBack);
         tvChannelName = findViewById(R.id.tvChannelName);
-        btnAttachImage = findViewById(R.id.btnAttachImage);
-        btnAttachFile = findViewById(R.id.btnAttachFile);
+        tvChannelHash = findViewById(R.id.tvChannelHash); // Ánh xạ chữ #
+
+        // Gán nút đính kèm (+)
+        btnAttachHome = findViewById(R.id.btnAttachHome);
+        messageCard = findViewById(R.id.messageCard);
+
         tvReplyingToLayout = findViewById(R.id.tvReplyingToLayout);
         tvReplyingToText = findViewById(R.id.tvReplyingToText);
         ivReplyPreview = findViewById(R.id.ivReplyPreview);
+        cardReplyPreviewImage = findViewById(R.id.cardReplyPreviewImage);
     }
 }

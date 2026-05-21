@@ -63,9 +63,12 @@ public class create_server extends DialogFragment {
                 String randomAccentColor = palette[new Random().nextInt(palette.length)];
 
                 // 3. Create Server object using your Model
+                String ownerId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+                        com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "unknown_owner";
+                        
                 Server newServer = new Server(
                         etName.getText().toString().trim(),
-                        "L2j7rDA0Y0cmsO0XNcaW", // ownerId
+                        ownerId, // ownerId
                         "default_icon_url",
                         etPurpose.getText().toString().trim(),
                         randomAccentColor // Thay màu cứng thành màu ngẫu nhiên vừa bốc được
@@ -77,10 +80,19 @@ public class create_server extends DialogFragment {
                         .add(newServer)
                         .addOnSuccessListener(documentReference -> {
                             Log.d("Firestore", "Server Created with ID: " + documentReference.getId());
-                            if (getActivity() != null) {
-                                Toast.makeText(getContext(), "Server Created!", Toast.LENGTH_SHORT).show();
-                            }
-                            dismiss();
+                            
+                            // Add owner to members subcollection
+                            String ownerName = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null && com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() != null ? 
+                                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : "Owner";
+                            com.example.se114_callingsystem.Model.ServerMember ownerMember = new com.example.se114_callingsystem.Model.ServerMember(ownerId, ownerName, "owner");
+                            db.collection("servers").document(documentReference.getId()).collection("members").document(ownerId)
+                                .set(ownerMember)
+                                .addOnSuccessListener(aVoid -> {
+                                    if (getActivity() != null) {
+                                        Toast.makeText(getContext(), "Server Created!", Toast.LENGTH_SHORT).show();
+                                    }
+                                    dismiss();
+                                });
                         })
                         .addOnFailureListener(e -> {
                             btnFinish.setEnabled(true);

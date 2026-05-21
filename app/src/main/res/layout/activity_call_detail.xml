@@ -3,16 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/call_bg">
+    android:background="@color/call_bg"
+    android:animateLayoutChanges="true">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvParticipants"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingTop="70dp"
-        android:paddingBottom="100dp"
-        android:paddingHorizontal="4dp"/>
+        android:paddingTop="80dp"
+        android:paddingBottom="120dp"
+        android:paddingHorizontal="8dp"/>
 
     <LinearLayout
         android:id="@+id/callHeader"
@@ -22,12 +23,13 @@
         android:background="@android:color/transparent"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="24dp"
+        android:animateLayoutChanges="true">
 
         <ImageButton
             android:id="@+id/btnMinimize"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/icon_expandbutton"
             android:rotation="180"
@@ -37,12 +39,12 @@
             android:id="@+id/tvCallChannelName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="16dp"
             android:layout_weight="1"
             android:text="Channel Name"
             android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="20sp"
+            android:fontFamily="sans-serif-black" />
 
         <TextView
             android:id="@+id/tvParticipantCount"
@@ -50,6 +52,7 @@
             android:layout_height="wrap_content"
             android:text="0 participants"
             android:textColor="#B0B0C8"
+            android:fontFamily="sans-serif-medium"
             android:textSize="14sp" />
     </LinearLayout>
 
@@ -59,61 +62,62 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="40dp"
         app:cardBackgroundColor="@color/call_control_bg"
-        app:cardCornerRadius="30dp"
-        app:cardElevation="8dp">
+        app:cardCornerRadius="40dp"
+        app:cardElevation="12dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="12dp">
+            android:padding="16dp"
+            android:animateLayoutChanges="true">
 
             <ImageButton
                 android:id="@+id/btnToggleVideo"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:background="@drawable/bg_call_tool_inactive"
                 android:src="@drawable/ic_videocam_off"
                 android:scaleType="centerInside"
-                android:padding="10dp"
+                android:padding="12dp"
                 app:tint="#B0B0C8"
                 android:contentDescription="Toggle camera" />
 
             <ImageButton
                 android:id="@+id/btnMute"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="12dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="16dp"
                 android:background="@drawable/bg_call_tool_active"
                 android:src="@drawable/ic_mic_on"
                 android:scaleType="centerInside"
-                android:padding="10dp"
+                android:padding="12dp"
                 app:tint="#B0B0C8"
                 android:contentDescription="Toggle microphone" />
 
             <ImageButton
                 android:id="@+id/btnShareScreen"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="12dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="16dp"
                 android:background="@drawable/bg_call_tool_inactive"
                 android:src="@drawable/ic_screen_share_off"
                 android:scaleType="centerInside"
-                android:padding="10dp"
+                android:padding="12dp"
                 app:tint="#B0B0C8"
                 android:contentDescription="Share screen" />
 
             <ImageButton
                 android:id="@+id/btnEndCall"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="24dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="32dp"
                 android:background="@drawable/bg_circle_end_call"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
                 android:scaleType="centerInside"
-                android:padding="10dp"
+                android:padding="12dp"
                 app:tint="@color/white"
                 android:contentDescription="End call" />
 

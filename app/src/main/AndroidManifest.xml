@@ -26,9 +26,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:extractNativeLibs="true"
         android:theme="@style/Theme.SE114_CallingSystem"
         tools:targetApi="31"
-        tools:replace="android:allowBackup, android:label, android:supportsRtl, android:theme">
+        tools:replace="android:allowBackup, android:label, android:supportsRtl, android:theme, android:extractNativeLibs">
         <service
             android:name=".Activity.Page.MessageNotificationService"
             android:enabled="true"
@@ -44,6 +45,9 @@
             android:exported="false" />
         <activity
             android:name=".Activity.Page.ChangeColorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.Page.ManageFriendsActivity"
             android:exported="false" />
         <activity
             android:name=".Activity.Page.ManageMembersActivity"

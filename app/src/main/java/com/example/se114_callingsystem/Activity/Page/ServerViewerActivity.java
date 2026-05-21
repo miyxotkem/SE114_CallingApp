@@ -3,7 +3,6 @@ package com.example.se114_callingsystem.Activity.Page;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +42,7 @@ public class ServerViewerActivity extends AppCompatActivity {
     private String serverId;
     private TextView tvServerName;
     private ImageView btnServerSettings;
-    private String currentAccentColor = "#7289DA"; // Màu mặc định Discord
+    private String currentAccentColor = "#5865F2"; // Chuyển màu mặc định sang Blurple (Discord) cho chuẩn bài
 
     // Chat Channel Variables
     private RecyclerView rvChatChannels;
@@ -88,7 +87,7 @@ public class ServerViewerActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadServerInfo(); // Tự động load lại màu khi quay lại từ trang đổi màu
+        loadServerInfo();
     }
 
     private void loadServerInfo() {
@@ -107,61 +106,34 @@ public class ServerViewerActivity extends AppCompatActivity {
         try {
             int color = Color.parseColor(currentAccentColor);
 
-            // TẠO MÀU NỀN NHẠT (Độ mờ 15%)
-            int lightBackgroundColor = Color.argb(38, Color.red(color), Color.green(color), Color.blue(color));
+            // 1. Phủ màu lên toàn bộ Hero Banner
+            View serverBanner = findViewById(R.id.serverBanner);
+            if (serverBanner != null) {
+                serverBanner.setBackgroundColor(color);
+            }
 
+            // 2. Nhuộm màu cho chữ cái bên trong Avatar
+            TextView tvAvatarLetter = findViewById(R.id.tvAvatarLetter);
+            if (tvAvatarLetter != null) {
+                tvAvatarLetter.setTextColor(color);
+                if (tvServerName.getText().length() > 0) {
+                    // Tự động lấy chữ cái đầu của Server
+                    tvAvatarLetter.setText(String.valueOf(tvServerName.getText().charAt(0)).toUpperCase());
+                }
+            }
+
+            // 3. Nhuộm sáng các dải Neon (Neon Strips) ở tiêu đề Kênh
+            View chatNeonStrip = findViewById(R.id.chatNeonStrip);
+            View callNeonStrip = findViewById(R.id.callNeonStrip);
+            if (chatNeonStrip != null) chatNeonStrip.setBackgroundColor(color);
+            if (callNeonStrip != null) callNeonStrip.setBackgroundColor(color);
+
+            // 4. Đồng bộ màu xuống RecyclerView
+            if (chatAdapter != null) chatAdapter.setServerColor(currentAccentColor);
+            if (callAdapter != null) callAdapter.setServerColor(currentAccentColor);
+
+            // 5. Đổi màu thanh Trạng thái (Status Bar) tiệp màu với Banner
             getWindow().setStatusBarColor(color);
-
-            com.google.android.material.card.MaterialCardView topBar = findViewById(R.id.topBar);
-            if (topBar != null) {
-                topBar.setCardBackgroundColor(color);
-            }
-
-            if (chatAdapter != null) {
-                chatAdapter.setServerColor(currentAccentColor);
-            }
-            if (callAdapter != null) {
-                callAdapter.setServerColor(currentAccentColor);
-            }
-
-            if (tvServerName != null) tvServerName.setTextColor(Color.WHITE);
-            ImageView btnBack = findViewById(R.id.btnBack);
-            ImageView btnSettings = findViewById(R.id.btnServerSettings);
-            if (btnBack != null) btnBack.setColorFilter(Color.WHITE);
-            if (btnSettings != null) btnSettings.setColorFilter(Color.WHITE);
-
-            ImageView btnAddChat = findViewById(R.id.btnAddChannel);
-            ImageView btnAddCall = findViewById(R.id.btnAddCallChannel);
-            ImageView btnExpandChat = findViewById(R.id.expandChatZone);
-            ImageView btnExpandCall = findViewById(R.id.expandCallZone);
-
-            if (btnAddChat != null) btnAddChat.setColorFilter(color);
-            if (btnAddCall != null) btnAddCall.setColorFilter(color);
-            if (btnExpandChat != null) btnExpandChat.setColorFilter(color);
-            if (btnExpandCall != null) btnExpandCall.setColorFilter(color);
-
-            // CHỈ BO VIỀN CHO CHAT/CALL ZONE (Bỏ phần tô nền)
-            com.google.android.material.card.MaterialCardView chatCard = findViewById(R.id.chatCard);
-            com.google.android.material.card.MaterialCardView callCard = findViewById(R.id.callCard);
-            if (chatCard != null) {
-                chatCard.setStrokeWidth(3);
-                chatCard.setStrokeColor(color);
-            }
-            if (callCard != null) {
-                callCard.setStrokeWidth(3);
-                callCard.setStrokeColor(color);
-            }
-
-            // ĐỔ MÀU NỀN RA BÊN NGOÀI (Nền chính của app)
-            View rootLayout = findViewById(R.id.rootLayout);
-            com.google.android.material.card.MaterialCardView mainBackgroundCard = findViewById(R.id.mainBackgroundCard);
-
-            if (rootLayout != null) {
-                rootLayout.setBackgroundColor(lightBackgroundColor);
-            }
-            if (mainBackgroundCard != null) {
-                mainBackgroundCard.setCardBackgroundColor(lightBackgroundColor);
-            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -196,6 +168,7 @@ public class ServerViewerActivity extends AppCompatActivity {
             toggleVisibility(rvCallChannels, btnExpandCall, isCallExpanded);
         });
 
+        // Đổi góc xoay mặc định của mũi tên mở rộng
         btnExpandChat.setRotation(90f);
         btnExpandCall.setRotation(90f);
     }
@@ -217,16 +190,13 @@ public class ServerViewerActivity extends AppCompatActivity {
         MaterialButton btnManageMembers = view.findViewById(R.id.btnManageMembers);
         MaterialButton btnChangeColor = view.findViewById(R.id.btnChangeColor);
 
-        // --- NHUỘM MÀU ACCENT CHO BOTTOM SHEET ---
+        // NHUỘM MÀU ACCENT CHO BOTTOM SHEET
         try {
             int color = Color.parseColor(currentAccentColor);
 
-            // Nhuộm nút Save
             if (btnRename != null) {
                 btnRename.setBackgroundTintList(ColorStateList.valueOf(color));
             }
-
-            // Nhuộm chữ và icon 2 nút menu
             if (btnManageMembers != null) {
                 btnManageMembers.setTextColor(color);
                 btnManageMembers.setIconTint(ColorStateList.valueOf(color));
@@ -257,6 +227,14 @@ public class ServerViewerActivity extends AppCompatActivity {
                     .update("serverName", newName)
                     .addOnSuccessListener(aVoid -> {
                         tvServerName.setText(newName);
+                        // Cập nhật lại chữ cái trên Avatar khi đổi tên
+                        com.google.android.material.card.MaterialCardView serverAvatar = findViewById(R.id.serverAvatarCard);
+                        if (serverAvatar != null) {
+                            TextView avatarText = (TextView) serverAvatar.getChildAt(0);
+                            if (avatarText != null) {
+                                avatarText.setText(String.valueOf(newName.charAt(0)).toUpperCase());
+                            }
+                        }
                         Toast.makeText(this, "Server renamed successfully", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                     })
@@ -393,7 +371,6 @@ public class ServerViewerActivity extends AppCompatActivity {
         MaterialButton btn = view.findViewById(R.id.btnCreateConfirm);
         if (title != null) title.setText(isChat ? "Create Chat Channel" : "Create Call Channel");
 
-        // Đổi màu luôn nút Add Channel cho tone-sur-tone nha
         try {
             int color = Color.parseColor(currentAccentColor);
             if (btn != null) btn.setBackgroundTintList(ColorStateList.valueOf(color));

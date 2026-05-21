@@ -6,13 +6,16 @@
     android:orientation="vertical"
     android:background="@color/bg_primary"
     android:padding="32dp"
-    android:gravity="center">
+    android:gravity="center"
+    android:animateLayoutChanges="true">
 
     <ImageView
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:src="@drawable/icon_user" 
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/edittext_background"
+        android:padding="24dp"
         app:tint="@color/accent" />
 
     <TextView
@@ -20,52 +23,58 @@
         android:layout_height="wrap_content"
         android:text="Welcome Back"
         android:textColor="@color/text_primary"
-        android:textSize="28sp"
-        android:textStyle="bold"
+        android:textSize="32sp"
+        android:fontFamily="sans-serif-black"
         android:layout_marginBottom="8dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Log in to continue"
+        android:text="Let's get you signed in"
         android:textColor="@color/text_secondary"
-        android:textSize="16sp"
-        android:layout_marginBottom="32dp"/>
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="40dp"/>
 
     <EditText
         android:id="@+id/etEmail"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="64dp"
         android:background="@drawable/edittext_background"
-        android:hint="Email"
-        android:paddingHorizontal="20dp"
+        android:hint="Email address"
+        android:paddingHorizontal="24dp"
         android:textColor="@color/text_primary"
         android:textColorHint="@color/text_hint"
         android:inputType="textEmailAddress"
+        android:fontFamily="sans-serif-medium"
         android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/etPassword"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="64dp"
         android:background="@drawable/edittext_background"
         android:hint="Password"
-        android:paddingHorizontal="20dp"
+        android:paddingHorizontal="24dp"
         android:textColor="@color/text_primary"
         android:textColorHint="@color/text_hint"
         android:inputType="textPassword"
-        android:layout_marginBottom="24dp"/>
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="32dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:text="Log In"
-        android:textSize="16sp"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-black"
         android:textColor="@color/text_on_accent"
         app:backgroundTint="@color/accent"
-        app:cornerRadius="16dp"
-        android:layout_marginBottom="24dp"/>
+        app:cornerRadius="32dp"
+        android:layout_marginBottom="24dp"
+        android:stateListAnimator="@null"
+        android:elevation="8dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -83,6 +92,7 @@
             android:layout_height="wrap_content"
             android:text="OR"
             android:textColor="@color/text_hint"
+            android:fontFamily="sans-serif-medium"
             android:layout_marginHorizontal="16dp"
             android:textSize="14sp"/>
         <View
@@ -96,13 +106,14 @@
         android:id="@+id/btnGoogleLogin"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:text="Sign in with Google"
         android:textColor="@color/text_primary"
+        android:fontFamily="sans-serif-black"
         app:strokeColor="@color/card_stroke"
-        app:strokeWidth="1.5dp"
-        app:cornerRadius="16dp"
-        android:layout_marginBottom="32dp"/>
+        app:strokeWidth="2dp"
+        app:cornerRadius="32dp"
+        android:layout_marginBottom="40dp"/>
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -111,17 +122,18 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Don't have an account? "
+            android:text="New here? "
             android:textColor="@color/text_secondary"
-            android:textSize="14sp"/>
+            android:fontFamily="sans-serif-medium"
+            android:textSize="16sp"/>
         <TextView
             android:id="@+id/tvGoToRegister"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Register"
+            android:text="Create Account"
             android:textColor="@color/accent"
-            android:textStyle="bold"
-            android:textSize="14sp"/>
+            android:fontFamily="sans-serif-black"
+            android:textSize="16sp"/>
     </LinearLayout>
 
 </LinearLayout>

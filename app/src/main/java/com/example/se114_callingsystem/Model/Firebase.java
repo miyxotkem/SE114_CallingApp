@@ -33,6 +33,23 @@ public class Firebase {
         return getDatabase().getReference("users");
     }
 
+    public static DatabaseReference getServersRef() {
+        return getDatabase().getReference("servers");
+    }
 
+    public static DatabaseReference getFriendsRef() {
+        return getDatabase().getReference("friends");
+    }
 
+    public static DatabaseReference getUserFriendsRef(String userId) {
+        return getDatabase().getReference("friends").child(userId);
+    }
+
+    public static DatabaseReference getFriendRequestsRef() {
+        return getDatabase().getReference("friend_requests");
+    }
+
+    public static DatabaseReference getUserFriendRequestsRef(String userId) {
+        return getDatabase().getReference("friend_requests").child(userId);
+    }
 }

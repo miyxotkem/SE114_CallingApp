@@ -22,8 +22,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/border_chat"
-            android:paddingHorizontal="14dp"
-            android:paddingVertical="10dp"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
             android:maxWidth="280dp">
 
             <TextView
@@ -36,6 +36,7 @@
                 android:textColor="@color/bubble_text_sent"
                 android:alpha="0.8"
                 android:textSize="12sp"
+                android:fontFamily="sans-serif-medium"
                 android:visibility="gone" />
 
             <ImageView
@@ -80,7 +81,7 @@
                     android:layout_marginStart="8dp"
                     android:text="Tài liệu đính kèm"
                     android:textColor="@color/bubble_text_sent"
-                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-black"
                     android:maxWidth="160dp"
                     android:ellipsize="middle"
                     android:singleLine="true"/>
@@ -91,7 +92,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/bubble_text_sent"
-                android:textSize="15sp"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-medium"
                 android:lineSpacingExtra="2dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -104,7 +106,7 @@
         android:elevation="4dp"
         android:padding="4dp"
         android:text="❤️"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="@id/cardBubble"
         app:layout_constraintStart_toStartOf="@id/cardBubble"
@@ -115,9 +117,10 @@
         android:id="@+id/textTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:textColor="@color/text_secondary"
-        android:textSize="10sp"
+        android:textSize="11sp"
+        android:fontFamily="sans-serif-medium"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@id/cardBubble"
         app:layout_constraintTop_toBottomOf="@id/cardBubble" />
