@@ -51,6 +51,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ChatDetailActivity extends AppCompatActivity {
+    public static String activeChatId = null;
+
     private RecyclerView recyclerView;
     private ChatAdapter adapter;
     private List<Message> messageList = new ArrayList<>();
@@ -122,6 +124,18 @@ public class ChatDetailActivity extends AppCompatActivity {
         applyServerColor();
         setupRecyclerView();
         setupClickListeners();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        activeChatId = groupId;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        activeChatId = null;
     }
 
     private void applyServerColor() {
