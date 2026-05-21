@@ -64,7 +64,7 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageAdapter.
 
             binding.tvAuthor.setText(msg.getSender().getName());
             binding.tvContent.setText(msg.getContent());
-            binding.tvTimestamp.setText(msg.getTimestamp());
+            binding.tvTimestamp.setText(msg.getFormattedTimestamp());
 
             binding.ivAvatar.setOnClickListener(v -> {
                 if (listener != null) listener.onUserClick(msg);

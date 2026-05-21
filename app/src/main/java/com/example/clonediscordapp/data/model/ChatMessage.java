@@ -1,5 +1,6 @@
 package com.example.clonediscordapp.data.model;
 
+import com.google.firebase.database.Exclude;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -10,7 +11,7 @@ public class ChatMessage {
     private String senderName;
     private String senderAvatar;
     private String content;
-    private long timestamp;
+    private Object timestamp;
     private String type; // "Message", "image", "file"
     private String fileUrl;
     private boolean isDeleted;
@@ -85,8 +86,22 @@ public class ChatMessage {
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
 
-    public long getTimestampLong() { return timestamp; }
-    public void setTimestampLong(long timestamp) { this.timestamp = timestamp; }
+    public Object getTimestamp() { return timestamp; }
+    public void setTimestamp(Object timestamp) { this.timestamp = timestamp; }
+
+    @Exclude
+    public long getTimestampLong() {
+        if (timestamp instanceof Number) {
+            return ((Number) timestamp).longValue();
+        } else if (timestamp instanceof String) {
+            try {
+                return Long.parseLong((String) timestamp);
+            } catch (NumberFormatException e) {
+                return System.currentTimeMillis();
+            }
+        }
+        return System.currentTimeMillis();
+    }
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
@@ -107,18 +122,21 @@ public class ChatMessage {
     public void setRepliedToType(String repliedToType) { this.repliedToType = repliedToType; }
 
     // --- CÁC PHƯƠNG THỨC TƯƠNG THÍCH VỚI MÃ NGUỒN ADAPTER CŨ ---
+    @Exclude
     public String getId() { return messageId; }
     
+    @Exclude
     public User getSender() { 
         User mockUser = new User(senderId, senderName, "");
         mockUser.setProfilePic(senderAvatar);
         return mockUser;
     }
     
-    public String getTimestamp() {
+    @Exclude
+    public String getFormattedTimestamp() {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("h:mm a", Locale.US);
-            return sdf.format(new Date(timestamp));
+            return sdf.format(new Date(getTimestampLong()));
         } catch (Exception e) {
             return "Just now";
         }

@@ -1,5 +1,9 @@
 package com.example.clonediscordapp.ui.voice;
 
+import static android.content.Context.MEDIA_PROJECTION_SERVICE;
+import static androidx.core.content.ContextCompat.getSystemService;
+import static androidx.core.content.ContextCompat.startForegroundService;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -39,6 +43,7 @@ import io.agora.rtc2.RtcEngineEx;
 import io.agora.rtc2.RtcConnection;
 import io.agora.rtc2.ChannelMediaOptions;
 import io.agora.rtc2.ScreenCaptureParameters;
+import io.agora.rtc2.video.VideoEncoderConfiguration;
 
 public class VoiceCallFragment extends Fragment {
 
@@ -47,10 +52,11 @@ public class VoiceCallFragment extends Fragment {
 
     private FragmentVoiceCallBinding binding;
     private RtcEngine mRtcEngine;
+    private static final int SCREEN_SHARE_REQUEST_CODE = 1001;
     private int uid;
     private String channelName = "s1";
     private String channelTitle = "Fantasy World";
-    
+
     private RtcConnection screenShareConnection;
     private final int SCREEN_SHARE_UID_OFFSET = 1000;
     private boolean isSharingScreen = false;
@@ -69,42 +75,18 @@ public class VoiceCallFragment extends Fragment {
             result -> {
                 Boolean recordAudioGranted = result.getOrDefault(Manifest.permission.RECORD_AUDIO, false);
                 Boolean cameraGranted = result.getOrDefault(Manifest.permission.CAMERA, false);
-                if (recordAudioGranted && cameraGranted) {
+                Boolean readPhoneStateGranted = result.getOrDefault(Manifest.permission.READ_PHONE_STATE, false);
+                if (recordAudioGranted && cameraGranted && readPhoneStateGranted) {
                     initAgoraAndJoinChannel();
                 } else {
                     if (getContext() != null) {
-                        Toast.makeText(requireContext(), "Microphone and Camera permissions are required for voice calls!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(requireContext(), "Microphone, Camera and Phone permissions are required for voice calls!", Toast.LENGTH_LONG).show();
                         Navigation.findNavController(requireView()).navigateUp();
                     }
                 }
             }
     );
 
-    private final ActivityResultLauncher<Intent> screenShareLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
-                    ScreenCaptureParameters params = new ScreenCaptureParameters();
-                    params.captureVideo = true;
-                    params.captureAudio = true;
-                    params.videoCaptureParameters.width = 720;
-                    params.videoCaptureParameters.height = 1280;
-                    mRtcEngine.startScreenCapture(params);
-
-                    Intent serviceIntent = new Intent(requireContext(), MyScreenShareService.class);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        requireContext().startForegroundService(serviceIntent);
-                    } else {
-                        requireContext().startService(serviceIntent);
-                    }
-
-                    setupScreenShareExConnection();
-                } else {
-                    Toast.makeText(requireContext(), "Permission denied for screen sharing", Toast.LENGTH_SHORT).show();
-                    stopScreenShare();
-                }
-            }
-    );
 
     @Nullable
     @Override
@@ -132,19 +114,21 @@ public class VoiceCallFragment extends Fragment {
             uid = (int) (Math.random() * 10000);
         }
 
-        // Initialize Recycler Adapter
-        adapter = new VoiceParticipantAdapter();
+        // Initialize Recycler Adapter with list reference
+        adapter = new VoiceParticipantAdapter(requireContext(), participantList, null);
         binding.rvVoiceParticipants.setAdapter(adapter);
         updateGridLayout();
 
-        // Check & request runtime calling permissions
+        // Check & request runtime calling permissions giống Backend (Thêm READ_PHONE_STATE)
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
             initAgoraAndJoinChannel();
         } else {
             requestPermissionLauncher.launch(new String[]{
                     Manifest.permission.RECORD_AUDIO,
-                    Manifest.permission.CAMERA
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.READ_PHONE_STATE
             });
         }
 
@@ -154,17 +138,17 @@ public class VoiceCallFragment extends Fragment {
     private void initAgoraAndJoinChannel() {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
-            config.mContext = requireContext().getApplicationContext();
+            config.mContext = requireActivity().getBaseContext();
             config.mAppId = appId;
             config.mEventHandler = mRtcEventHandler;
             mRtcEngine = RtcEngine.create(config);
 
-            // Configure audio and video pipelines
+            // Configure audio and video pipelines giống Backend
             mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_COMMUNICATION);
             mRtcEngine.enableAudio();
-            mRtcEngine.setDefaultAudioRoutetoSpeakerphone(true); // default to speakerphone for Discord style
-            
-            // Audio quality adjustments (echo & noise cancel)
+            mRtcEngine.setDefaultAudioRoutetoSpeakerphone(false); // Mặc định tai nghe, tránh echo giống Backend
+
+            // Audio quality adjustments (echo & noise cancel) giống Backend
             mRtcEngine.setParameters("{\"che.audio.enable.aec\":true}");
             mRtcEngine.setParameters("{\"che.audio.enable.ans\":true}");
             mRtcEngine.setParameters("{\"che.audio.enable.agc\":true}");
@@ -172,6 +156,8 @@ public class VoiceCallFragment extends Fragment {
             mRtcEngine.enableVideo();
             mRtcEngine.muteLocalVideoStream(true); // start camera disabled by default
             mRtcEngine.enableAudioVolumeIndication(200, 3, true);
+            // Ép SDK sử dụng giao thức kết nối mạnh nhất giống Backend
+            mRtcEngine.setParameters("{\"rtc.force_unified_communication_mode\":true}");
 
             // Bind RtcEngine to Adapter so it can attach surface views
             adapter.setRtcEngine(mRtcEngine);
@@ -203,13 +189,13 @@ public class VoiceCallFragment extends Fragment {
                     mRtcEngine.muteRemoteAudioStream(remoteUid, true);
                     return;
                 }
-                
+
                 Toast.makeText(requireContext(), "User " + remoteUid + " joined the voice channel!", Toast.LENGTH_SHORT).show();
                 Participant newUser = new Participant(remoteUid, "User " + remoteUid);
                 newUser.isVideoOff = true;
                 participantList.add(newUser);
                 updateGridLayout();
-                adapter.submitList(new ArrayList<>(participantList));
+                adapter.notifyItemInserted(participantList.size() - 1);
             });
         }
 
@@ -230,7 +216,7 @@ public class VoiceCallFragment extends Fragment {
                     me.isMuted = isMuted;
                     participantList.add(0, me);
                     updateGridLayout();
-                    adapter.submitList(new ArrayList<>(participantList));
+                    adapter.notifyItemInserted(0);
                 }
             });
         }
@@ -246,7 +232,7 @@ public class VoiceCallFragment extends Fragment {
                     if (participantList.get(i).uid == remoteUid) {
                         participantList.remove(i);
                         updateGridLayout();
-                        adapter.submitList(new ArrayList<>(participantList));
+                        adapter.notifyItemRemoved(i);
                         break;
                     }
                 }
@@ -264,18 +250,14 @@ public class VoiceCallFragment extends Fragment {
                     }
                 }
 
-                boolean changed = false;
                 for (int i = 0; i < participantList.size(); i++) {
                     Participant p = participantList.get(i);
                     int checkUid = (i == 0) ? 0 : p.uid;
                     boolean isNowSpeaking = activeSpeakers.contains(checkUid);
                     if (p.isSpeaking != isNowSpeaking) {
                         p.isSpeaking = isNowSpeaking;
-                        changed = true;
+                        adapter.notifyItemChanged(i, "border_update");
                     }
-                }
-                if (changed) {
-                    adapter.submitList(new ArrayList<>(participantList));
                 }
             });
         }
@@ -284,10 +266,11 @@ public class VoiceCallFragment extends Fragment {
         public void onUserMuteVideo(int remoteUid, boolean muted) {
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
-                for (Participant p : participantList) {
+                for (int i = 0; i < participantList.size(); i++) {
+                    Participant p = participantList.get(i);
                     if (p.uid == remoteUid) {
                         p.isVideoOff = muted;
-                        adapter.submitList(new ArrayList<>(participantList));
+                        adapter.notifyItemChanged(i, "state_update");
                         break;
                     }
                 }
@@ -298,12 +281,13 @@ public class VoiceCallFragment extends Fragment {
         public void onRemoteVideoStateChanged(int remoteUid, int state, int reason, int elapsed) {
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
-                for (Participant p : participantList) {
+                for (int i = 0; i < participantList.size(); i++) {
+                    Participant p = participantList.get(i);
                     if (p.uid == remoteUid) {
                         boolean isOff = (state == 0);
                         if (p.isVideoOff != isOff) {
                             p.isVideoOff = isOff;
-                            adapter.submitList(new ArrayList<>(participantList));
+                            adapter.notifyItemChanged(i, "state_update");
                         }
                         break;
                     }
@@ -314,15 +298,16 @@ public class VoiceCallFragment extends Fragment {
         @Override
         public void onLocalVideoStateChanged(Constants.VideoSourceType source, int state, int error) {
             super.onLocalVideoStateChanged(source, state, error);
-            if (source == Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY) {
-                if (state == Constants.LOCAL_VIDEO_STREAM_STATE_CAPTURING) {
+            if (source == io.agora.rtc2.Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY) {
+                if (state == io.agora.rtc2.Constants.LOCAL_VIDEO_STREAM_STATE_CAPTURING) {
                     if (getActivity() == null) return;
                     getActivity().runOnUiThread(() -> {
+
                         setupScreenShareExConnection();
                         isSharingScreen = true;
                         updateScreenShareUI();
                     });
-                } else if (state == Constants.LOCAL_VIDEO_STREAM_STATE_FAILED) {
+                } else if (state == io.agora.rtc2.Constants.LOCAL_VIDEO_STREAM_STATE_FAILED) {
                     if (getActivity() == null) return;
                     getActivity().runOnUiThread(() -> {
                         Toast.makeText(requireContext(), "Screen sharing cancelled", Toast.LENGTH_SHORT).show();
@@ -336,42 +321,40 @@ public class VoiceCallFragment extends Fragment {
     private void startScreenShare() {
         if (mRtcEngine == null) return;
         mRtcEngine.muteLocalVideoStream(true);
-        
-        // Disable local camera UI indicator while sharing screen
-        isVideoOn = false;
-        updateCameraUI();
-        if (!participantList.isEmpty()) {
-            participantList.get(0).isVideoOff = true;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            mProjectionManager = (MediaProjectionManager)
+                    requireContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         }
-
-        mProjectionManager = (MediaProjectionManager) requireContext().getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         if (mProjectionManager != null) {
             Intent intent = mProjectionManager.createScreenCaptureIntent();
-            screenShareLauncher.launch(intent);
+            startActivityForResult(intent, SCREEN_SHARE_REQUEST_CODE);
         }
     }
 
     private void stopScreenShare() {
-        if (mRtcEngine != null) {
-            mRtcEngine.stopPreview(Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY);
-            mRtcEngine.stopScreenCapture();
-        }
+        // 0. Dừng preview của luồng screen để tránh leak
+        mRtcEngine.stopPreview(Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY);
+        // 1. Tắt quay màn hình của Agora
+        mRtcEngine.stopScreenCapture();
 
+        // 2. Rời luồng phụ
         if (screenShareConnection != null) {
-            RtcEngineEx engineEx = (RtcEngineEx) mRtcEngine;
+            io.agora.rtc2.RtcEngineEx engineEx = (io.agora.rtc2.RtcEngineEx) mRtcEngine;
             engineEx.leaveChannelEx(screenShareConnection);
             screenShareConnection = null;
         }
 
+        // 3. Xóa ô màn hình khỏi UI
         for (int i = 0; i < participantList.size(); i++) {
             if (participantList.get(i).name.equals("Màn hình của tôi")) {
                 participantList.remove(i);
                 updateGridLayout();
+                adapter.notifyItemRemoved(i);
                 break;
             }
         }
-        adapter.submitList(new ArrayList<>(participantList));
 
+        // 4. Dừng cái Service của bạn lại để tắt Notification
         Intent serviceIntent = new Intent(requireContext(), MyScreenShareService.class);
         requireContext().stopService(serviceIntent);
 
@@ -381,26 +364,26 @@ public class VoiceCallFragment extends Fragment {
 
     private void setupScreenShareExConnection() {
         if (mRtcEngine == null) return;
-        RtcEngineEx engineEx = (RtcEngineEx) mRtcEngine;
-        screenShareConnection = new RtcConnection();
+        io.agora.rtc2.RtcEngineEx engineEx = (io.agora.rtc2.RtcEngineEx) mRtcEngine;
+        screenShareConnection = new io.agora.rtc2.RtcConnection();
         screenShareConnection.channelId = channelName;
-        screenShareConnection.localUid = uid + SCREEN_SHARE_UID_OFFSET;
+        screenShareConnection.localUid = uid + 1000; // UID màn hình (ví dụ 1400)
 
-        ChannelMediaOptions options = new ChannelMediaOptions();
+        io.agora.rtc2.ChannelMediaOptions options = new io.agora.rtc2.ChannelMediaOptions();
         options.publishCameraTrack = false;
         options.publishMicrophoneTrack = false;
         options.publishScreenCaptureVideo = true;
         options.publishScreenCaptureAudio = true;
-        options.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER;
+        options.clientRoleType = io.agora.rtc2.Constants.CLIENT_ROLE_BROADCASTER;
 
-        engineEx.joinChannelEx(null, screenShareConnection, options, new IRtcEngineEventHandler() {});
+        engineEx.joinChannelEx(null, screenShareConnection, options, new io.agora.rtc2.IRtcEngineEventHandler() {});
 
+        // Hiện thêm 1 ô màn hình vào UI của máy mình
         Participant myScreen = new Participant(screenShareConnection.localUid, "Màn hình của tôi");
         myScreen.isVideoOff = false;
-        myScreen.isSharingScreen = true;
         participantList.add(myScreen);
         updateGridLayout();
-        adapter.submitList(new ArrayList<>(participantList));
+        adapter.notifyItemInserted(participantList.size() - 1);
     }
 
     private void setupControls() {
@@ -448,11 +431,8 @@ public class VoiceCallFragment extends Fragment {
             updateDeafenUI();
         });
 
-        // Local Camera Toggle
+        // Local Camera Toggle giống Backend (Hoạt động hoàn toàn độc lập với Screen Share)
         binding.btnVideo.setOnClickListener(v -> {
-            if (isSharingScreen) {
-                stopScreenShare();
-            }
             isVideoOn = !isVideoOn;
             if (mRtcEngine != null) {
                 mRtcEngine.muteLocalVideoStream(!isVideoOn);
@@ -463,7 +443,22 @@ public class VoiceCallFragment extends Fragment {
         // Screen share toggle
         binding.btnScreenShare.setOnClickListener(v -> {
             if (!isSharingScreen) {
-                startScreenShare();
+                Intent intent = new Intent(requireContext(), MyScreenShareService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    requireContext().startForegroundService(intent);
+                } else {
+                    requireContext().startService(intent);
+                }
+
+                // 2. Gọi Agora mở Popup xin quyền quay màn hình
+                io.agora.rtc2.ScreenCaptureParameters params = new io.agora.rtc2.ScreenCaptureParameters();
+                params.captureVideo = true;
+                params.captureAudio = true;
+                params.videoCaptureParameters.width = 720;
+                params.videoCaptureParameters.height = 1280;
+
+                mRtcEngine.startScreenCapture(params);
+                // Lưu ý: Tuyệt đối dừng ở đây, không gọi setupScreenShareExConnection() vội.
             } else {
                 stopScreenShare();
             }
@@ -482,7 +477,7 @@ public class VoiceCallFragment extends Fragment {
     private void updateMuteUI() {
         if (!participantList.isEmpty()) {
             participantList.get(0).isMuted = isMuted;
-            adapter.submitList(new ArrayList<>(participantList));
+            adapter.notifyItemChanged(0, "state_update");
         }
 
         if (isMuted) {
@@ -515,7 +510,7 @@ public class VoiceCallFragment extends Fragment {
     private void updateCameraUI() {
         if (!participantList.isEmpty()) {
             participantList.get(0).isVideoOff = !isVideoOn;
-            adapter.submitList(new ArrayList<>(participantList));
+            adapter.notifyItemChanged(0, "state_update");
         }
 
         if (isVideoOn) {
