@@ -10,6 +10,11 @@
     </style>
 
     <style name="Theme.SE114_CallingSystem" parent="Base.Theme.SE114_CallingSystem" />
+
+    <style name="ShapeAppearanceOverlay.App.CornerSize50Percent" parent="">
+        <item name="cornerSize">50%</item>
+    </style>
+
     <style name="CircleImage">
         <item name="cornerSize">50%</item>
     </style>

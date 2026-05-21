@@ -50,6 +50,14 @@ public class HomePageActivity extends AppCompatActivity {
             dialog.show(getSupportFragmentManager(), "Server_on_create");
         });
 
+        MaterialCardView btnManageFriends = findViewById(R.id.btnManageFriends);
+        if (btnManageFriends != null) {
+            btnManageFriends.setOnClickListener(v -> {
+                Intent intent = new Intent(this, com.example.se114_callingsystem.Activity.Page.ManageFriendsActivity.class);
+                startActivity(intent);
+            });
+        }
+
         MaterialCardView btnLogout = findViewById(R.id.btnLogout);
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> {

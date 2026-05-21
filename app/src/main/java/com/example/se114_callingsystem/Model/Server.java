@@ -11,6 +11,7 @@ public class Server {
     private String purpose;
     private int orderIndex;
     private String accentColor;
+    private java.util.List<String> members;
 
     public Server() {}
     public Server(String serverName, String ownerId, String iconUrl, String purpose, String accentColor) {
@@ -19,6 +20,8 @@ public class Server {
         this.iconUrl = iconUrl;
         this.purpose = purpose;
         this.accentColor = accentColor;
+        this.members = new java.util.ArrayList<>();
+        this.members.add(ownerId); // Add owner as a member initially
     }
 
     public String getServerId() { return serverId; }
@@ -35,4 +38,6 @@ public class Server {
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
     public String getAccentColor() { return accentColor; }
     public void setAccentColor(String accentColor) { this.accentColor = accentColor; }
+    public java.util.List<String> getMembers() { return members; }
+    public void setMembers(java.util.List<String> members) { this.members = members; }
 }

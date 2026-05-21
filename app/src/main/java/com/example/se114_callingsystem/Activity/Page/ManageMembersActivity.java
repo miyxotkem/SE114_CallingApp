@@ -40,6 +40,13 @@ public class ManageMembersActivity extends AppCompatActivity {
 
         rvMembers = findViewById(R.id.rvMembers);
         rvMembers.setLayoutManager(new LinearLayoutManager(this));
+        
+        ImageView btnAddMember = findViewById(R.id.btnAddMember);
+        btnAddMember.setOnClickListener(v -> {
+            com.example.se114_callingsystem.Activity.Component.add_server_member dialog = 
+                new com.example.se114_callingsystem.Activity.Component.add_server_member(serverId);
+            dialog.show(getSupportFragmentManager(), "Add_server_member");
+        });
 
         adapter = new ServerMemberAdapter(memberList, this, new ServerMemberAdapter.OnMemberActionListener() {
             @Override
@@ -74,13 +81,31 @@ public class ManageMembersActivity extends AppCompatActivity {
         db.collection("servers").document(serverId).collection("members").get()
                 .addOnSuccessListener(snapshots -> {
                     memberList.clear();
+                    String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+                        com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+                    boolean canAddMembers = false;
+                    
                     for (DocumentSnapshot doc : snapshots) {
                         ServerMember m = doc.toObject(ServerMember.class);
                         if (m != null) {
                             m.setUserId(doc.getId());
                             memberList.add(m);
+                            
+                            if (m.getUserId().equals(currentUid)) {
+                                if ("owner".equals(m.getRole()) || "admin".equals(m.getRole())) {
+                                    canAddMembers = true;
+                                }
+                            }
                         }
                     }
+                    
+                    ImageView btnAddMember = findViewById(R.id.btnAddMember);
+                    if (canAddMembers) {
+                        btnAddMember.setVisibility(android.view.View.VISIBLE);
+                    } else {
+                        btnAddMember.setVisibility(android.view.View.GONE);
+                    }
+                    
                     adapter.notifyDataSetChanged();
                 });
     }
