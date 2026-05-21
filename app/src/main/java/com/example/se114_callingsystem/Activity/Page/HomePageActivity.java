@@ -44,6 +44,9 @@ public class HomePageActivity extends AppCompatActivity {
 
         fetchServers();
 
+        checkNotificationPermission();
+        startMessageNotificationService();
+
         MaterialCardView cardServerCreate = findViewById(R.id.mcvServerCreate);
         cardServerCreate.setOnClickListener(v -> {
             create_server dialog = new create_server();
@@ -53,6 +56,7 @@ public class HomePageActivity extends AppCompatActivity {
         MaterialCardView btnLogout = findViewById(R.id.btnLogout);
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> {
+                stopService(new Intent(this, MessageNotificationService.class));
                 FirebaseAuth.getInstance().signOut();
                 GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
                 Intent intent = new Intent(this, LoginActivity.class);
@@ -60,6 +64,23 @@ public class HomePageActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
             });
+        }
+    }
+
+    private void checkNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                androidx.core.app.ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+    }
+
+    private void startMessageNotificationService() {
+        if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null) {
+            Intent serviceIntent = new Intent(this, MessageNotificationService.class);
+            startService(serviceIntent);
         }
     }
 

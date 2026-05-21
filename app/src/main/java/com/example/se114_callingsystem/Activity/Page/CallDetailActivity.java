@@ -33,6 +33,7 @@ import com.example.se114_callingsystem.Model.Participant;
 import com.example.se114_callingsystem.Adapter.ParticipantAdapter;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.Util.ThemeHelper;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +53,7 @@ public class CallDetailActivity extends AppCompatActivity {
     private RtcEngine mRtcEngine;
 
     // NHÃ ƠI: Nhớ chỉnh UID này khác nhau trên 2 máy để không bị đá nhau nhé!
-    int uid = 500;
+    int uid = FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode();
 
     private String channelName = "TestChannel";
     private RtcConnection screenShareConnection;
