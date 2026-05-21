@@ -6,6 +6,11 @@ public class User {
     private String email;       // Địa chỉ email
     private String profilePic;  // Link ảnh đại diện (URL)
     private String status;      // Trạng thái: "online" hoặc "offline"
+    private String coverPic;
+    private String bio;
+    private String dob;
+    private String workplace;
+    private String hobbies;
 
     // Constructor trống bắt buộc phải có để Firebase mapping dữ liệu
     public User() {
@@ -18,6 +23,11 @@ public class User {
         this.email = email;
         this.status = "online"; // Mặc định khi mới tạo là online
         this.profilePic = "";   // Để trống nếu chưa có ảnh
+        this.coverPic = "";
+        this.bio = "";
+        this.dob = "";
+        this.workplace = "";
+        this.hobbies = "";
     }
 
     // Getter và Setter
@@ -35,4 +45,19 @@ public class User {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getCoverPic() { return coverPic; }
+    public void setCoverPic(String coverPic) { this.coverPic = coverPic; }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
+
+    public String getDob() { return dob; }
+    public void setDob(String dob) { this.dob = dob; }
+
+    public String getWorkplace() { return workplace; }
+    public void setWorkplace(String workplace) { this.workplace = workplace; }
+
+    public String getHobbies() { return hobbies; }
+    public void setHobbies(String hobbies) { this.hobbies = hobbies; }
 }

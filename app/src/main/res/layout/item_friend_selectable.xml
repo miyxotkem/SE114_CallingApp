@@ -33,45 +33,13 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <!-- For Friend Requests -->
-        <LinearLayout
-            android:id="@+id/llRequestActions"
+        <CheckBox
+            android:id="@+id/cbSelect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:orientation="horizontal"
-            android:visibility="gone">
-
-            <ImageView
-                android:id="@+id/btnAccept"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginEnd="8dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_input_add"
-                app:tint="#4CAF50" />
-
-            <ImageView
-                android:id="@+id/btnReject"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_delete"
-                app:tint="#F44336" />
-        </LinearLayout>
-        
-        <!-- For Friends -->
-        <ImageView
-            android:id="@+id/btnRemoveFriend"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:padding="6dp"
-            android:src="@android:drawable/ic_delete"
-            app:tint="#F44336"
-            android:visibility="gone" />
+            android:buttonTint="#F7374F" />
 
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -68,6 +68,13 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
                 if (listener != null) listener.onRemove(user);
             });
         }
+        
+        // Open Profile on click
+        holder.itemView.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(v.getContext(), com.example.se114_callingsystem.Activity.Page.ProfileActivity.class);
+            intent.putExtra("USER_ID", user.getUserId());
+            v.getContext().startActivity(intent);
+        });
     }
 
     @Override

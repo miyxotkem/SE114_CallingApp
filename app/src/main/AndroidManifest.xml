@@ -50,6 +50,12 @@
             android:name=".Activity.Page.ManageFriendsActivity"
             android:exported="false" />
         <activity
+            android:name=".Activity.Page.ProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.Page.EditProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activity.Page.ManageMembersActivity"
             android:exported="false" />
         <activity

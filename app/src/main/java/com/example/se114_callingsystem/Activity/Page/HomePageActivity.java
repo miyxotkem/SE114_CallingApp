@@ -61,16 +61,11 @@ public class HomePageActivity extends AppCompatActivity {
             });
         }
 
-        MaterialCardView btnLogout = findViewById(R.id.btnLogout);
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> {
-                stopService(new Intent(this, MessageNotificationService.class));
-                FirebaseAuth.getInstance().signOut();
-                GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
-                Intent intent = new Intent(this, LoginActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        MaterialCardView btnProfile = findViewById(R.id.btnProfile);
+        if (btnProfile != null) {
+            btnProfile.setOnClickListener(v -> {
+                Intent intent = new Intent(this, com.example.se114_callingsystem.Activity.Page.ProfileActivity.class);
                 startActivity(intent);
-                finish();
             });
         }
     }
@@ -93,7 +88,12 @@ public class HomePageActivity extends AppCompatActivity {
     }
 
     private void fetchServers() {
-        db.collection("servers").addSnapshotListener((value, error) -> {
+        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUserUid.isEmpty()) return;
+
+        db.collection("servers")
+          .whereArrayContains("members", currentUserUid)
+          .addSnapshotListener((value, error) -> {
             if (error != null) {
                 Log.e("Firestore", "Error: " + error.getMessage());
                 return;

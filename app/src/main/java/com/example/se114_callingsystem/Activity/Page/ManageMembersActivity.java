@@ -66,6 +66,10 @@ public class ManageMembersActivity extends AppCompatActivity {
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                         .delete()
                         .addOnSuccessListener(a -> {
+                            // Cập nhật lại mảng members ở server document để xóa userId này
+                            db.collection("servers").document(serverId)
+                                .update("members", com.google.firebase.firestore.FieldValue.arrayRemove(member.getUserId()));
+                                
                             Toast.makeText(ManageMembersActivity.this, "Member kicked", Toast.LENGTH_SHORT).show();
                             loadMembers();
                         });
