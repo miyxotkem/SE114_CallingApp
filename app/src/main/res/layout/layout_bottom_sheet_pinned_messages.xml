@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_bottom_sheet"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:minHeight="400dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/handle_bar"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/tvPinnedTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📌 TIN NHẮN ĐÃ GHIM"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-black"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:letterSpacing="0.05"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        android:layout_marginBottom="12dp"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvPinnedMessages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible"
+            android:padding="4dp"
+            android:clipToPadding="false"/>
+
+        <TextView
+            android:id="@+id/tvNoPinnedMessages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Không có tin nhắn ghim nào trong phòng này."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:visibility="gone"/>
+    </FrameLayout>
+
+</LinearLayout>

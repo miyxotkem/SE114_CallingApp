@@ -31,69 +31,57 @@
         tools:targetApi="31"
         tools:replace="android:allowBackup, android:label, android:supportsRtl, android:theme, android:extractNativeLibs">
         <service
-            android:name=".Activity.Page.MessageNotificationService"
+            android:name=".service.MessageNotificationService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".Activity.Page.MyScreenShareService"
+            android:name=".service.MyScreenShareService"
             android:foregroundServiceType="mediaProjection"
             tools:node="merge"
             android:exported="false">
         </service>
         <activity
-            android:name=".Activity.Page.ChatInfoActivity"
+            android:name=".chat.ChatInfoActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.ChangeColorActivity"
+            android:name=".chat.SearchInChatActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.ManageFriendsActivity"
+            android:name=".server.ChangeColorActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.ProfileActivity"
+            android:name=".friend.ManageFriendsActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.EditProfileActivity"
+            android:name=".profile.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.ManageMembersActivity"
+            android:name=".profile.EditProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.CallDetailActivity"
+            android:name=".server.ManageMembersActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Component.item_participant"
+            android:name=".call.CallDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Component.bottom_sheet_server_settings"
+            android:name=".viewer.DocumentViewerActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.DocumentViewerActivity"
+            android:name=".viewer.ImageViewerActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.ImageViewerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activity.Component.item_chat_bubble_receive"
-            android:exported="false" />
-        <activity
-            android:name=".Activity.Page.ChatDetailActivity"
+            android:name=".chat.ChatDetailActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".Activity.Component.list_item_chat_channels"
+            android:name=".server.ServerViewerActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Component.list_item_servers"
+            android:name=".home.HomePageActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.Page.ServerViewerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activity.Page.HomePageActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Activity.Page.LoginActivity"
+            android:name=".auth.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -101,7 +89,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Activity.Page.RegisterActivity"
+            android:name=".auth.RegisterActivity"
             android:exported="false" />
     </application>
 
