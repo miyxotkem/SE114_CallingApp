@@ -15,6 +15,8 @@ public class Message {
     private String repliedToContent;
     private String repliedToType; // "image", "file", or null/"Message" for text
     private boolean pinned;
+    private long reminderTime;
+
 
     // Constructor trống để Firebase mapping
     public Message() {
@@ -23,6 +25,7 @@ public class Message {
         this.repliedToContent = "";
         this.repliedToType = "";
         this.pinned = false;
+        this.reminderTime = 0;
     }
 
     // Constructor đầy đủ cho Text
@@ -37,6 +40,7 @@ public class Message {
         this.repliedToContent = "";
         this.repliedToType = "";
         this.pinned = false;
+        this.reminderTime = 0;
     }
 
     // Constructor đầy đủ cho Media
@@ -52,6 +56,7 @@ public class Message {
         this.repliedToContent = "";
         this.repliedToType = "";
         this.pinned = false;
+        this.reminderTime = 0;
     }
 
     // --- Original Getters & Setters ---
@@ -81,4 +86,7 @@ public class Message {
     public void setRepliedToType(String repliedToType) { this.repliedToType = repliedToType; }
     public boolean isPinned() { return pinned; }
     public void setPinned(boolean pinned) { this.pinned = pinned; }
+    
+    public long getReminderTime() { return reminderTime; }
+    public void setReminderTime(long reminderTime) { this.reminderTime = reminderTime; }
 }

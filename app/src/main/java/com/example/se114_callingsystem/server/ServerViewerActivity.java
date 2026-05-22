@@ -20,6 +20,7 @@ import com.example.se114_callingsystem.call.CallAdapter;
 import com.example.se114_callingsystem.chat.ChatZoneAdapter;
 import com.example.se114_callingsystem.model.CallChannel;
 import com.example.se114_callingsystem.model.ChatChannel;
+import com.example.se114_callingsystem.model.PostChannel;
 import com.example.se114_callingsystem.model.Server;
 import com.example.se114_callingsystem.util.ThemeHelper;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -53,6 +54,12 @@ public class ServerViewerActivity extends AppCompatActivity {
     private List<CallChannel> callList = new ArrayList<>();
     private boolean isCallExpanded = true;
 
+    // Post Channel Variables
+    private RecyclerView rvPostChannels;
+    private PostChannelAdapter postAdapter;
+    private List<PostChannel> postList = new ArrayList<>();
+    private boolean isPostExpanded = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
@@ -76,9 +83,11 @@ public class ServerViewerActivity extends AppCompatActivity {
         initViews();
         setupChatRecyclerView();
         setupCallRecyclerView();
+        setupPostRecyclerView();
 
         loadChatData();
         loadCallData();
+        loadPostData();
     }
 
     @Override
@@ -122,12 +131,15 @@ public class ServerViewerActivity extends AppCompatActivity {
             // 3. Nhuộm sáng các dải Neon (Neon Strips) ở tiêu đề Kênh
             View chatNeonStrip = findViewById(R.id.chatNeonStrip);
             View callNeonStrip = findViewById(R.id.callNeonStrip);
+            View postNeonStrip = findViewById(R.id.postNeonStrip);
             if (chatNeonStrip != null) chatNeonStrip.setBackgroundColor(color);
             if (callNeonStrip != null) callNeonStrip.setBackgroundColor(color);
+            if (postNeonStrip != null) postNeonStrip.setBackgroundColor(color);
 
             // 4. Đồng bộ màu xuống RecyclerView
             if (chatAdapter != null) chatAdapter.setServerColor(currentAccentColor);
             if (callAdapter != null) callAdapter.setServerColor(currentAccentColor);
+            if (postAdapter != null) postAdapter.setServerColor(currentAccentColor);
 
             // 5. Đổi màu thanh Trạng thái (Status Bar) tiệp màu với Banner
             getWindow().setStatusBarColor(color);
@@ -141,11 +153,13 @@ public class ServerViewerActivity extends AppCompatActivity {
         ImageView btnBack = findViewById(R.id.btnBack);
         ImageView btnAddChat = findViewById(R.id.btnAddChannel);
         ImageView btnAddCall = findViewById(R.id.btnAddCallChannel);
+        ImageView btnAddPost = findViewById(R.id.btnAddPostChannel);
         btnServerSettings = findViewById(R.id.btnServerSettings);
 
         btnBack.setOnClickListener(v -> finish());
-        btnAddChat.setOnClickListener(v -> showAddChannelDialog(true));
-        btnAddCall.setOnClickListener(v -> showAddChannelDialog(false));
+        btnAddChat.setOnClickListener(v -> showAddChannelDialog("chat"));
+        btnAddCall.setOnClickListener(v -> showAddChannelDialog("call"));
+        if (btnAddPost != null) btnAddPost.setOnClickListener(v -> showAddChannelDialog("post"));
 
         if (btnServerSettings != null) {
             btnServerSettings.setOnClickListener(v -> showServerSettingsDialog());
@@ -165,9 +179,19 @@ public class ServerViewerActivity extends AppCompatActivity {
             toggleVisibility(rvCallChannels, btnExpandCall, isCallExpanded);
         });
 
+        ImageView btnExpandPost = findViewById(R.id.expandPostZone);
+        rvPostChannels = findViewById(R.id.rvPostChannels);
+        if (btnExpandPost != null) {
+            btnExpandPost.setOnClickListener(v -> {
+                isPostExpanded = !isPostExpanded;
+                toggleVisibility(rvPostChannels, btnExpandPost, isPostExpanded);
+            });
+        }
+
         // Đổi góc xoay mặc định của mũi tên mở rộng
         btnExpandChat.setRotation(90f);
         btnExpandCall.setRotation(90f);
+        if (btnExpandPost != null) btnExpandPost.setRotation(90f);
     }
 
     private void toggleVisibility(View view, View icon, boolean expanded) {
@@ -295,12 +319,12 @@ public class ServerViewerActivity extends AppCompatActivity {
     // --- CHAT & CALL CHANNELS METHODS ---
     private void setupChatRecyclerView() {
         chatAdapter = new ChatZoneAdapter(chatList, new ChatZoneAdapter.OnChannelActionListener() {
-            @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", true); }
+            @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", "chat"); }
             @Override public void onRemove(ChatChannel channel) { db.collection("Channels").document(channel.getChatId()).delete().addOnSuccessListener(a -> loadChatData()); }
         });
         rvChatChannels.setLayoutManager(new LinearLayoutManager(this));
         rvChatChannels.setAdapter(chatAdapter);
-        setupDragAndDrop(rvChatChannels, chatList, chatAdapter, true);
+        setupDragAndDrop(rvChatChannels, chatList, chatAdapter, "chat");
     }
 
     private void loadChatData() {
@@ -317,12 +341,12 @@ public class ServerViewerActivity extends AppCompatActivity {
 
     private void setupCallRecyclerView() {
         callAdapter = new CallAdapter(callList, new CallAdapter.OnCallActionListener() {
-            @Override public void onRename(CallChannel channel) { showBaseRenameDialog(channel.getCallId(), channel.getCallName(), "CallChannels", false); }
+            @Override public void onRename(CallChannel channel) { showBaseRenameDialog(channel.getCallId(), channel.getCallName(), "CallChannels", "call"); }
             @Override public void onRemove(CallChannel channel) { db.collection("CallChannels").document(channel.getCallId()).delete().addOnSuccessListener(a -> loadCallData()); }
         });
         rvCallChannels.setLayoutManager(new LinearLayoutManager(this));
         rvCallChannels.setAdapter(callAdapter);
-        setupDragAndDrop(rvCallChannels, callList, callAdapter, false);
+        setupDragAndDrop(rvCallChannels, callList, callAdapter, "call");
     }
 
     private void loadCallData() {
@@ -337,7 +361,30 @@ public class ServerViewerActivity extends AppCompatActivity {
                 });
     }
 
-    private void setupDragAndDrop(RecyclerView rv, List<?> list, RecyclerView.Adapter<?> adapter, boolean isChat) {
+    private void setupPostRecyclerView() {
+        postAdapter = new PostChannelAdapter(postList, new PostChannelAdapter.OnChannelActionListener() {
+            @Override public void onRename(PostChannel channel) { showBaseRenameDialog(channel.getId(), channel.getName(), "PostChannels", "post"); }
+            @Override public void onRemove(PostChannel channel) { db.collection("PostChannels").document(channel.getId()).delete().addOnSuccessListener(a -> loadPostData()); }
+        });
+        rvPostChannels.setLayoutManager(new LinearLayoutManager(this));
+        rvPostChannels.setAdapter(postAdapter);
+        setupDragAndDrop(rvPostChannels, postList, postAdapter, "post");
+    }
+
+    private void loadPostData() {
+        db.collection("PostChannels").whereEqualTo("serverId", serverId).get()
+                .addOnSuccessListener(snapshots -> {
+                    postList.clear();
+                    for (DocumentSnapshot doc : snapshots) {
+                        PostChannel c = doc.toObject(PostChannel.class);
+                        if (c != null) { c.setId(doc.getId()); postList.add(c); }
+                    }
+                    Collections.sort(postList, (a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()));
+                    postAdapter.notifyDataSetChanged();
+                });
+    }
+
+    private void setupDragAndDrop(RecyclerView rv, List<?> list, RecyclerView.Adapter<?> adapter, String type) {
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
             @Override public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh, @NonNull RecyclerView.ViewHolder target) {
                 Collections.swap(list, vh.getAdapterPosition(), target.getAdapterPosition());
@@ -346,19 +393,22 @@ public class ServerViewerActivity extends AppCompatActivity {
             @Override public void clearView(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
                 super.clearView(rv, vh);
                 WriteBatch batch = db.batch();
-                if (isChat) {
+                if ("chat".equals(type)) {
                     for (int i = 0; i < chatList.size(); i++) batch.update(db.collection("Channels").document(chatList.get(i).getChatId()), "orderIndex", i);
                     batch.commit().addOnSuccessListener(a -> loadChatData());
-                } else {
+                } else if ("call".equals(type)) {
                     for (int i = 0; i < callList.size(); i++) batch.update(db.collection("CallChannels").document(callList.get(i).getCallId()), "orderIndex", i);
                     batch.commit().addOnSuccessListener(a -> loadCallData());
+                } else {
+                    for (int i = 0; i < postList.size(); i++) batch.update(db.collection("PostChannels").document(postList.get(i).getId()), "orderIndex", i);
+                    batch.commit().addOnSuccessListener(a -> loadPostData());
                 }
             }
             @Override public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {}
         }).attachToRecyclerView(rv);
     }
 
-    private void showAddChannelDialog(boolean isChat) {
+    private void showAddChannelDialog(String type) {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
         dialog.setContentView(view);
@@ -366,7 +416,11 @@ public class ServerViewerActivity extends AppCompatActivity {
         TextView title = view.findViewById(R.id.tvBottomSheetTitle);
         EditText etName = view.findViewById(R.id.etChannelName);
         MaterialButton btn = view.findViewById(R.id.btnCreateConfirm);
-        if (title != null) title.setText(isChat ? "Create Chat Channel" : "Create Call Channel");
+        if (title != null) {
+            if ("chat".equals(type)) title.setText("Create Chat Channel");
+            else if ("call".equals(type)) title.setText("Create Call Channel");
+            else title.setText("Create Post Channel");
+        }
 
         try {
             int color = Color.parseColor(currentAccentColor);
@@ -376,14 +430,15 @@ public class ServerViewerActivity extends AppCompatActivity {
         btn.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
             if (name.isEmpty()) return;
-            String col = isChat ? "Channels" : "CallChannels";
-            String field = isChat ? "chatName" : "callName";
+            String col = "chat".equals(type) ? "Channels" : ("call".equals(type) ? "CallChannels" : "PostChannels");
+            String field = "chat".equals(type) ? "chatName" : ("call".equals(type) ? "callName" : "name");
 
             db.collection(col).whereEqualTo("serverId", serverId).whereEqualTo(field, name).get().addOnSuccessListener(snaps -> {
                 if (!snaps.isEmpty()) etName.setError("Name exists!");
                 else {
-                    if (isChat) db.collection(col).add(new ChatChannel(name, serverId, chatList.size())).addOnSuccessListener(r -> loadChatData());
-                    else db.collection(col).add(new CallChannel(name, serverId, callList.size())).addOnSuccessListener(r -> loadCallData());
+                    if ("chat".equals(type)) db.collection(col).add(new ChatChannel(name, serverId, chatList.size())).addOnSuccessListener(r -> loadChatData());
+                    else if ("call".equals(type)) db.collection(col).add(new CallChannel(name, serverId, callList.size())).addOnSuccessListener(r -> loadCallData());
+                    else db.collection(col).add(new PostChannel(name, serverId, postList.size())).addOnSuccessListener(r -> loadPostData());
                     dialog.dismiss();
                 }
             });
@@ -391,7 +446,7 @@ public class ServerViewerActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void showBaseRenameDialog(String id, String currentName, String collection, boolean isChat) {
+    private void showBaseRenameDialog(String id, String currentName, String collection, String type) {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
         dialog.setContentView(view);
@@ -400,7 +455,11 @@ public class ServerViewerActivity extends AppCompatActivity {
         EditText etName = view.findViewById(R.id.etChannelName);
         MaterialButton btnConfirm = view.findViewById(R.id.btnCreateConfirm);
 
-        if (tvTitle != null) tvTitle.setText(isChat ? "Rename Chat Channel" : "Rename Call Channel");
+        if (tvTitle != null) {
+            if ("chat".equals(type)) tvTitle.setText("Rename Chat Channel");
+            else if ("call".equals(type)) tvTitle.setText("Rename Call Channel");
+            else tvTitle.setText("Rename Post Channel");
+        }
         if (btnConfirm != null) btnConfirm.setText("Rename");
         etName.setText(currentName);
 
@@ -411,14 +470,16 @@ public class ServerViewerActivity extends AppCompatActivity {
 
         btnConfirm.setOnClickListener(v -> {
             String newName = etName.getText().toString().trim();
-            String field = isChat ? "chatName" : "callName";
+            String field = "chat".equals(type) ? "chatName" : ("call".equals(type) ? "callName" : "name");
             if (newName.isEmpty() || newName.equalsIgnoreCase(currentName)) { dialog.dismiss(); return; }
 
             db.collection(collection).whereEqualTo("serverId", serverId).whereEqualTo(field, newName).get().addOnSuccessListener(snaps -> {
                 if (!snaps.isEmpty()) etName.setError("Name exists!");
                 else {
                     db.collection(collection).document(id).update(field, newName).addOnSuccessListener(a -> {
-                        if (isChat) loadChatData(); else loadCallData();
+                        if ("chat".equals(type)) loadChatData(); 
+                        else if ("call".equals(type)) loadCallData();
+                        else loadPostData();
                         dialog.dismiss();
                     });
                 }

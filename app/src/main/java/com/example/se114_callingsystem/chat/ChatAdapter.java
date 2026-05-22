@@ -35,6 +35,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_SENT = 1;
     private static final int TYPE_RECEIVED = 2;
+    private static final int TYPE_REMINDER = 3;
 
     private List<Message> mMessages;
     private static FirebaseFirestore db;
@@ -58,6 +59,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void onDelete(Message message);
         void onReact(Message message, String emoji);
         void onPinToggle(Message message);
+        void onEditReminder(Message message);
     }
 
     public ChatAdapter(List<Message> messages, String serverColor, OnChatInteractListener listener) {
@@ -88,6 +90,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemViewType(int position) {
+        if ("reminder".equals(mMessages.get(position).getType())) {
+            return TYPE_REMINDER;
+        }
         if (mMessages.get(position).getSenderId().equals(currentUserId)) {
             return TYPE_SENT;
         } else {
@@ -98,7 +103,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == TYPE_SENT) {
+        if (viewType == TYPE_REMINDER) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_item_chat_reminder, parent, false);
+            return new ReminderViewHolder(view);
+        } else if (viewType == TYPE_SENT) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_item_chat_bubble, parent, false);
             return new SentMessageViewHolder(view);
         } else {
@@ -141,7 +149,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         holder.itemView.setLayoutParams(params);
 
         // 3. Gọi hàm bind như bình thường
-        if (holder instanceof SentMessageViewHolder) {
+        if (holder instanceof ReminderViewHolder) {
+            ((ReminderViewHolder) holder).bind(message, serverColor, listener);
+        } else if (holder instanceof SentMessageViewHolder) {
             ((SentMessageViewHolder) holder).bind(message, listener, currentUserId, isLastInGroup, serverColor, serverMemberNames, highlightMessageId);
         } else if (holder instanceof ReceivedMessageViewHolder) {
             ((ReceivedMessageViewHolder) holder).bind(message, isFirstInGroup, isLastInGroup, listener, currentUserId, serverColor, serverMemberNames, serverMembers, highlightMessageId);
@@ -154,6 +164,58 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     // --- VIEWHOLDERS ---
+
+    public static class ReminderViewHolder extends RecyclerView.ViewHolder {
+        TextView tvReminderContent, tvReminderTime;
+        com.google.android.material.card.MaterialCardView cardReminder;
+
+        public ReminderViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvReminderContent = itemView.findViewById(R.id.tvReminderContent);
+            tvReminderTime = itemView.findViewById(R.id.tvReminderTime);
+            cardReminder = itemView.findViewById(R.id.cardReminder);
+        }
+
+        void bind(Message message, String serverColor, OnChatInteractListener listener) {
+            if (message.isDeleted()) {
+                tvReminderContent.setText("Lời nhắc đã bị xóa");
+                tvReminderContent.setTypeface(null, android.graphics.Typeface.ITALIC);
+                tvReminderTime.setVisibility(View.GONE);
+                cardReminder.setOnClickListener(null);
+                cardReminder.setOnLongClickListener(null);
+            } else {
+                tvReminderContent.setText(message.getContent());
+                tvReminderContent.setTypeface(null, android.graphics.Typeface.NORMAL);
+                tvReminderTime.setVisibility(View.VISIBLE);
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+                tvReminderTime.setText(sdf.format(new Date(message.getReminderTime())));
+                
+                cardReminder.setOnLongClickListener(v -> {
+                    if (message.getReminderTime() < System.currentTimeMillis()) {
+                        android.widget.Toast.makeText(v.getContext(), "Không thể sửa hoặc xóa lời nhắc đã qua", android.widget.Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                    String[] options = {"✏️ Sửa lời nhắc", "🗑️ Xóa lời nhắc"};
+                    new com.google.android.material.dialog.MaterialAlertDialogBuilder(v.getContext())
+                            .setTitle("Tùy chọn lời nhắc")
+                            .setItems(options, (dialog, which) -> {
+                                if (which == 0) {
+                                    listener.onEditReminder(message);
+                                } else {
+                                    listener.onDelete(message);
+                                }
+                            })
+                            .show();
+                    return true;
+                });
+            }
+            
+            try {
+                int color = Color.parseColor(serverColor);
+                cardReminder.setStrokeColor(color);
+            } catch (Exception e) {}
+        }
+    }
 
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, textReaction, textRepliedTo, textTime, tvFileName;
@@ -443,6 +505,34 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         return gestureDetector.onTouchEvent(event);
                     });
                 }
+            } else if ("post_share".equals(msg.getType())) {
+                textMessage.setVisibility(View.VISIBLE);
+                textMessage.setText("📰 Đã chia sẻ một bài viết\n(Chạm để xem chi tiết)");
+                textMessage.setTextColor(Color.parseColor("#5865F2"));
+                textMessage.setTypeface(null, Typeface.BOLD_ITALIC);
+                if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
+                if (layoutFile != null) layoutFile.setVisibility(View.GONE);
+                
+                cardBubble.setOnClickListener(v -> {
+                    String postId = msg.getContent();
+                    // Fetch Post to get serverId, channelId
+                    FirebaseFirestore.getInstance().collection("Posts").document(postId).get().addOnSuccessListener(doc -> {
+                        if (doc.exists()) {
+                            String cId = doc.getString("channelId");
+                            String sId = doc.getString("serverId");
+                            if (cId != null && sId != null) {
+                                Intent intent = new Intent(ctx, com.example.se114_callingsystem.post.PostChannelActivity.class);
+                                intent.putExtra("CHANNEL_ID", cId);
+                                intent.putExtra("SERVER_ID", sId);
+                                intent.putExtra("SERVER_COLOR", serverColor);
+                                intent.putExtra("CHANNEL_NAME", "Bài Viết");
+                                ctx.startActivity(intent);
+                            }
+                        } else {
+                            android.widget.Toast.makeText(ctx, "Bài viết đã bị xóa", android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                });
             } else {
                 // Tin nhắn văn bản bình thường
                 textMessage.setVisibility(View.VISIBLE);
@@ -525,16 +615,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // --- XỬ LÝ SỰ KIỆN CLICK VÀ LONG CLICK CHO BONG BÓNG CHAT ---
         if (cardBubble != null) {
             final long[] lastClickTime = {0};
-            cardBubble.setOnClickListener(v -> {
-                if (msg.isDeleted()) return;
-                long clickTime = System.currentTimeMillis();
-                if (clickTime - lastClickTime[0] < 300) {
-                    // Double Click để thả tim cho văn bản
-                    if ("❤️".equals(msg.getReactionEmoji())) listener.onReact(msg, "");
-                    else listener.onReact(msg, "❤️");
-                }
-                lastClickTime[0] = clickTime;
-            });
+            if (!"post_share".equals(msg.getType())) {
+                cardBubble.setOnClickListener(v -> {
+                    if (msg.isDeleted()) return;
+                    long clickTime = System.currentTimeMillis();
+                    if (clickTime - lastClickTime[0] < 300) {
+                        // Double Click để thả tim cho văn bản
+                        if ("❤️".equals(msg.getReactionEmoji())) listener.onReact(msg, "");
+                        else listener.onReact(msg, "❤️");
+                    }
+                    lastClickTime[0] = clickTime;
+                });
+            }
 
             cardBubble.setOnLongClickListener(v -> {
                 if (!msg.isDeleted()) {

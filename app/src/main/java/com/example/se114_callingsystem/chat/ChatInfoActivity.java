@@ -68,7 +68,6 @@ public class ChatInfoActivity extends AppCompatActivity {
         initViews();
         setupTabs();
         loadMessages();
-        setupNicknames();
         setupMuteNotifications();
         setupSearchInChat();
     }
@@ -110,33 +109,7 @@ public class ChatInfoActivity extends AppCompatActivity {
         }
     }
 
-    private void setupNicknames() {
-        if (serverId == null && chatId != null) {
-            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("Channels").document(chatId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String sId = documentSnapshot.getString("serverId");
-                        if (sId != null) {
-                            serverId = sId;
-                            setupNicknamesButton(sId);
-                        }
-                    }
-                });
-        } else if (serverId != null) {
-            setupNicknamesButton(serverId);
-        }
-    }
 
-    private void setupNicknamesButton(String sId) {
-        android.widget.LinearLayout btnNicknames = findViewById(R.id.btnNicknames);
-        if (btnNicknames != null) {
-            btnNicknames.setOnClickListener(v -> {
-                android.content.Intent intent = new android.content.Intent(this, ManageMembersActivity.class);
-                intent.putExtra("SERVER_ID", sId);
-                startActivity(intent);
-            });
-        }
-    }
 
     private void initViews() {
         ImageView btnBack = findViewById(R.id.btnBack);

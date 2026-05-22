@@ -75,6 +75,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     private ImageView ivReplyPreview;
     private MaterialCardView cardReplyPreviewImage;
     private Message messageToReply = null;
+    private int mentionStartIndex = -1;
     private String lastMessageId = null;
 
     private String groupId;
@@ -276,6 +277,10 @@ public class ChatDetailActivity extends AppCompatActivity {
                     groupChatRef.child(message.getMessageId()).child("pinned").setValue(!message.isPinned());
                 }
             }
+            @Override
+            public void onEditReminder(Message message) {
+                showReminderDialog(message);
+            }
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -309,15 +314,15 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        // Mở popup menu khi bấm nút Attach (Gen Z Style)
         if (btnAttachHome != null) {
             btnAttachHome.setOnClickListener(v -> {
-                String[] options = {"📷 Gửi Hình ảnh", "📎 Gửi Tập tin"};
+                String[] options = {"📷 Gửi Hình ảnh", "📎 Gửi Tập tin", "⏰ Lời nhắc"};
                 new MaterialAlertDialogBuilder(this)
-                        .setTitle("Tải tệp lên hệ thống")
+                        .setTitle("Tải lên hệ thống")
                         .setItems(options, (dialog, which) -> {
                             if (which == 0) imagePickerLauncher.launch("image/*");
-                            else filePickerLauncher.launch("*/*");
+                            else if (which == 1) filePickerLauncher.launch("*/*");
+                            else if (which == 2) showReminderDialog(null);
                         })
                         .show();
             });
@@ -511,6 +516,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                 }
 
                 if (atIndex != -1) {
+                    mentionStartIndex = atIndex;
                     String query = text.substring(atIndex + 1, cursor);
                     if (query.contains("\n")) {
                         hideMentionSuggestions();
@@ -583,42 +589,102 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
     private void hideMentionSuggestions() {
+        mentionStartIndex = -1;
         if (cardMentionSuggestions != null) {
             cardMentionSuggestions.setVisibility(View.GONE);
         }
     }
 
     private void insertMention(com.example.se114_callingsystem.model.ServerMember member) {
-        int cursor = edtMessage.getSelectionStart();
-        if (cursor < 0) return;
-        String text = edtMessage.getText().toString();
+        String nickname = member.getNickname() != null ? member.getNickname() : member.getUserName();
+        String mention = "@" + nickname + " ";
         
-        int atIndex = -1;
-        for (int i = cursor - 1; i >= 0; i--) {
-            if (text.charAt(i) == '@') {
-                if (i == 0 || Character.isWhitespace(text.charAt(i - 1))) {
-                    atIndex = i;
-                    break;
-                }
-            }
-        }
+        String text = edtMessage.getText().toString();
+        String newText = text.substring(0, mentionStartIndex) + mention;
+        
+        edtMessage.setText(newText);
+        edtMessage.setSelection(newText.length());
+        
+        mentionStartIndex = -1;
+        cardMentionSuggestions.setVisibility(View.GONE);
+    }
+    
+    private void showReminderDialog(Message existingMessage) {
+        android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_reminder, null);
+        com.google.android.material.textfield.TextInputEditText etContent = dialogView.findViewById(R.id.etReminderContent);
+        android.widget.TextView tvDateTime = dialogView.findViewById(R.id.tvReminderDateTime);
+        android.widget.Button btnPickDate = dialogView.findViewById(R.id.btnPickDate);
 
-        if (atIndex != -1) {
-            String before = text.substring(0, atIndex);
-            String after = text.substring(cursor);
-            String nameToInsert = member.getNickname();
-            if (nameToInsert == null || nameToInsert.trim().isEmpty()) {
-                nameToInsert = member.getUserName();
-            }
-            if (nameToInsert == null) {
-                nameToInsert = "";
-            }
-            String mention = "@" + nameToInsert + " ";
-            
-            edtMessage.setText(before + mention + after);
-            edtMessage.setSelection(atIndex + mention.length());
+        final java.util.Calendar calendar = java.util.Calendar.getInstance();
+        if (existingMessage != null) {
+            etContent.setText(existingMessage.getContent());
+            calendar.setTimeInMillis(existingMessage.getReminderTime());
         }
-        hideMentionSuggestions();
+        
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault());
+        tvDateTime.setText("Thời gian: " + sdf.format(calendar.getTime()));
+
+        btnPickDate.setOnClickListener(v -> {
+            new android.app.DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
+                calendar.set(java.util.Calendar.YEAR, year);
+                calendar.set(java.util.Calendar.MONTH, month);
+                calendar.set(java.util.Calendar.DAY_OF_MONTH, dayOfMonth);
+                new android.app.TimePickerDialog(this, (tView, hourOfDay, minute) -> {
+                    calendar.set(java.util.Calendar.HOUR_OF_DAY, hourOfDay);
+                    calendar.set(java.util.Calendar.MINUTE, minute);
+                    calendar.set(java.util.Calendar.SECOND, 0);
+                    calendar.set(java.util.Calendar.MILLISECOND, 0);
+                    tvDateTime.setText("Thời gian: " + sdf.format(calendar.getTime()));
+                }, calendar.get(java.util.Calendar.HOUR_OF_DAY), calendar.get(java.util.Calendar.MINUTE), true).show();
+            }, calendar.get(java.util.Calendar.YEAR), calendar.get(java.util.Calendar.MONTH), calendar.get(java.util.Calendar.DAY_OF_MONTH)).show();
+        });
+
+        String title = existingMessage != null ? "Sửa lời nhắc" : "Tạo lời nhắc";
+        String btnText = existingMessage != null ? "Lưu" : "Tạo";
+
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(this)
+                .setTitle(title)
+                .setView(dialogView)
+                .setPositiveButton(btnText, null) // Set null to override later
+                .setNegativeButton("Hủy", null)
+                .create();
+                
+        dialog.show();
+        
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+                android.widget.Toast.makeText(ChatDetailActivity.this, "Thời gian hẹn phải ở trong tương lai!", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            String content = etContent.getText() != null ? etContent.getText().toString().trim() : "";
+            if (content.isEmpty()) {
+                android.widget.Toast.makeText(ChatDetailActivity.this, "Vui lòng nhập nội dung!", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            if (existingMessage != null) {
+                if (groupChatRef != null && existingMessage.getMessageId() != null) {
+                    groupChatRef.child(existingMessage.getMessageId()).child("content").setValue(content);
+                    groupChatRef.child(existingMessage.getMessageId()).child("reminderTime").setValue(calendar.getTimeInMillis());
+                }
+            } else {
+                sendReminderMessage(content, calendar.getTimeInMillis());
+            }
+            dialog.dismiss();
+        });
+    }
+
+    private void sendReminderMessage(String content, long targetTime) {
+        if (senderId == null || groupChatRef == null) return;
+        String messageId = groupChatRef.push().getKey();
+        if (messageId != null) {
+            Message message = new Message(senderId, groupId, content, System.currentTimeMillis());
+            message.setMessageId(messageId);
+            message.setType("reminder");
+            message.setReminderTime(targetTime);
+            groupChatRef.child(messageId).setValue(message);
+        }
     }
 
     private class MentionAdapter extends RecyclerView.Adapter<MentionAdapter.ViewHolder> {

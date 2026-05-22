@@ -155,6 +155,13 @@ public class MessageNotificationService extends Service {
                 String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
                         ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
 
+                if ("reminder".equals(message.getType())) {
+                    if (message.getReminderTime() > System.currentTimeMillis()) {
+                        scheduleReminder(chatId, chatName, message);
+                    }
+                    return; // Don't show immediate notification for reminder
+                }
+
                 // Ignore if sent by the current user
                 if (currentUserId != null && currentUserId.equals(message.getSenderId())) {
                     return;
@@ -175,7 +182,20 @@ public class MessageNotificationService extends Service {
                 fetchSenderNameAndShowNotification(chatId, chatName, message);
             }
 
-            @Override public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Message message = snapshot.getValue(Message.class);
+                if (message == null) return;
+                
+                if ("reminder".equals(message.getType())) {
+                    if (message.isDeleted()) {
+                        cancelReminder(message);
+                    } else if (message.getReminderTime() > System.currentTimeMillis()) {
+                        scheduleReminder(chatId, chatName, message);
+                    }
+                }
+            }
+
             @Override public void onChildRemoved(@NonNull DataSnapshot snapshot) {}
             @Override public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {}
             @Override public void onCancelled(@NonNull DatabaseError error) {}
@@ -245,6 +265,42 @@ public class MessageNotificationService extends Service {
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
             manager.notify(chatId.hashCode(), builder.build());
+        }
+    }
+
+    private void scheduleReminder(String chatId, String chatName, Message message) {
+        android.app.AlarmManager alarmManager = (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, ReminderReceiver.class);
+        intent.putExtra("CHAT_ID", chatId);
+        intent.putExtra("CHAT_NAME", chatName);
+        intent.putExtra("CONTENT", message.getContent());
+        int notificationId = (message.getMessageId() != null) ? message.getMessageId().hashCode() : (int) System.currentTimeMillis();
+        intent.putExtra("NOTIFICATION_ID", notificationId);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, notificationId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        if (alarmManager != null) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, message.getReminderTime(), pendingIntent);
+                } else {
+                    alarmManager.setExact(android.app.AlarmManager.RTC_WAKEUP, message.getReminderTime(), pendingIntent);
+                }
+            } catch (SecurityException e) {
+                alarmManager.set(android.app.AlarmManager.RTC_WAKEUP, message.getReminderTime(), pendingIntent);
+            }
+        }
+    }
+
+    private void cancelReminder(Message message) {
+        android.app.AlarmManager alarmManager = (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, ReminderReceiver.class);
+        int notificationId = (message.getMessageId() != null) ? message.getMessageId().hashCode() : 0;
+        
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, notificationId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
         }
     }
 }
