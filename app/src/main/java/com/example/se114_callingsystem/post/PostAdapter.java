@@ -1,6 +1,7 @@
 package com.example.se114_callingsystem.post;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +30,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
     private OnPostInteractionListener listener;
     private String currentUserId;
     private FirebaseFirestore db;
-    private List<String> memberNames = new ArrayList<>();
+    private List<com.example.se114_callingsystem.model.ServerMember> serverMembers = new ArrayList<>();
     private String serverColor = "#6C63FF";
 
     public interface OnPostInteractionListener {
@@ -50,8 +51,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.db = FirebaseFirestore.getInstance();
     }
 
-    public void setMemberNames(List<String> names) {
-        this.memberNames = names != null ? names : new ArrayList<>();
+    public void setServerMembers(List<com.example.se114_callingsystem.model.ServerMember> members) {
+        this.serverMembers = members != null ? members : new ArrayList<>();
         notifyDataSetChanged();
     }
 
@@ -72,7 +73,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         } else {
             holder.tvContent.setVisibility(View.VISIBLE);
             holder.tvContent.setText(post.getContent());
-            highlightMentionsInSpannable(holder.tvContent, serverColor, memberNames);
+            highlightMentionsInSpannable(holder.tvContent, serverColor, serverMembers);
         }
 
         // Render time
@@ -177,8 +178,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
     }
 
-    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<String> memberNames) {
-        if (textView == null || memberNames == null || memberNames.isEmpty()) return;
+    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<com.example.se114_callingsystem.model.ServerMember> serverMembers) {
+        if (textView == null) return;
         CharSequence text = textView.getText();
         if (text == null) return;
         android.text.SpannableString spannable = new android.text.SpannableString(text);
@@ -190,15 +191,37 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         } catch (Exception e) {
             highlightColor = android.graphics.Color.parseColor("#FF007F");
         }
+        final int finalHighlightColor = highlightColor;
 
-        List<String> sortedNames = new ArrayList<>(memberNames);
-        java.util.Collections.sort(sortedNames, (s1, s2) -> Integer.compare(s2.length(), s1.length()));
+        class MemberNameMapping {
+            final String name;
+            final String userId;
+            MemberNameMapping(String name, String userId) {
+                this.name = name;
+                this.userId = userId;
+            }
+        }
+
+        List<MemberNameMapping> nameMappings = new ArrayList<>();
+        if (serverMembers != null) {
+            for (com.example.se114_callingsystem.model.ServerMember m : serverMembers) {
+                if (m.getUserId() == null) continue;
+                if (m.getNickname() != null && !m.getNickname().trim().isEmpty()) {
+                    nameMappings.add(new MemberNameMapping(m.getNickname(), m.getUserId()));
+                }
+                if (m.getUserName() != null && !m.getUserName().trim().isEmpty()) {
+                    nameMappings.add(new MemberNameMapping(m.getUserName(), m.getUserId()));
+                }
+            }
+        }
+
+        // Sort by name length descending to avoid partial matches
+        java.util.Collections.sort(nameMappings, (m1, m2) -> Integer.compare(m2.name.length(), m1.name.length()));
 
         boolean[] highlighted = new boolean[textStr.length()];
 
-        for (String name : sortedNames) {
-            if (name == null || name.trim().isEmpty()) continue;
-            String mentionTag = "@" + name;
+        for (MemberNameMapping mapping : nameMappings) {
+            String mentionTag = "@" + mapping.name;
             int index = textStr.indexOf(mentionTag);
             while (index >= 0) {
                 int end = index + mentionTag.length();
@@ -209,12 +232,50 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
                 if (!alreadyUsed) {
                     for (int i = index; i < end; i++) highlighted[i] = true;
-                    spannable.setSpan(new android.text.style.ForegroundColorSpan(highlightColor), index, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    final String targetUserId = mapping.userId;
+                    spannable.setSpan(new android.text.style.ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            Context context = widget.getContext();
+                            Intent intent = new Intent(context, com.example.se114_callingsystem.profile.ProfileActivity.class);
+                            intent.putExtra("USER_ID", targetUserId);
+                            context.startActivity(intent);
+                        }
+                        @Override
+                        public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                            super.updateDrawState(ds);
+                            ds.setColor(finalHighlightColor);
+                            ds.setUnderlineText(false);
+                        }
+                    }, index, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
                     spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), index, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
                 index = textStr.indexOf(mentionTag, index + 1);
             }
         }
+
+        // Regex fallback
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@[A-Za-z0-9_ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝàáâãèéêìíòóôõùúýĂăĐđĨĩŨũƠơƯưẠ-ỹ]+");
+        java.util.regex.Matcher matcher = pattern.matcher(textStr);
+        while (matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+            boolean alreadyUsed = false;
+            for (int i = start; i < end; i++) {
+                if (highlighted[i]) { alreadyUsed = true; break; }
+            }
+
+            if (!alreadyUsed) {
+                for (int i = start; i < end; i++) highlighted[i] = true;
+                spannable.setSpan(new android.text.style.ForegroundColorSpan(highlightColor), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+        }
+
+        textView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+        textView.setHighlightColor(android.graphics.Color.TRANSPARENT);
         textView.setText(spannable);
     }
 }

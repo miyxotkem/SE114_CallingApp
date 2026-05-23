@@ -103,6 +103,7 @@ public class PostChannelActivity extends AppCompatActivity {
                 intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("POST_AUTHOR_ID", post.getAuthorId());
                 intent.putExtra("SERVER_ID", post.getServerId());
+                intent.putExtra("SERVER_COLOR", serverColor);
                 startActivity(intent);
             }
 
@@ -137,18 +138,14 @@ public class PostChannelActivity extends AppCompatActivity {
           });
 
         db.collection("servers").document(serverId).collection("members").get().addOnSuccessListener(snapshots -> {
-            List<String> names = new ArrayList<>();
+            List<ServerMember> members = new ArrayList<>();
             for (DocumentSnapshot doc : snapshots) {
                 ServerMember member = doc.toObject(ServerMember.class);
                 if (member != null) {
-                    if (member.getNickname() != null && !member.getNickname().trim().isEmpty()) {
-                        names.add(member.getNickname());
-                    } else if (member.getUserName() != null && !member.getUserName().trim().isEmpty()) {
-                        names.add(member.getUserName());
-                    }
+                    members.add(member);
                 }
             }
-            postAdapter.setMemberNames(names);
+            postAdapter.setServerMembers(members);
         });
     }
 

@@ -1,13 +1,21 @@
 package com.example.se114_callingsystem.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Comment {
     private String id;
     private String postId;
     private String authorId;
     private String content;
     private long createdAt;
+    private Map<String, String> reactions;
+    private String parentCommentId;
+    private String parentCommentAuthorName;
 
-    public Comment() {}
+    public Comment() {
+        this.reactions = new HashMap<>();
+    }
 
     public Comment(String id, String postId, String authorId, String content, long createdAt) {
         this.id = id;
@@ -15,6 +23,9 @@ public class Comment {
         this.authorId = authorId;
         this.content = content;
         this.createdAt = createdAt;
+        this.reactions = new HashMap<>();
+        this.parentCommentId = null;
+        this.parentCommentAuthorName = null;
     }
 
     public String getId() { return id; }
@@ -27,4 +38,10 @@ public class Comment {
     public void setContent(String content) { this.content = content; }
     public long getCreatedAt() { return createdAt; }
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
+    public Map<String, String> getReactions() { return reactions; }
+    public void setReactions(Map<String, String> reactions) { this.reactions = reactions; }
+    public String getParentCommentId() { return parentCommentId; }
+    public void setParentCommentId(String parentCommentId) { this.parentCommentId = parentCommentId; }
+    public String getParentCommentAuthorName() { return parentCommentAuthorName; }
+    public void setParentCommentAuthorName(String parentCommentAuthorName) { this.parentCommentAuthorName = parentCommentAuthorName; }
 }

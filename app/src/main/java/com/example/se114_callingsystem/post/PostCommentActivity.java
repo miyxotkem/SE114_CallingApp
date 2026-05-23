@@ -22,11 +22,19 @@ public class PostCommentActivity extends AppCompatActivity {
     private String postId;
     private String postAuthorId;
     private String serverId;
+    private String serverColor;
     private RecyclerView rvComments;
     private CommentAdapter commentAdapter;
     private List<Comment> commentList = new ArrayList<>();
     private FirebaseFirestore db;
     private EditText etComment;
+
+    // Reply state & UI
+    private android.widget.LinearLayout layoutReplyHeader;
+    private android.widget.TextView tvReplyHeader;
+    private android.widget.ImageView btnCancelReply;
+    private String replyToCommentId = null;
+    private String replyToAuthorName = null;
 
     // Mentions
     private com.google.android.material.card.MaterialCardView cardMentionSuggestions;
@@ -45,6 +53,13 @@ public class PostCommentActivity extends AppCompatActivity {
         postId = getIntent().getStringExtra("POST_ID");
         postAuthorId = getIntent().getStringExtra("POST_AUTHOR_ID");
         serverId = getIntent().getStringExtra("SERVER_ID");
+        serverColor = getIntent().getStringExtra("SERVER_COLOR");
+
+        if (postId == null) {
+            Toast.makeText(this, "Không tìm thấy bài viết", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
         db = FirebaseFirestore.getInstance();
 
         ImageView btnBack = findViewById(R.id.btnBack);
@@ -54,11 +69,29 @@ public class PostCommentActivity extends AppCompatActivity {
         ImageView btnSendComment = findViewById(R.id.btnSendComment);
         btnSendComment.setOnClickListener(v -> postComment());
 
+        // Bind reply layout elements
+        layoutReplyHeader = findViewById(R.id.layoutReplyHeader);
+        tvReplyHeader = findViewById(R.id.tvReplyHeader);
+        btnCancelReply = findViewById(R.id.btnCancelReply);
+        if (btnCancelReply != null) {
+            btnCancelReply.setOnClickListener(v -> cancelReplyMode());
+        }
+
         setupMentionSuggestions();
         fetchServerMembers();
 
         rvComments = findViewById(R.id.rvComments);
-        commentAdapter = new CommentAdapter(this, commentList, postAuthorId);
+        commentAdapter = new CommentAdapter(this, commentList, postAuthorId, serverColor, new CommentAdapter.OnCommentInteractionListener() {
+            @Override
+            public void onReplyClick(Comment comment, String authorName) {
+                setReplyMode(comment, authorName);
+            }
+
+            @Override
+            public void onDeleteClick(Comment comment) {
+                showDeleteConfirmationDialog(comment);
+            }
+        });
         rvComments.setLayoutManager(new LinearLayoutManager(this));
         rvComments.setAdapter(commentAdapter);
 
@@ -68,7 +101,10 @@ public class PostCommentActivity extends AppCompatActivity {
     private void loadComments() {
         db.collection("Posts").document(postId).collection("comments")
           .addSnapshotListener((snapshots, error) -> {
-              if (error != null) return;
+              if (error != null) {
+                  Toast.makeText(PostCommentActivity.this, "Lỗi tải bình luận: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                  return;
+              }
               if (snapshots != null) {
                   commentList.clear();
                   for (DocumentSnapshot doc : snapshots) {
@@ -91,6 +127,9 @@ public class PostCommentActivity extends AppCompatActivity {
                 for (com.google.firebase.firestore.DocumentSnapshot doc : snapshots) {
                     com.example.se114_callingsystem.model.ServerMember member = doc.toObject(com.example.se114_callingsystem.model.ServerMember.class);
                     if (member != null) serverMembers.add(member);
+                }
+                if (commentAdapter != null) {
+                    commentAdapter.setServerMembers(serverMembers);
                 }
             });
         }
@@ -168,19 +207,83 @@ public class PostCommentActivity extends AppCompatActivity {
 
         Comment c = new Comment(null, postId, uid, text, System.currentTimeMillis());
         
-        db.collection("Posts").document(postId).collection("comments").add(c).addOnSuccessListener(doc -> {
-            c.setId(doc.getId());
-            db.collection("Posts").document(postId).collection("comments").document(doc.getId()).set(c);
-            etComment.setText("");
-            
-            // Tăng số đếm comment trong Post
-            db.collection("Posts").document(postId).get().addOnSuccessListener(postDoc -> {
-                if (postDoc.exists()) {
-                    Long currentCount = postDoc.getLong("commentCount");
-                    if (currentCount == null) currentCount = 0L;
-                    db.collection("Posts").document(postId).update("commentCount", currentCount + 1);
-                }
+        // Attach reply details if present
+        if (replyToCommentId != null) {
+            c.setParentCommentId(replyToCommentId);
+            c.setParentCommentAuthorName(replyToAuthorName);
+        }
+
+        db.collection("Posts").document(postId).collection("comments").add(c)
+            .addOnSuccessListener(doc -> {
+                c.setId(doc.getId());
+                db.collection("Posts").document(postId).collection("comments").document(doc.getId()).set(c);
+                etComment.setText("");
+                cancelReplyMode();
+                
+                // Tăng số đếm comment trong Post
+                db.collection("Posts").document(postId).get().addOnSuccessListener(postDoc -> {
+                    if (postDoc.exists()) {
+                        Long currentCount = postDoc.getLong("commentCount");
+                        if (currentCount == null) currentCount = 0L;
+                        db.collection("Posts").document(postId).update("commentCount", currentCount + 1);
+                    }
+                });
+            })
+            .addOnFailureListener(e -> {
+                Toast.makeText(PostCommentActivity.this, "Lỗi đăng bình luận: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
-        });
+    }
+
+    private void setReplyMode(Comment comment, String authorName) {
+        replyToCommentId = comment.getId();
+        replyToAuthorName = authorName;
+        if (layoutReplyHeader != null && tvReplyHeader != null) {
+            tvReplyHeader.setText("Đang trả lời @" + authorName);
+            layoutReplyHeader.setVisibility(android.view.View.VISIBLE);
+        }
+        if (etComment != null) {
+            etComment.requestFocus();
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(etComment, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            }
+        }
+    }
+
+    private void cancelReplyMode() {
+        replyToCommentId = null;
+        replyToAuthorName = null;
+        if (layoutReplyHeader != null) {
+            layoutReplyHeader.setVisibility(android.view.View.GONE);
+        }
+    }
+
+    private void showDeleteConfirmationDialog(Comment comment) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Xóa bình luận")
+            .setMessage("Bạn có chắc chắn muốn xóa bình luận này không?")
+            .setPositiveButton("Xóa", (dialog, which) -> deleteComment(comment))
+            .setNegativeButton("Hủy", null)
+            .show();
+    }
+
+    private void deleteComment(Comment comment) {
+        db.collection("Posts").document(postId).collection("comments").document(comment.getId()).delete()
+            .addOnSuccessListener(aVoid -> {
+                Toast.makeText(PostCommentActivity.this, "Đã xóa bình luận", Toast.LENGTH_SHORT).show();
+                
+                // Giảm số đếm comment trong Post
+                db.collection("Posts").document(postId).get().addOnSuccessListener(postDoc -> {
+                    if (postDoc.exists()) {
+                        Long currentCount = postDoc.getLong("commentCount");
+                        if (currentCount == null) currentCount = 0L;
+                        long newCount = Math.max(0L, currentCount - 1);
+                        db.collection("Posts").document(postId).update("commentCount", newCount);
+                    }
+                });
+            })
+            .addOnFailureListener(e -> {
+                Toast.makeText(PostCommentActivity.this, "Lỗi xóa bình luận: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            });
     }
 }

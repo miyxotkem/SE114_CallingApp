@@ -152,9 +152,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder instanceof ReminderViewHolder) {
             ((ReminderViewHolder) holder).bind(message, serverColor, listener);
         } else if (holder instanceof SentMessageViewHolder) {
-            ((SentMessageViewHolder) holder).bind(message, listener, currentUserId, isLastInGroup, serverColor, serverMemberNames, highlightMessageId);
+            ((SentMessageViewHolder) holder).bind(message, listener, currentUserId, isLastInGroup, serverColor, serverMembers, highlightMessageId);
         } else if (holder instanceof ReceivedMessageViewHolder) {
-            ((ReceivedMessageViewHolder) holder).bind(message, isFirstInGroup, isLastInGroup, listener, currentUserId, serverColor, serverMemberNames, serverMembers, highlightMessageId);
+            ((ReceivedMessageViewHolder) holder).bind(message, isFirstInGroup, isLastInGroup, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
         }
     }
 
@@ -237,8 +237,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layoutPinnedIndicator = itemView.findViewById(R.id.layoutPinnedIndicator);
         }
 
-        void bind(Message message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<String> memberNames, String highlightMessageId) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, listener, currentUserId, serverColor, memberNames, highlightMessageId);
+        void bind(Message message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -272,8 +272,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layoutPinnedIndicator = itemView.findViewById(R.id.layoutPinnedIndicator);
         }
 
-        void bind(Message message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<String> memberNames, List<ServerMember> serverMembers, String highlightMessageId) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, listener, currentUserId, serverColor, memberNames, highlightMessageId);
+        void bind(Message message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
             // Xử lý Tên (Hiện ở tin đầu nhóm)
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
@@ -337,7 +337,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, OnChatInteractListener listener, String currentUserId, String serverColor, List<String> memberNames, String highlightMessageId) {
+    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
         Context ctx = textMessage.getContext();
         boolean isSentByMe = msg.getSenderId() != null && msg.getSenderId().equals(currentUserId);
         boolean isHighlighted = msg.getMessageId() != null && msg.getMessageId().equals(highlightMessageId);
@@ -541,7 +541,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 // Tự động nhận diện URL, gạch chân và cho phép click
                 android.text.util.Linkify.addLinks(textMessage, android.text.util.Linkify.WEB_URLS);
 
-                highlightMentionsInSpannable(textMessage, serverColor, memberNames);
+                highlightMentionsInSpannable(textMessage, serverColor, serverMembers, isSentByMe);
                 
                 // Đổi màu link để dễ đọc trên các nền bubble khác nhau
                 if (isSentByMe) {
@@ -665,33 +665,57 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<String> memberNames) {
-        if (textView == null || memberNames == null) return;
+    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<ServerMember> serverMembers, boolean isSentByMe) {
+        if (textView == null) return;
         CharSequence text = textView.getText();
         if (text == null) return;
         android.text.SpannableString spannable = new android.text.SpannableString(text);
         String textStr = spannable.toString();
 
         int highlightColor;
-        try {
-            highlightColor = android.graphics.Color.parseColor(serverColorStr);
-        } catch (Exception e) {
-            highlightColor = android.graphics.Color.parseColor("#FF007F");
+        if (isSentByMe) {
+            highlightColor = android.graphics.Color.WHITE;
+        } else {
+            try {
+                highlightColor = android.graphics.Color.parseColor(serverColorStr);
+            } catch (Exception e) {
+                highlightColor = android.graphics.Color.parseColor("#FF007F");
+            }
+        }
+        final int finalHighlightColor = highlightColor;
+
+        class MemberNameMapping {
+            final String name;
+            final String userId;
+            MemberNameMapping(String name, String userId) {
+                this.name = name;
+                this.userId = userId;
+            }
         }
 
-        // Sort server member names by length descending
-        List<String> sortedNames = new java.util.ArrayList<>(memberNames);
-        java.util.Collections.sort(sortedNames, (s1, s2) -> Integer.compare(s2.length(), s1.length()));
+        List<MemberNameMapping> nameMappings = new java.util.ArrayList<>();
+        if (serverMembers != null) {
+            for (ServerMember m : serverMembers) {
+                if (m.getUserId() == null) continue;
+                if (m.getNickname() != null && !m.getNickname().trim().isEmpty()) {
+                    nameMappings.add(new MemberNameMapping(m.getNickname(), m.getUserId()));
+                }
+                if (m.getUserName() != null && !m.getUserName().trim().isEmpty()) {
+                    nameMappings.add(new MemberNameMapping(m.getUserName(), m.getUserId()));
+                }
+            }
+        }
+
+        // Sort by name length descending to avoid partial matches
+        java.util.Collections.sort(nameMappings, (m1, m2) -> Integer.compare(m2.name.length(), m1.name.length()));
 
         boolean[] highlighted = new boolean[textStr.length()];
 
-        for (String name : sortedNames) {
-            if (name == null || name.trim().isEmpty()) continue;
-            String mentionTag = "@" + name;
+        for (MemberNameMapping mapping : nameMappings) {
+            String mentionTag = "@" + mapping.name;
             int index = textStr.indexOf(mentionTag);
             while (index >= 0) {
                 int end = index + mentionTag.length();
-                
                 boolean alreadyUsed = false;
                 for (int i = index; i < end; i++) {
                     if (highlighted[i]) {
@@ -705,7 +729,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         highlighted[i] = true;
                     }
 
-                    spannable.setSpan(new android.text.style.ForegroundColorSpan(highlightColor), index, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    final String targetUserId = mapping.userId;
+                    spannable.setSpan(new android.text.style.ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull android.view.View widget) {
+                            android.content.Context context = widget.getContext();
+                            android.content.Intent intent = new android.content.Intent(context, com.example.se114_callingsystem.profile.ProfileActivity.class);
+                            intent.putExtra("USER_ID", targetUserId);
+                            context.startActivity(intent);
+                        }
+                        @Override
+                        public void updateDrawState(@NonNull android.text.TextPaint ds) {
+                            super.updateDrawState(ds);
+                            ds.setColor(finalHighlightColor);
+                            ds.setUnderlineText(false);
+                        }
+                    }, index, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
                     spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), index, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
                 index = textStr.indexOf(mentionTag, index + 1);
@@ -718,7 +758,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         while (matcher.find()) {
             int start = matcher.start();
             int end = matcher.end();
-            
             boolean alreadyUsed = false;
             for (int i = start; i < end; i++) {
                 if (highlighted[i]) {
@@ -735,6 +774,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 spannable.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
         }
+
+        textView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
+        textView.setHighlightColor(android.graphics.Color.TRANSPARENT);
         textView.setText(spannable);
     }
 }
