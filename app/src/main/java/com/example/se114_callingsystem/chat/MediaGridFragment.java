@@ -45,8 +45,10 @@ public class MediaGridFragment extends Fragment {
         super.onResume();
         if (getActivity() instanceof ChatInfoActivity) {
             mediaUrls = ((ChatInfoActivity) getActivity()).getMediaUrls();
-            adapter.notifyDataSetChanged();
+        } else if (getParentFragment() instanceof ChatInfoFragment) {
+            mediaUrls = ((ChatInfoFragment) getParentFragment()).getMediaUrls();
         }
+        adapter.notifyDataSetChanged();
     }
 
     // ===== INNER ADAPTER =====

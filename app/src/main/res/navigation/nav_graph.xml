@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_login">
+
+    <fragment
+        android:id="@+id/nav_login"
+        android:name="com.example.se114_callingsystem.auth.LoginFragment"
+        android:label="Login"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/nav_login"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/nav_register" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_register"
+        android:name="com.example.se114_callingsystem.auth.RegisterFragment"
+        android:label="Register"
+        tools:layout="@layout/fragment_register">
+        <action
+            android:id="@+id/action_register_to_home"
+            app:destination="@id/nav_home"
+            app:popUpTo="@id/nav_login"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.se114_callingsystem.home.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_home_to_chat_detail"
+            app:destination="@id/nav_chat_detail" />
+        <action
+            android:id="@+id/action_home_to_server"
+            app:destination="@id/nav_server" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_notifications"
+        android:name="com.example.se114_callingsystem.home.NotificationsFragment"
+        android:label="Notifications"
+        tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.se114_callingsystem.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_login"
+            app:destination="@id/nav_login"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_profile_to_edit_profile"
+            app:destination="@id/nav_edit_profile" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_edit_profile"
+        android:name="com.example.se114_callingsystem.profile.EditProfileFragment"
+        android:label="Edit Profile"
+        tools:layout="@layout/fragment_edit_profile" />
+
+    <fragment
+        android:id="@+id/nav_chat_detail"
+        android:name="com.example.se114_callingsystem.chat.ChatDetailFragment"
+        android:label="Chat Detail"
+        tools:layout="@layout/fragment_chat_detail">
+        <action
+            android:id="@+id/action_chat_to_voice_call"
+            app:destination="@id/nav_voice_call" />
+        <action
+            android:id="@+id/action_chat_to_chat_info"
+            app:destination="@id/nav_chat_info" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_voice_call"
+        android:name="com.example.se114_callingsystem.call.VoiceCallFragment"
+        android:label="Voice Call"
+        tools:layout="@layout/fragment_voice_call" />
+
+    <fragment
+        android:id="@+id/nav_server"
+        android:name="com.example.se114_callingsystem.server.ServerFragment"
+        android:label="Server"
+        tools:layout="@layout/fragment_server">
+        <argument
+            android:name="SERVER_ID"
+            app:argType="string" />
+        <argument
+            android:name="SERVER_NAME"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_server_to_server_chat"
+            app:destination="@id/nav_server_chat" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_server_chat"
+        android:name="com.example.se114_callingsystem.server.ServerChatFragment"
+        android:label="Server Chat"
+        tools:layout="@layout/fragment_server_chat">
+        <argument
+            android:name="CHAT_ID"
+            app:argType="string" />
+        <argument
+            android:name="CHAT_NAME"
+            app:argType="string" />
+        <argument
+            android:name="SERVER_ID"
+            app:argType="string" />
+        <argument
+            android:name="SERVER_COLOR"
+            app:argType="string"
+            android:defaultValue="#5865F2" />
+        <action
+            android:id="@+id/action_server_chat_to_chat_info"
+            app:destination="@id/nav_chat_info" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_chat_info"
+        android:name="com.example.se114_callingsystem.chat.ChatInfoFragment"
+        android:label="Chat Info"
+        tools:layout="@layout/fragment_chat_info">
+        <argument
+            android:name="CHAT_ID"
+            app:argType="string" />
+        <argument
+            android:name="CHAT_NAME"
+            app:argType="string" />
+        <argument
+            android:name="SERVER_ID"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="SERVER_COLOR"
+            app:argType="string"
+            android:defaultValue="#5865F2" />
+    </fragment>
+
+</navigation>

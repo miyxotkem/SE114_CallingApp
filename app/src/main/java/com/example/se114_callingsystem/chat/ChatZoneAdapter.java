@@ -1,6 +1,6 @@
 package com.example.se114_callingsystem.chat;
 
-import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,16 +61,13 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
         holder.itemView.setOnClickListener(v -> {
             int currentPos = holder.getAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION) {
-                ChatChannel currentChannel = channels.get(currentPos); // Get the channel object
-                Intent intent = new Intent(holder.itemView.getContext(), ChatDetailActivity.class);
-
-                // Pass the name and ID to the next activity
-                intent.putExtra("CHAT_NAME", currentChannel.getChatName());
-                intent.putExtra("CHAT_ID", currentChannel.getChatId());
-                intent.putExtra("SERVER_ID", currentChannel.getServerId());
-                intent.putExtra("SERVER_COLOR", serverColor);
-
-                holder.itemView.getContext().startActivity(intent);
+                ChatChannel currentChannel = channels.get(currentPos);
+                Bundle args = new Bundle();
+                args.putString("CHAT_NAME", currentChannel.getChatName());
+                args.putString("CHAT_ID", currentChannel.getChatId());
+                args.putString("SERVER_ID", currentChannel.getServerId());
+                args.putString("SERVER_COLOR", serverColor);
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_server_to_server_chat, args);
             }
         });
     }

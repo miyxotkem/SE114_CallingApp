@@ -1,6 +1,6 @@
 package com.example.se114_callingsystem.server;
 
-import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,12 +31,10 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
         holder.nameText.setText(server.getServerName());
 
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), ServerViewerActivity.class);
-
-            intent.putExtra("SERVER_NAME", server.getServerName());
-            intent.putExtra("SERVER_ID", server.getServerId());
-
-            v.getContext().startActivity(intent);
+            Bundle args = new Bundle();
+            args.putString("SERVER_ID", server.getServerId());
+            args.putString("SERVER_NAME", server.getServerName());
+            androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_home_to_server, args);
         });
     }
 

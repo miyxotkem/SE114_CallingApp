@@ -46,8 +46,10 @@ public class SharedFilesFragment extends Fragment {
         super.onResume();
         if (getActivity() instanceof ChatInfoActivity) {
             fileMessages = ((ChatInfoActivity) getActivity()).getFileMessages();
-            adapter.notifyDataSetChanged();
+        } else if (getParentFragment() instanceof ChatInfoFragment) {
+            fileMessages = ((ChatInfoFragment) getParentFragment()).getFileMessages();
         }
+        adapter.notifyDataSetChanged();
     }
 
     // ===== INNER ADAPTER =====

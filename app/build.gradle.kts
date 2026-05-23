@@ -7,7 +7,6 @@ android {
     namespace = "com.example.se114_callingsystem"
     compileSdk = 36
 
-
     defaultConfig {
         applicationId = "com.example.se114_callingsystem"
         minSdk = 32
@@ -16,6 +15,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        viewBinding = true
     }
 
     buildTypes {
@@ -44,6 +47,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
     implementation("com.cloudinary:cloudinary-android:2.5.0")
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
 

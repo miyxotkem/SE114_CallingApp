@@ -41,8 +41,10 @@ public class SharedLinksFragment extends Fragment {
         super.onResume();
         if (getActivity() instanceof ChatInfoActivity) {
             linkItems = ((ChatInfoActivity) getActivity()).getLinkItems();
-            adapter.notifyDataSetChanged();
+        } else if (getParentFragment() instanceof ChatInfoFragment) {
+            linkItems = ((ChatInfoFragment) getParentFragment()).getLinkItems();
         }
+        adapter.notifyDataSetChanged();
     }
 
     // ===== INNER ADAPTER =====
