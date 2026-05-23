@@ -61,18 +61,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
-            <ImageView
-                android:id="@+id/btnPinnedMessages"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_pin"
-                app:tint="@color/discord_text_secondary"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:clickable="true"
-                android:focusable="true" />
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

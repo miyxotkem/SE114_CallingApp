@@ -28,6 +28,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.graphics.Color;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.example.se114_callingsystem.model.ServerMember;
+
 public class ChatInfoFragment extends Fragment {
 
     private static final String TAG = "ChatInfoFragment";
@@ -42,6 +48,9 @@ public class ChatInfoFragment extends Fragment {
     private List<String> mediaUrls = new ArrayList<>();
     private List<Message> fileMessages = new ArrayList<>();
     private List<String[]> linkItems = new ArrayList<>(); // [url, contextText]
+    private List<Message> currentPinnedMessages = new ArrayList<>();
+    private List<ServerMember> serverMembers = new ArrayList<>();
+    private PinnedMessagesAdapter pinnedAdapter;
 
     private ChatInfoPagerAdapter pagerAdapter;
 
@@ -80,6 +89,7 @@ public class ChatInfoFragment extends Fragment {
         setupNicknames();
         setupMuteNotifications();
         setupSearchInChat();
+        setupPinnedMessages();
     }
 
     private void initViews() {
@@ -121,10 +131,17 @@ public class ChatInfoFragment extends Fragment {
                 mediaUrls.clear();
                 fileMessages.clear();
                 linkItems.clear();
+                currentPinnedMessages.clear();
 
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Message msg = data.getValue(Message.class);
                     if (msg == null || msg.isDeleted()) continue;
+
+                    msg.setMessageId(data.getKey());
+
+                    if (msg.isPinned()) {
+                        currentPinnedMessages.add(msg);
+                    }
 
                     String type = msg.getType();
                     String content = msg.getContent();
@@ -133,7 +150,6 @@ public class ChatInfoFragment extends Fragment {
                     if ("image".equals(type)) {
                         mediaUrls.add(content);
                     } else if ("file".equals(type)) {
-                        msg.setMessageId(data.getKey());
                         fileMessages.add(msg);
                     } else {
                         Matcher matcher = URL_PATTERN.matcher(content);
@@ -153,6 +169,9 @@ public class ChatInfoFragment extends Fragment {
 
                 if (pagerAdapter != null) {
                     pagerAdapter.notifyDataSetChanged();
+                }
+                if (pinnedAdapter != null) {
+                    pinnedAdapter.notifyDataSetChanged();
                 }
             }
 
@@ -202,11 +221,17 @@ public class ChatInfoFragment extends Fragment {
                         if (sId != null) {
                             serverId = sId;
                             setupNicknamesButton(sId);
+                            loadServerMembers(sId);
+                        } else {
+                            loadDMParticipants();
                         }
                     }
                 });
         } else if (serverId != null) {
             setupNicknamesButton(serverId);
+            loadServerMembers(serverId);
+        } else {
+            loadDMParticipants();
         }
     }
 
@@ -219,6 +244,114 @@ public class ChatInfoFragment extends Fragment {
             intent.putExtra("SERVER_ID", sId);
             startActivity(intent);
         });
+    }
+
+    private void loadServerMembers(String sId) {
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("servers").document(sId).collection("members")
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                if (queryDocumentSnapshots != null) {
+                    serverMembers.clear();
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                        ServerMember m = doc.toObject(ServerMember.class);
+                        if (m != null) {
+                            serverMembers.add(m);
+                        }
+                    }
+                    if (pinnedAdapter != null) {
+                        pinnedAdapter.setServerMembers(serverMembers);
+                    }
+                }
+            });
+    }
+
+    private void loadDMParticipants() {
+        String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUid.isEmpty()) return;
+
+        serverMembers.clear();
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("users").document(currentUid).get()
+            .addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    String username = doc.getString("username");
+                    ServerMember me = new ServerMember(currentUid, username, "online");
+                    me.setNickname("You");
+                    serverMembers.add(me);
+                    if (pinnedAdapter != null) {
+                        pinnedAdapter.setServerMembers(serverMembers);
+                    }
+                }
+            });
+    }
+
+    private void setupPinnedMessages() {
+        if (binding == null) return;
+        binding.btnPinnedMessages.setOnClickListener(v -> showPinnedMessages());
+    }
+
+    private void showPinnedMessages() {
+        if (getContext() == null) return;
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.layout_bottom_sheet_pinned_messages, null);
+        bottomSheetDialog.setContentView(sheetView);
+
+        try {
+            ((View) sheetView.getParent()).setBackgroundColor(Color.TRANSPARENT);
+        } catch (Exception e) {}
+
+        RecyclerView rvPinnedMessages = sheetView.findViewById(R.id.rvPinnedMessages);
+        View tvNoPinnedMessages = sheetView.findViewById(R.id.tvNoPinnedMessages);
+
+        if (currentPinnedMessages.isEmpty()) {
+            if (tvNoPinnedMessages != null) tvNoPinnedMessages.setVisibility(View.VISIBLE);
+            if (rvPinnedMessages != null) rvPinnedMessages.setVisibility(View.GONE);
+        } else {
+            if (tvNoPinnedMessages != null) tvNoPinnedMessages.setVisibility(View.GONE);
+            if (rvPinnedMessages != null) rvPinnedMessages.setVisibility(View.VISIBLE);
+        }
+
+        pinnedAdapter = new PinnedMessagesAdapter(currentPinnedMessages, serverColor, new PinnedMessagesAdapter.OnPinnedMessageInteractListener() {
+            @Override
+            public void onGoTo(Message message) {
+                androidx.navigation.NavController navController = Navigation.findNavController(requireView());
+                if (navController.getPreviousBackStackEntry() != null) {
+                    navController.getPreviousBackStackEntry().getSavedStateHandle().set("GOTO_MESSAGE_ID", message.getMessageId());
+                }
+                navController.popBackStack();
+                bottomSheetDialog.dismiss();
+            }
+
+            @Override
+            public void onUnpin(Message message) {
+                if (chatRef != null && message.getMessageId() != null) {
+                    chatRef.child(message.getMessageId()).child("pinned").setValue(false)
+                        .addOnSuccessListener(aVoid -> {
+                            currentPinnedMessages.remove(message);
+                            if (currentPinnedMessages.isEmpty()) {
+                                if (tvNoPinnedMessages != null) tvNoPinnedMessages.setVisibility(View.VISIBLE);
+                                if (rvPinnedMessages != null) rvPinnedMessages.setVisibility(View.GONE);
+                            } else {
+                                if (pinnedAdapter != null) pinnedAdapter.notifyDataSetChanged();
+                            }
+                        });
+                }
+            }
+        });
+        pinnedAdapter.setServerMembers(serverMembers);
+
+        if (rvPinnedMessages != null) {
+            rvPinnedMessages.setLayoutManager(new LinearLayoutManager(getContext()));
+            rvPinnedMessages.setAdapter(pinnedAdapter);
+        }
+
+        bottomSheetDialog.setOnDismissListener(dialog -> {
+            pinnedAdapter = null;
+        });
+
+        bottomSheetDialog.show();
     }
 
     @Override

@@ -9,10 +9,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="@color/discord_dark_floating"
         app:cardCornerRadius="24dp"
         app:cardElevation="8dp"
-        app:strokeWidth="0dp">
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/discord_divider">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -20,23 +21,40 @@
             android:orientation="vertical"
             android:padding="32dp">
 
+            <!-- Premium Circular Icon -->
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="20dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="#1A5865F2">
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/icon_user"
+                    app:tint="@color/discord_blurple" />
+            </FrameLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Thêm Bạn Bè"
                 android:textAlignment="center"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#2C2C2C"
+                android:textSize="22sp"
+                android:fontFamily="sans-serif-black"
+                android:textColor="@color/discord_text_primary"
                 android:layout_marginBottom="8dp"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Nhập email của bạn bè để thêm họ vào danh sách."
+                android:text="Nhập email của bạn bè để gửi lời mời kết bạn."
                 android:textAlignment="center"
                 android:textSize="14sp"
-                android:textColor="#522546"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/discord_text_secondary"
                 android:layout_marginBottom="24dp"/>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -48,8 +66,11 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusBottomEnd="12dp"
-                app:boxStrokeColor="#F7374F"
-                app:hintTextColor="#F7374F"
+                app:boxStrokeColor="@color/discord_blurple"
+                app:hintTextColor="@color/discord_blurple"
+                app:boxBackgroundColor="@color/discord_dark_elevated"
+                app:startIconDrawable="@android:drawable/ic_dialog_email"
+                app:startIconTint="@color/discord_text_secondary"
                 android:hint="Email bạn bè">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -57,18 +78,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress"
-                    android:textColor="#2C2C2C"/>
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="16sp"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddFriendConfirm"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="Thêm"
+                android:text="Gửi lời mời kết bạn"
                 android:textSize="16sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif-black"
                 app:cornerRadius="12dp"
-                android:backgroundTint="#F7374F"
-                android:textColor="#FFFFFF"/>
+                android:backgroundTint="@color/discord_blurple"
+                android:textColor="@color/white"
+                app:elevation="4dp"/>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

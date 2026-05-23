@@ -68,8 +68,7 @@ public class ServerChatFragment extends Fragment {
     private com.google.firebase.firestore.ListenerRegistration membersListener;
     private MentionAdapter mentionAdapter;
 
-    private PinnedMessagesAdapter pinnedAdapter;
-    private List<Message> currentPinnedMessages = new ArrayList<>();
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -210,7 +209,18 @@ public class ServerChatFragment extends Fragment {
             binding.tvReplyingToLayout.setVisibility(View.GONE);
         });
 
-        binding.btnPinnedMessages.setOnClickListener(v -> showPinnedMessages());
+        androidx.navigation.NavController navController = Navigation.findNavController(requireView());
+        if (navController.getCurrentBackStackEntry() != null) {
+            navController.getCurrentBackStackEntry().getSavedStateHandle()
+                .getLiveData("GOTO_MESSAGE_ID")
+                .observe(getViewLifecycleOwner(), targetIdObj -> {
+                    if (targetIdObj != null) {
+                        String targetId = (String) targetIdObj;
+                        scrollToMessage(targetId);
+                        navController.getCurrentBackStackEntry().getSavedStateHandle().remove("GOTO_MESSAGE_ID");
+                    }
+                });
+        }
 
         View.OnClickListener toChatInfo = v -> {
             Bundle args = new Bundle();
@@ -293,15 +303,6 @@ public class ServerChatFragment extends Fragment {
                 }
                 adapter.notifyDataSetChanged();
 
-                if (pinnedAdapter != null) {
-                    currentPinnedMessages.clear();
-                    for (Message m : messageList) {
-                        if (m.isPinned() && !m.isDeleted()) {
-                            currentPinnedMessages.add(m);
-                        }
-                    }
-                    pinnedAdapter.notifyDataSetChanged();
-                }
                 
                 if (!messageList.isEmpty()) {
                     Message lastMsg = messageList.get(messageList.size() - 1);
@@ -405,9 +406,6 @@ public class ServerChatFragment extends Fragment {
                     if (adapter != null) {
                         adapter.setServerMembers(serverMembers);
                     }
-                    if (pinnedAdapter != null) {
-                        pinnedAdapter.setServerMembers(serverMembers);
-                    }
                 }
             });
     }
@@ -472,79 +470,18 @@ public class ServerChatFragment extends Fragment {
         hideMentionSuggestions();
     }
 
-    private void showPinnedMessages() {
-        if (getContext() == null) return;
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
-        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.layout_bottom_sheet_pinned_messages, null);
-        bottomSheetDialog.setContentView(sheetView);
-
-        try {
-            ((View) sheetView.getParent()).setBackgroundColor(Color.TRANSPARENT);
-        } catch (Exception e) {}
-
-        RecyclerView rvPinnedMessages = sheetView.findViewById(R.id.rvPinnedMessages);
-        View tvNoPinnedMessages = sheetView.findViewById(R.id.tvNoPinnedMessages);
-
-        currentPinnedMessages.clear();
-        for (Message m : messageList) {
-            if (m.isPinned() && !m.isDeleted()) {
-                currentPinnedMessages.add(m);
+    private void scrollToMessage(String messageId) {
+        if (messageId == null || messageList == null || binding == null) return;
+        for (int i = 0; i < messageList.size(); i++) {
+            Message m = messageList.get(i);
+            if (m != null && messageId.equals(m.getMessageId())) {
+                final int pos = i;
+                binding.chatRecyclerView.post(() -> {
+                    binding.chatRecyclerView.scrollToPosition(pos);
+                });
+                break;
             }
         }
-
-        if (currentPinnedMessages.isEmpty()) {
-            if (tvNoPinnedMessages != null) tvNoPinnedMessages.setVisibility(View.VISIBLE);
-            if (rvPinnedMessages != null) rvPinnedMessages.setVisibility(View.GONE);
-        } else {
-            if (tvNoPinnedMessages != null) tvNoPinnedMessages.setVisibility(View.GONE);
-            if (rvPinnedMessages != null) rvPinnedMessages.setVisibility(View.VISIBLE);
-        }
-
-        pinnedAdapter = new PinnedMessagesAdapter(currentPinnedMessages, serverColor, new PinnedMessagesAdapter.OnPinnedMessageInteractListener() {
-            @Override
-            public void onGoTo(Message message) {
-                int index = -1;
-                for (int i = 0; i < messageList.size(); i++) {
-                    if (messageList.get(i).getMessageId() != null && messageList.get(i).getMessageId().equals(message.getMessageId())) {
-                        index = i;
-                        break;
-                    }
-                }
-                if (index != -1 && binding != null) {
-                    binding.chatRecyclerView.scrollToPosition(index);
-                }
-                bottomSheetDialog.dismiss();
-            }
-
-            @Override
-            public void onUnpin(Message message) {
-                if (groupChatRef != null && message.getMessageId() != null) {
-                    groupChatRef.child(message.getMessageId()).child("pinned").setValue(false)
-                        .addOnSuccessListener(aVoid -> {
-                            currentPinnedMessages.remove(message);
-                            if (currentPinnedMessages.isEmpty()) {
-                                if (tvNoPinnedMessages != null) tvNoPinnedMessages.setVisibility(View.VISIBLE);
-                                if (rvPinnedMessages != null) rvPinnedMessages.setVisibility(View.GONE);
-                            } else {
-                                if (pinnedAdapter != null) pinnedAdapter.notifyDataSetChanged();
-                            }
-                        });
-                }
-            }
-        });
-        pinnedAdapter.setServerMembers(serverMembers);
-
-        if (rvPinnedMessages != null) {
-            rvPinnedMessages.setLayoutManager(new LinearLayoutManager(getContext()));
-            rvPinnedMessages.setAdapter(pinnedAdapter);
-        }
-
-        bottomSheetDialog.setOnDismissListener(dialog -> {
-            pinnedAdapter = null;
-            currentPinnedMessages.clear();
-        });
-
-        bottomSheetDialog.show();
     }
 
     private class MentionAdapter extends RecyclerView.Adapter<MentionAdapter.ViewHolder> {

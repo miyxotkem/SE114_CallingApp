@@ -551,10 +551,15 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     btnDelete.setVisibility(msg.getSenderId().equals(currentUserId) ? View.VISIBLE : View.GONE);
                     btnRemoveReaction.setVisibility((msg.getReactionEmoji() != null && !msg.getReactionEmoji().isEmpty()) ? View.VISIBLE : View.GONE);
 
+                    View dividerAction = sheetView.findViewById(R.id.dividerAction);
+                    if (dividerAction != null) {
+                        dividerAction.setVisibility(btnRemoveReaction.getVisibility());
+                    }
+
                     if (msg.isPinned()) {
-                        btnPin.setText("📌 Bỏ ghim tin nhắn");
+                        btnPin.setText("Bỏ ghim tin nhắn");
                     } else {
-                        btnPin.setText("📌 Ghim tin nhắn");
+                        btnPin.setText("Ghim tin nhắn");
                     }
                     btnPin.setOnClickListener(view -> {
                         listener.onPinToggle(msg);
@@ -563,6 +568,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                     sheetView.findViewById(R.id.btnReactLike).setOnClickListener(view -> { listener.onReact(msg, "👍"); bottomSheetDialog.dismiss(); });
                     sheetView.findViewById(R.id.btnReactLove).setOnClickListener(view -> { listener.onReact(msg, "❤️"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactHaha).setOnClickListener(view -> { listener.onReact(msg, "😂"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactWow).setOnClickListener(view -> { listener.onReact(msg, "😮"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactSad).setOnClickListener(view -> { listener.onReact(msg, "😢"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactAngry).setOnClickListener(view -> { listener.onReact(msg, "😡"); bottomSheetDialog.dismiss(); });
                     btnRemoveReaction.setOnClickListener(view -> { listener.onReact(msg, ""); bottomSheetDialog.dismiss(); });
                     btnDelete.setOnClickListener(view -> { listener.onDelete(msg); bottomSheetDialog.dismiss(); });
 

@@ -9,10 +9,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="@color/discord_dark_floating"
         app:cardCornerRadius="24dp"
         app:cardElevation="8dp"
-        app:strokeWidth="0dp">
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/discord_divider">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -20,14 +21,39 @@
             android:orientation="vertical"
             android:padding="32dp">
 
+            <!-- Premium Circular Group Icon -->
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="20dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="#1A5865F2">
+                <!-- Overlapped Users to represent a group -->
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center_vertical|start"
+                    android:layout_marginStart="12dp"
+                    android:src="@drawable/icon_user"
+                    app:tint="@color/discord_blurple" />
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center_vertical|end"
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/icon_user"
+                    app:tint="@color/discord_blurple" />
+            </FrameLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Thêm Bạn Vào Server"
                 android:textAlignment="center"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#2C2C2C"
+                android:textSize="22sp"
+                android:fontFamily="sans-serif-black"
+                android:textColor="@color/discord_text_primary"
                 android:layout_marginBottom="8dp"/>
 
             <TextView
@@ -36,24 +62,30 @@
                 android:text="Chọn bạn bè để thêm họ vào server."
                 android:textAlignment="center"
                 android:textSize="14sp"
-                android:textColor="#522546"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/discord_text_secondary"
                 android:layout_marginBottom="24dp"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvFriendsToSelect"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginBottom="24dp"
+                android:scrollbars="vertical"
+                android:fadeScrollbars="true" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAddConfirm"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="Thêm"
+                android:text="Thêm vào Server"
                 android:textSize="16sp"
+                android:textAllCaps="false"
+                android:fontFamily="sans-serif-black"
                 app:cornerRadius="12dp"
-                android:backgroundTint="#F7374F"
-                android:textColor="#FFFFFF"/>
+                android:backgroundTint="@color/discord_blurple"
+                android:textColor="@color/white"
+                app:elevation="4dp"/>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

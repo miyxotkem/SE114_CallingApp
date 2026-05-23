@@ -148,6 +148,7 @@
                                 android:layout_gravity="center"
                                 android:scaleType="centerCrop"
                                 android:padding="2dp"
+                                android:background="@color/discord_dark_alt"
                                 android:src="@drawable/icon_user"
                                 app:strokeColor="@color/discord_dark_alt"
                                 app:strokeWidth="4dp"

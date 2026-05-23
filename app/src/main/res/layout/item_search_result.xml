@@ -7,7 +7,7 @@
     android:gravity="top"
     android:paddingHorizontal="16dp"
     android:paddingVertical="12dp"
-    android:background="?attr/selectableItemBackground"
+    android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true">
 
@@ -17,7 +17,7 @@
         android:layout_width="36dp"
         android:layout_height="36dp"
         app:cardCornerRadius="18dp"
-        app:cardBackgroundColor="#2A2A3A"
+        app:cardBackgroundColor="@color/discord_dark_elevated"
         app:cardElevation="0dp"
         app:strokeWidth="0dp">
 
@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Tên người gửi"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/discord_text_primary"
                 android:textSize="14sp"
                 android:fontFamily="sans-serif-black" />
 
@@ -59,7 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="12/12/2026 12:00"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/discord_text_muted"
                 android:textSize="11sp"
                 android:fontFamily="sans-serif-medium" />
         </LinearLayout>
@@ -71,7 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Nội dung tin nhắn tìm thấy..."
-            android:textColor="@color/text_secondary"
+            android:textColor="@color/discord_text_secondary"
             android:textSize="13sp"
             android:fontFamily="sans-serif-medium"
             android:maxLines="3"

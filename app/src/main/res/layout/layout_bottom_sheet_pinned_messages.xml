@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_bottom_sheet"
+    android:backgroundTint="@color/discord_dark_floating"
     android:orientation="vertical"
     android:padding="16dp"
     android:minHeight="400dp">
@@ -12,25 +13,25 @@
         android:layout_width="40dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
-        android:background="@color/handle_bar"
+        android:background="@color/discord_divider"
         android:layout_marginBottom="16dp"/>
 
     <TextView
         android:id="@+id/tvPinnedTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="📌 TIN NHẮN ĐÃ GHIM"
-        android:textColor="@color/text_primary"
+        android:text="📌 Tin Nhắn Đã Ghim"
+        android:textColor="@color/discord_text_primary"
         android:textSize="18sp"
         android:fontFamily="sans-serif-black"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="12dp"
-        android:letterSpacing="0.05"/>
+        android:letterSpacing="0.02"/>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/divider"
+        android:background="@color/discord_divider"
         android:layout_marginBottom="12dp"/>
 
     <FrameLayout
@@ -46,16 +47,30 @@
             android:padding="4dp"
             android:clipToPadding="false"/>
 
-        <TextView
+        <LinearLayout
             android:id="@+id/tvNoPinnedMessages"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Không có tin nhắn ghim nào trong phòng này."
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            android:fontFamily="sans-serif-medium"
-            android:visibility="gone"/>
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📌"
+                android:textSize="48sp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chưa có tin nhắn ghim nào trong phòng này."
+                android:textColor="@color/discord_text_secondary"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"/>
+        </LinearLayout>
     </FrameLayout>
 
 </LinearLayout>

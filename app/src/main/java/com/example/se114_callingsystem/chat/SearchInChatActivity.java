@@ -42,6 +42,7 @@ public class SearchInChatActivity extends AppCompatActivity {
     private ImageView btnBack, btnClear;
     private RecyclerView rvSearchResults;
     private TextView tvEmptyState;
+    private View layoutEmptyState;
 
     private List<Message> allMessages = new ArrayList<>();
     private List<Message> searchResults = new ArrayList<>();
@@ -73,6 +74,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         edtSearch = findViewById(R.id.edtSearch);
         rvSearchResults = findViewById(R.id.rvSearchResults);
         tvEmptyState = findViewById(R.id.tvEmptyState);
+        layoutEmptyState = findViewById(R.id.layoutEmptyState);
 
         btnBack.setOnClickListener(v -> finish());
         
@@ -158,7 +160,7 @@ public class SearchInChatActivity extends AppCompatActivity {
             searchResults.clear();
             adapter.notifyDataSetChanged();
             tvEmptyState.setText("Nhập từ khóa để tìm kiếm tin nhắn");
-            tvEmptyState.setVisibility(View.VISIBLE);
+            if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -197,9 +199,9 @@ public class SearchInChatActivity extends AppCompatActivity {
 
         if (searchResults.isEmpty()) {
             tvEmptyState.setText("Không tìm thấy kết quả phù hợp");
-            tvEmptyState.setVisibility(View.VISIBLE);
+            if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.VISIBLE);
         } else {
-            tvEmptyState.setVisibility(View.GONE);
+            if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.GONE);
         }
     }
 

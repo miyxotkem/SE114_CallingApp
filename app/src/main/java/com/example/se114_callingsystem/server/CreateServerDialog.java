@@ -102,6 +102,8 @@ public class CreateServerDialog extends DialogFragment {
     }
 
     private void setupNavigation(View view, ViewFlipper viewFlipper, EditText etName) {
+        updateStepIndicator(view, 1);
+
         view.findViewById(R.id.btnNext1).setOnClickListener(v -> {
             if (etName.getText().toString().trim().isEmpty()) {
                 etName.setError("Please enter a server name");
@@ -110,25 +112,40 @@ public class CreateServerDialog extends DialogFragment {
             viewFlipper.setInAnimation(getContext(), R.anim.slide_in_right);
             viewFlipper.setOutAnimation(getContext(), R.anim.slide_out_left);
             viewFlipper.showNext();
+            updateStepIndicator(view, 2);
         });
 
         view.findViewById(R.id.btnBack2).setOnClickListener(v -> {
             viewFlipper.setInAnimation(getContext(), R.anim.slide_in_left);
             viewFlipper.setOutAnimation(getContext(), R.anim.slide_out_right);
             viewFlipper.showPrevious();
+            updateStepIndicator(view, 1);
         });
 
         view.findViewById(R.id.btnNext2).setOnClickListener(v -> {
             viewFlipper.setInAnimation(getContext(), R.anim.slide_in_right);
             viewFlipper.setOutAnimation(getContext(), R.anim.slide_out_left);
             viewFlipper.showNext();
+            updateStepIndicator(view, 3);
         });
 
         view.findViewById(R.id.btnBack3).setOnClickListener(v -> {
             viewFlipper.setInAnimation(getContext(), R.anim.slide_in_left);
             viewFlipper.setOutAnimation(getContext(), R.anim.slide_out_right);
             viewFlipper.showPrevious();
+            updateStepIndicator(view, 2);
         });
+    }
+
+    private void updateStepIndicator(View view, int step) {
+        View step1 = view.findViewById(R.id.step1Indicator);
+        View step2 = view.findViewById(R.id.step2Indicator);
+        View step3 = view.findViewById(R.id.step3Indicator);
+        if (step1 == null || step2 == null || step3 == null) return;
+        
+        step1.setBackgroundResource(step >= 1 ? R.color.discord_blurple : R.color.discord_divider);
+        step2.setBackgroundResource(step >= 2 ? R.color.discord_blurple : R.color.discord_divider);
+        step3.setBackgroundResource(step >= 3 ? R.color.discord_blurple : R.color.discord_divider);
     }
 
     @Override
