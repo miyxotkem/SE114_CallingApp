@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.model;
+package com.example.se114_callingsystem.core.model;
 
 public class PostChannel {
     private String id;
@@ -52,3 +52,4 @@ public class PostChannel {
     public int getOrderIndex() { return orderIndex; }
     public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
 }
+

@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.friend;
+package com.example.se114_callingsystem.features.friend;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,11 +9,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.User;
-import com.example.se114_callingsystem.profile.ProfileActivity;
+import com.example.se114_callingsystem.core.model.User;
+import androidx.navigation.Navigation;
+import android.os.Bundle;
 import java.util.List;
 
-public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendViewHolder> {
+public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.FriendViewHolder> {
 
     private List<User> userList;
     private boolean isRequestList;
@@ -25,7 +26,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         void onRemove(User user);
     }
 
-    public FriendAdapter(List<User> userList, boolean isRequestList, OnFriendActionListener listener) {
+    public FriendListAdapter(List<User> userList, boolean isRequestList, OnFriendActionListener listener) {
         this.userList = userList;
         this.isRequestList = isRequestList;
         this.listener = listener;
@@ -69,9 +70,9 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         
         // Open Profile on click
         holder.itemView.setOnClickListener(v -> {
-            android.content.Intent intent = new android.content.Intent(v.getContext(), ProfileActivity.class);
-            intent.putExtra("USER_ID", user.getUserId());
-            v.getContext().startActivity(intent);
+            Bundle bundle = new Bundle();
+            bundle.putString("USER_ID", user.getUserId());
+            Navigation.findNavController(v).navigate(R.id.nav_profile, bundle);
         });
     }
 
@@ -95,3 +96,5 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         }
     }
 }
+
+

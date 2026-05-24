@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.call;
+package com.example.se114_callingsystem.features.call;
 
 import android.Manifest;
 import android.content.Context;
@@ -24,10 +24,10 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.databinding.FragmentVoiceCallBinding;
-import com.example.se114_callingsystem.model.Participant;
-import com.example.se114_callingsystem.model.ServerMember;
-import com.example.se114_callingsystem.service.MyScreenShareService;
+import com.example.se114_callingsystem.databinding.FragmentCallVoiceBinding;
+import com.example.se114_callingsystem.core.model.Participant;
+import com.example.se114_callingsystem.core.model.ServerMember;
+import com.example.se114_callingsystem.core.service.MyScreenShareService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -54,7 +54,7 @@ public class VoiceCallFragment extends Fragment {
     private boolean isSharingScreen = false;
     private boolean isUiVisible = true;
 
-    private FragmentVoiceCallBinding binding;
+    private FragmentCallVoiceBinding binding;
     private ParticipantAdapter adapter;
     private List<Participant> participantList = new ArrayList<>();
 
@@ -83,7 +83,7 @@ public class VoiceCallFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentVoiceCallBinding.inflate(inflater, container, false);
+        binding = FragmentCallVoiceBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -378,7 +378,7 @@ public class VoiceCallFragment extends Fragment {
         }
 
         for (int i = 0; i < participantList.size(); i++) {
-            if (participantList.get(i).name.equals("Màn hình của tôi")) {
+            if (participantList.get(i).name.equals("MÃ n hÃ¬nh cá»§a tÃ´i")) {
                 participantList.remove(i);
                 updateGridLayout();
                 if (adapter != null) adapter.notifyItemRemoved(i);
@@ -549,7 +549,7 @@ public class VoiceCallFragment extends Fragment {
 
     private String resolveNameForUid(int agoraUid) {
         if (agoraUid == this.uid + SCREEN_SHARE_UID_OFFSET) {
-            return "Màn hình của tôi";
+            return "MÃ n hÃ¬nh cá»§a tÃ´i";
         }
         
         boolean isScreenShare = false;
@@ -584,7 +584,7 @@ public class VoiceCallFragment extends Fragment {
                     }
                 }
             }
-            return isScreenShare ? "Màn hình của " + name : name + " (Me)";
+            return isScreenShare ? "MÃ n hÃ¬nh cá»§a " + name : name + " (Me)";
         }
 
         if (serverMembers != null) {
@@ -595,14 +595,14 @@ public class VoiceCallFragment extends Fragment {
                         name = m.getUserName();
                     }
                     if (name != null && !name.trim().isEmpty()) {
-                        return isScreenShare ? "Màn hình của " + name : name;
+                        return isScreenShare ? "MÃ n hÃ¬nh cá»§a " + name : name;
                     }
                 }
             }
         }
 
         if (isScreenShare) {
-            return "Màn hình của User " + targetUid;
+            return "MÃ n hÃ¬nh cá»§a User " + targetUid;
         }
         return "User " + agoraUid;
     }
@@ -615,3 +615,4 @@ public class VoiceCallFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 }
+

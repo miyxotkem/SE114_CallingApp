@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.post;
+package com.example.se114_callingsystem.features.post;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -14,8 +14,8 @@ import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Post;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.Post;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -38,16 +38,16 @@ public class CreatePostActivity extends AppCompatActivity {
     // Mentions
     private com.google.android.material.card.MaterialCardView cardMentionSuggestions;
     private androidx.recyclerview.widget.RecyclerView rvMentionSuggestions;
-    private com.example.se114_callingsystem.util.MentionAdapter mentionAdapter;
-    private List<com.example.se114_callingsystem.model.ServerMember> serverMembers = new ArrayList<>();
-    private List<com.example.se114_callingsystem.model.ServerMember> filteredMembers = new ArrayList<>();
+    private com.example.se114_callingsystem.core.util.MentionAdapter mentionAdapter;
+    private List<com.example.se114_callingsystem.core.model.ServerMember> serverMembers = new ArrayList<>();
+    private List<com.example.se114_callingsystem.core.model.ServerMember> filteredMembers = new ArrayList<>();
     private int mentionStartIndex = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_post);
+        setContentView(R.layout.activity_post_create);
 
         channelId = getIntent().getStringExtra("CHANNEL_ID");
         serverId = getIntent().getStringExtra("SERVER_ID");
@@ -100,7 +100,7 @@ public class CreatePostActivity extends AppCompatActivity {
             db.collection("servers").document(serverId).collection("members").get().addOnSuccessListener(snapshots -> {
                 serverMembers.clear();
                 for (com.google.firebase.firestore.DocumentSnapshot doc : snapshots) {
-                    com.example.se114_callingsystem.model.ServerMember member = doc.toObject(com.example.se114_callingsystem.model.ServerMember.class);
+                    com.example.se114_callingsystem.core.model.ServerMember member = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
                     if (member != null) serverMembers.add(member);
                 }
             });
@@ -111,7 +111,7 @@ public class CreatePostActivity extends AppCompatActivity {
         cardMentionSuggestions = findViewById(R.id.cardMentionSuggestions);
         rvMentionSuggestions = findViewById(R.id.rvMentionSuggestions);
         
-        mentionAdapter = new com.example.se114_callingsystem.util.MentionAdapter(filteredMembers, member -> insertMention(member));
+        mentionAdapter = new com.example.se114_callingsystem.core.util.MentionAdapter(filteredMembers, member -> insertMention(member));
         rvMentionSuggestions.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
         rvMentionSuggestions.setAdapter(mentionAdapter);
 
@@ -141,7 +141,7 @@ public class CreatePostActivity extends AppCompatActivity {
     private void showMentionSuggestions(String query) {
         filteredMembers.clear();
         String lowercaseQuery = query.toLowerCase();
-        for (com.example.se114_callingsystem.model.ServerMember member : serverMembers) {
+        for (com.example.se114_callingsystem.core.model.ServerMember member : serverMembers) {
             String name = member.getNickname() != null ? member.getNickname() : member.getUserName();
             if (name != null && name.toLowerCase().contains(lowercaseQuery)) {
                 filteredMembers.add(member);
@@ -160,7 +160,7 @@ public class CreatePostActivity extends AppCompatActivity {
         if (cardMentionSuggestions != null) cardMentionSuggestions.setVisibility(android.view.View.GONE);
     }
 
-    private void insertMention(com.example.se114_callingsystem.model.ServerMember member) {
+    private void insertMention(com.example.se114_callingsystem.core.model.ServerMember member) {
         String nickname = member.getNickname() != null ? member.getNickname() : member.getUserName();
         String mention = "@" + nickname + " ";
         String text = etContent.getText().toString();
@@ -214,12 +214,12 @@ public class CreatePostActivity extends AppCompatActivity {
     private void handlePost() {
         String content = etContent.getText().toString().trim();
         if (content.isEmpty() && selectedMediaUris.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập nội dung hoặc chọn ảnh/video", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Vui lÃ²ng nháº­p ná»™i dung hoáº·c chá»n áº£nh/video", Toast.LENGTH_SHORT).show();
             return;
         }
 
         ProgressDialog pd = new ProgressDialog(this);
-        pd.setMessage("Đang đăng bài...");
+        pd.setMessage("Äang Ä‘Äƒng bÃ i...");
         pd.setCancelable(false);
         pd.show();
 
@@ -240,7 +240,7 @@ public class CreatePostActivity extends AppCompatActivity {
         Uri uri = selectedMediaUris.get(index);
         MediaManager.get().upload(uri).option("resource_type", "auto").callback(new UploadCallback() {
             @Override public void onStart(String requestId) {
-                pd.setMessage("Đang tải lên " + (index + 1) + "/" + selectedMediaUris.size() + "...");
+                pd.setMessage("Äang táº£i lÃªn " + (index + 1) + "/" + selectedMediaUris.size() + "...");
             }
             @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
             @Override public void onSuccess(String requestId, Map resultData) {
@@ -249,7 +249,7 @@ public class CreatePostActivity extends AppCompatActivity {
             }
             @Override public void onError(String requestId, ErrorInfo error) {
                 pd.dismiss();
-                Toast.makeText(CreatePostActivity.this, "Upload lỗi: " + error.getDescription(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(CreatePostActivity.this, "Upload lá»—i: " + error.getDescription(), Toast.LENGTH_SHORT).show();
             }
             @Override public void onReschedule(String requestId, ErrorInfo error) {}
         }).dispatch();
@@ -263,11 +263,11 @@ public class CreatePostActivity extends AppCompatActivity {
             // Update existing post
             db.collection("Posts").document(editPostId).update("content", content).addOnSuccessListener(a -> {
                 pd.dismiss();
-                Toast.makeText(this, "Đã cập nhật bài viết!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "ÄÃ£ cáº­p nháº­t bÃ i viáº¿t!", Toast.LENGTH_SHORT).show();
                 finish();
             }).addOnFailureListener(e -> {
                 pd.dismiss();
-                Toast.makeText(this, "Lỗi cập nhật", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Lá»—i cáº­p nháº­t", Toast.LENGTH_SHORT).show();
             });
             return;
         }
@@ -284,12 +284,13 @@ public class CreatePostActivity extends AppCompatActivity {
             post.setId(doc.getId());
             db.collection("Posts").document(doc.getId()).set(post).addOnSuccessListener(a -> {
                 pd.dismiss();
-                Toast.makeText(this, "Đã đăng bài thành công!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "ÄÃ£ Ä‘Äƒng bÃ i thÃ nh cÃ´ng!", Toast.LENGTH_SHORT).show();
                 finish();
             });
         }).addOnFailureListener(e -> {
             pd.dismiss();
-            Toast.makeText(this, "Lỗi đăng bài", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lá»—i Ä‘Äƒng bÃ i", Toast.LENGTH_SHORT).show();
         });
     }
 }
+

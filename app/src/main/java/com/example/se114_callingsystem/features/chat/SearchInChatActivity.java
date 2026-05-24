@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -18,11 +18,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Firebase;
-import com.example.se114_callingsystem.model.Message;
-import com.example.se114_callingsystem.model.Server;
-import com.example.se114_callingsystem.model.ServerMember;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.Firebase;
+import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.core.model.ServerMember;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -54,7 +54,7 @@ public class SearchInChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search_in_chat);
+        setContentView(R.layout.activity_chat_search);
 
         chatId = getIntent().getStringExtra("CHAT_ID");
         chatName = getIntent().getStringExtra("CHAT_NAME");
@@ -159,7 +159,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         if (query == null || query.trim().isEmpty()) {
             searchResults.clear();
             adapter.notifyDataSetChanged();
-            tvEmptyState.setText("Nhập từ khóa để tìm kiếm tin nhắn");
+            tvEmptyState.setText("Nháº­p tá»« khÃ³a Ä‘á»ƒ tÃ¬m kiáº¿m tin nháº¯n");
             if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.VISIBLE);
             return;
         }
@@ -198,7 +198,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
 
         if (searchResults.isEmpty()) {
-            tvEmptyState.setText("Không tìm thấy kết quả phù hợp");
+            tvEmptyState.setText("KhÃ´ng tÃ¬m tháº¥y káº¿t quáº£ phÃ¹ há»£p");
             if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.VISIBLE);
         } else {
             if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.GONE);
@@ -210,7 +210,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_search_result, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_search_result, parent, false);
             return new ViewHolder(view);
         }
 
@@ -251,14 +251,14 @@ public class SearchInChatActivity extends AppCompatActivity {
 
             // Bind text
             if ("image".equals(msg.getType())) {
-                holder.tvMessageBody.setText("📷 [Hình ảnh]");
+                holder.tvMessageBody.setText("ðŸ“· [HÃ¬nh áº£nh]");
             } else if ("file".equals(msg.getType())) {
                 String fileUrl = msg.getContent();
-                String fileName = "Tài liệu đính kèm";
+                String fileName = "TÃ i liá»‡u Ä‘Ã­nh kÃ¨m";
                 try {
                     fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
                 } catch (Exception e) {}
-                holder.tvMessageBody.setText("📎 [Tài liệu] " + fileName);
+                holder.tvMessageBody.setText("ðŸ“Ž [TÃ i liá»‡u] " + fileName);
             } else {
                 holder.tvMessageBody.setText(msg.getContent());
             }
@@ -268,7 +268,7 @@ public class SearchInChatActivity extends AppCompatActivity {
             holder.tvTime.setText(sdf.format(new Date(msg.getTimestamp())));
 
             // Load Avatar
-            holder.ivAvatar.setImageResource(R.drawable.icon_user);
+            holder.ivAvatar.setImageResource(R.drawable.ic_user);
             try {
                 holder.ivAvatar.setColorFilter(Color.parseColor(serverColor));
             } catch (Exception e) {
@@ -283,7 +283,7 @@ public class SearchInChatActivity extends AppCompatActivity {
                             holder.ivAvatar.setColorFilter(null);
                             Glide.with(holder.itemView.getContext())
                                 .load(profilePic)
-                                .placeholder(R.drawable.icon_user)
+                                .placeholder(R.drawable.ic_user)
                                 .into(holder.ivAvatar);
                         }
                     }
@@ -316,3 +316,4 @@ public class SearchInChatActivity extends AppCompatActivity {
         }
     }
 }
+

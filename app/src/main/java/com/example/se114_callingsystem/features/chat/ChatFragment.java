@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
@@ -25,10 +25,10 @@ import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.databinding.FragmentChatDetailBinding;
-import com.example.se114_callingsystem.model.Firebase;
-import com.example.se114_callingsystem.model.Message;
-import com.example.se114_callingsystem.model.ServerMember;
+import com.example.se114_callingsystem.databinding.FragmentChatBinding;
+import com.example.se114_callingsystem.core.model.Firebase;
+import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
@@ -41,12 +41,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ChatDetailFragment extends Fragment {
+public class ChatFragment extends Fragment {
 
-    private static final String TAG = "ChatDetailFragment";
+    private static final String TAG = "ChatFragment";
     public static String activeChatId = null;
 
-    private FragmentChatDetailBinding binding;
+    private FragmentChatBinding binding;
     private ChatAdapter adapter;
     private List<Message> messageList = new ArrayList<>();
     
@@ -85,7 +85,7 @@ public class ChatDetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentChatDetailBinding.inflate(inflater, container, false);
+        binding = FragmentChatBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -198,7 +198,7 @@ public class ChatDetailFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            String[] options = {"📷 Send Image", "📎 Send File"};
+            String[] options = {"ðŸ“· Send Image", "ðŸ“Ž Send File"};
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Upload Media")
                     .setItems(options, (dialog, which) -> {
@@ -334,13 +334,13 @@ public class ChatDetailFragment extends Fragment {
         binding.tvReplyingToLayout.setVisibility(View.VISIBLE);
         String type = message.getType();
         if ("image".equals(type)) {
-            binding.tvReplyingToText.setText("Replying to: 📷 Image");
+            binding.tvReplyingToText.setText("Replying to: ðŸ“· Image");
             binding.cardReplyPreviewImage.setVisibility(View.VISIBLE);
             Glide.with(this).load(message.getContent()).centerCrop().into(binding.ivReplyPreview);
         } else if ("file".equals(type)) {
             String fileName = "Attachment";
             try { fileName = message.getContent().substring(message.getContent().lastIndexOf('/') + 1); } catch (Exception e) {}
-            binding.tvReplyingToText.setText("Replying to: 📎 " + fileName);
+            binding.tvReplyingToText.setText("Replying to: ðŸ“Ž " + fileName);
             binding.cardReplyPreviewImage.setVisibility(View.GONE);
         } else {
             String content = message.getContent();
@@ -507,7 +507,7 @@ public class ChatDetailFragment extends Fragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_mention_suggestion, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_mention_suggestion, parent, false);
             return new ViewHolder(view);
         }
 
@@ -530,12 +530,12 @@ public class ChatDetailFragment extends Fragment {
                     if (doc.exists() && uid.equals(holder.itemView.getTag()) && getContext() != null) {
                         String profilePic = doc.getString("profilePic");
                         if (profilePic != null && !profilePic.isEmpty()) {
-                            Glide.with(ChatDetailFragment.this)
+                            Glide.with(ChatFragment.this)
                                 .load(profilePic)
-                                .placeholder(R.drawable.icon_user)
+                                .placeholder(R.drawable.ic_user)
                                 .into(holder.ivAvatar);
                         } else {
-                            holder.ivAvatar.setImageResource(R.drawable.icon_user);
+                            holder.ivAvatar.setImageResource(R.drawable.ic_user);
                         }
                     }
                 });
@@ -567,3 +567,5 @@ public class ChatDetailFragment extends Fragment {
         }
     }
 }
+
+

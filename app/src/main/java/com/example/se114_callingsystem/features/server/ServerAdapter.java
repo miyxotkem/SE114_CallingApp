@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.server;
+package com.example.se114_callingsystem.features.server;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Server;
+import com.example.se114_callingsystem.core.model.Server;
 import com.google.android.material.card.MaterialCardView;
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_list_item_servers, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_server_sidebar, parent, false);
         return new ViewHolder(v);
     }
 
@@ -57,7 +57,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
             holder.tvServerInitials.setVisibility(View.GONE);
             Glide.with(holder.itemView.getContext())
                  .load(iconUrl)
-                 .placeholder(R.drawable.icon_user)
+                 .placeholder(R.drawable.ic_user)
                  .into(holder.ivServerIcon);
         } else {
             holder.ivServerIcon.setVisibility(View.GONE);
@@ -102,3 +102,4 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
         }
     }
 }
+

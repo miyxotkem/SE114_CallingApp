@@ -16,7 +16,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_centerVertical="true"
-            android:src="@drawable/icon_backbutton"
+            android:src="@drawable/ic_back"
             app:tint="@color/icon_tint" />
         <TextView
             android:layout_width="wrap_content"

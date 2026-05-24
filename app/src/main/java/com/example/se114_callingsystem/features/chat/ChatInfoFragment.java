@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,9 +15,9 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.databinding.FragmentChatInfoBinding;
-import com.example.se114_callingsystem.model.Firebase;
-import com.example.se114_callingsystem.model.Message;
-import com.example.se114_callingsystem.server.ManageMembersActivity;
+import com.example.se114_callingsystem.core.model.Firebase;
+import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.features.server.ManageMembersActivity;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -32,7 +32,7 @@ import android.graphics.Color;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.example.se114_callingsystem.model.ServerMember;
+import com.example.se114_callingsystem.core.model.ServerMember;
 
 public class ChatInfoFragment extends Fragment {
 
@@ -111,10 +111,10 @@ public class ChatInfoFragment extends Fragment {
 
         new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
             switch (position) {
-                case 0: tab.setText("👥 Members"); break;
-                case 1: tab.setText("📷 Media"); break;
-                case 2: tab.setText("📎 Files"); break;
-                case 3: tab.setText("🔗 Links"); break;
+                case 0: tab.setText("ðŸ‘¥ Members"); break;
+                case 1: tab.setText("ðŸ“· Media"); break;
+                case 2: tab.setText("ðŸ“Ž Files"); break;
+                case 3: tab.setText("ðŸ”— Links"); break;
             }
         }).attach();
     }
@@ -295,7 +295,7 @@ public class ChatInfoFragment extends Fragment {
     private void showPinnedMessages() {
         if (getContext() == null) return;
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
-        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.layout_bottom_sheet_pinned_messages, null);
+        View sheetView = LayoutInflater.from(requireContext()).inflate(R.layout.layout_chat_bottom_sheet_pinned_messages, null);
         bottomSheetDialog.setContentView(sheetView);
 
         try {
@@ -370,3 +370,4 @@ public class ChatInfoFragment extends Fragment {
     public String getServerId() { return serverId; }
     public String getChatId() { return chatId; }
 }
+

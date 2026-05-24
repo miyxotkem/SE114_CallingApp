@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.model;
+package com.example.se114_callingsystem.core.model;
 
 import java.util.List;
 import java.util.Map;
@@ -49,3 +49,4 @@ public class Post {
     public int getCommentCount() { return commentCount; }
     public void setCommentCount(int commentCount) { this.commentCount = commentCount; }
 }
+

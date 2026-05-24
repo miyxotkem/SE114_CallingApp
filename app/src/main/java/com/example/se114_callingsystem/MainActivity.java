@@ -45,6 +45,37 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        handleNotificationIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleNotificationIntent(intent);
+    }
+
+    private void handleNotificationIntent(android.content.Intent intent) {
+        if (intent != null && intent.hasExtra("CHAT_ID")) {
+            String chatId = intent.getStringExtra("CHAT_ID");
+            String chatName = intent.getStringExtra("CHAT_NAME");
+            String serverColor = intent.getStringExtra("SERVER_COLOR");
+            String serverId = intent.getStringExtra("SERVER_ID");
+
+            NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.nav_host_fragment);
+            if (navHostFragment != null) {
+                NavController navController = navHostFragment.getNavController();
+                Bundle args = new Bundle();
+                args.putString("CHAT_ID", chatId);
+                args.putString("CHAT_NAME", chatName);
+                args.putString("SERVER_COLOR", serverColor != null ? serverColor : "#5865F2");
+                args.putString("SERVER_ID", serverId);
+
+                navController.navigate(R.id.nav_chat_detail, args);
+            }
+        }
     }
 
     @Override

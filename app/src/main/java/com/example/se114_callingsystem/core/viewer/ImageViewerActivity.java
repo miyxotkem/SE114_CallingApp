@@ -1,11 +1,11 @@
-package com.example.se114_callingsystem.viewer;
+package com.example.se114_callingsystem.core.viewer;
 
 import android.os.Bundle;
 import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.github.chrisbanes.photoview.PhotoView;
 
 public class ImageViewerActivity extends AppCompatActivity {
@@ -30,3 +30,4 @@ public class ImageViewerActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
     }
 }
+

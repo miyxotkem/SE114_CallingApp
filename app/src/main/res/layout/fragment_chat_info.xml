@@ -26,7 +26,7 @@
                 android:id="@+id/btnBack"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/icon_backbutton"
+                android:src="@drawable/ic_back"
                 app:tint="@color/discord_text_primary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -225,7 +225,7 @@
                 <ImageView
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:src="@drawable/icon_searchbutton"
+                    android:src="@drawable/ic_search"
                     app:tint="@color/discord_text_secondary" />
 
                 <TextView
@@ -311,7 +311,7 @@
                 <ImageView
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:src="@drawable/icon_user"
+                    android:src="@drawable/ic_user"
                     app:tint="@color/discord_text_secondary" />
 
                 <TextView

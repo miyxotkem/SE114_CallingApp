@@ -70,7 +70,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/icon_more_vert"
+                android:src="@drawable/ic_more_vert"
                 app:tint="@color/discord_text_secondary" />
 
         </LinearLayout>
@@ -173,7 +173,7 @@
                 <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
-                    android:src="@drawable/icon_edit"
+                    android:src="@drawable/ic_edit"
                     app:tint="@color/discord_text_secondary" />
 
                 <TextView

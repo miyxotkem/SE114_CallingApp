@@ -35,14 +35,14 @@
                     android:layout_height="28dp"
                     android:layout_gravity="center_vertical|start"
                     android:layout_marginStart="12dp"
-                    android:src="@drawable/icon_user"
+                    android:src="@drawable/ic_user"
                     app:tint="@color/discord_blurple" />
                 <ImageView
                     android:layout_width="28dp"
                     android:layout_height="28dp"
                     android:layout_gravity="center_vertical|end"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/icon_user"
+                    android:src="@drawable/ic_user"
                     app:tint="@color/discord_blurple" />
             </FrameLayout>
 

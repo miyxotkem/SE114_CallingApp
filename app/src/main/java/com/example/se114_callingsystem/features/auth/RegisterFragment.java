@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.auth;
+package com.example.se114_callingsystem.features.auth;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.databinding.FragmentRegisterBinding;
+import com.example.se114_callingsystem.databinding.FragmentAuthRegisterBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -22,14 +22,14 @@ public class RegisterFragment extends Fragment {
 
     private static final String TAG = "RegisterFragment";
 
-    private FragmentRegisterBinding binding;
+    private FragmentAuthRegisterBinding binding;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentRegisterBinding.inflate(inflater, container, false);
+        binding = FragmentAuthRegisterBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -133,3 +133,4 @@ public class RegisterFragment extends Fragment {
         binding = null;
     }
 }
+

@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.post;
+package com.example.se114_callingsystem.features.post;
 
 import android.os.Bundle;
 import android.widget.EditText;
@@ -8,8 +8,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Comment;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.Comment;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -24,7 +24,7 @@ public class PostCommentActivity extends AppCompatActivity {
     private String serverId;
     private String serverColor;
     private RecyclerView rvComments;
-    private CommentAdapter commentAdapter;
+    private CommentListAdapter CommentListAdapter;
     private List<Comment> commentList = new ArrayList<>();
     private FirebaseFirestore db;
     private EditText etComment;
@@ -39,9 +39,9 @@ public class PostCommentActivity extends AppCompatActivity {
     // Mentions
     private com.google.android.material.card.MaterialCardView cardMentionSuggestions;
     private androidx.recyclerview.widget.RecyclerView rvMentionSuggestions;
-    private com.example.se114_callingsystem.util.MentionAdapter mentionAdapter;
-    private List<com.example.se114_callingsystem.model.ServerMember> serverMembers = new ArrayList<>();
-    private List<com.example.se114_callingsystem.model.ServerMember> filteredMembers = new ArrayList<>();
+    private com.example.se114_callingsystem.core.util.MentionAdapter mentionAdapter;
+    private List<com.example.se114_callingsystem.core.model.ServerMember> serverMembers = new ArrayList<>();
+    private List<com.example.se114_callingsystem.core.model.ServerMember> filteredMembers = new ArrayList<>();
     private int mentionStartIndex = -1;
 
     @Override
@@ -56,7 +56,7 @@ public class PostCommentActivity extends AppCompatActivity {
         serverColor = getIntent().getStringExtra("SERVER_COLOR");
 
         if (postId == null) {
-            Toast.makeText(this, "Không tìm thấy bài viết", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "KhÃ´ng tÃ¬m tháº¥y bÃ i viáº¿t", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -81,7 +81,7 @@ public class PostCommentActivity extends AppCompatActivity {
         fetchServerMembers();
 
         rvComments = findViewById(R.id.rvComments);
-        commentAdapter = new CommentAdapter(this, commentList, postAuthorId, serverColor, new CommentAdapter.OnCommentInteractionListener() {
+        CommentListAdapter = new CommentListAdapter(this, commentList, postAuthorId, serverColor, new CommentListAdapter.OnCommentInteractionListener() {
             @Override
             public void onReplyClick(Comment comment, String authorName) {
                 setReplyMode(comment, authorName);
@@ -93,7 +93,7 @@ public class PostCommentActivity extends AppCompatActivity {
             }
         });
         rvComments.setLayoutManager(new LinearLayoutManager(this));
-        rvComments.setAdapter(commentAdapter);
+        rvComments.setAdapter(CommentListAdapter);
 
         loadComments();
     }
@@ -102,7 +102,7 @@ public class PostCommentActivity extends AppCompatActivity {
         db.collection("Posts").document(postId).collection("comments")
           .addSnapshotListener((snapshots, error) -> {
               if (error != null) {
-                  Toast.makeText(PostCommentActivity.this, "Lỗi tải bình luận: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                  Toast.makeText(PostCommentActivity.this, "Lá»—i táº£i bÃ¬nh luáº­n: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                   return;
               }
               if (snapshots != null) {
@@ -112,7 +112,7 @@ public class PostCommentActivity extends AppCompatActivity {
                       if (c != null) { c.setId(doc.getId()); commentList.add(c); }
                   }
                   Collections.sort(commentList, (a, b) -> Long.compare(a.getCreatedAt(), b.getCreatedAt()));
-                  commentAdapter.notifyDataSetChanged();
+                  CommentListAdapter.notifyDataSetChanged();
                   if (!commentList.isEmpty()) {
                       rvComments.scrollToPosition(commentList.size() - 1);
                   }
@@ -125,11 +125,11 @@ public class PostCommentActivity extends AppCompatActivity {
             db.collection("servers").document(serverId).collection("members").get().addOnSuccessListener(snapshots -> {
                 serverMembers.clear();
                 for (com.google.firebase.firestore.DocumentSnapshot doc : snapshots) {
-                    com.example.se114_callingsystem.model.ServerMember member = doc.toObject(com.example.se114_callingsystem.model.ServerMember.class);
+                    com.example.se114_callingsystem.core.model.ServerMember member = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
                     if (member != null) serverMembers.add(member);
                 }
-                if (commentAdapter != null) {
-                    commentAdapter.setServerMembers(serverMembers);
+                if (CommentListAdapter != null) {
+                    CommentListAdapter.setServerMembers(serverMembers);
                 }
             });
         }
@@ -139,7 +139,7 @@ public class PostCommentActivity extends AppCompatActivity {
         cardMentionSuggestions = findViewById(R.id.cardMentionSuggestions);
         rvMentionSuggestions = findViewById(R.id.rvMentionSuggestions);
         
-        mentionAdapter = new com.example.se114_callingsystem.util.MentionAdapter(filteredMembers, member -> insertMention(member));
+        mentionAdapter = new com.example.se114_callingsystem.core.util.MentionAdapter(filteredMembers, member -> insertMention(member));
         rvMentionSuggestions.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
         rvMentionSuggestions.setAdapter(mentionAdapter);
 
@@ -169,7 +169,7 @@ public class PostCommentActivity extends AppCompatActivity {
     private void showMentionSuggestions(String query) {
         filteredMembers.clear();
         String lowercaseQuery = query.toLowerCase();
-        for (com.example.se114_callingsystem.model.ServerMember member : serverMembers) {
+        for (com.example.se114_callingsystem.core.model.ServerMember member : serverMembers) {
             String name = member.getNickname() != null ? member.getNickname() : member.getUserName();
             if (name != null && name.toLowerCase().contains(lowercaseQuery)) {
                 filteredMembers.add(member);
@@ -188,7 +188,7 @@ public class PostCommentActivity extends AppCompatActivity {
         if (cardMentionSuggestions != null) cardMentionSuggestions.setVisibility(android.view.View.GONE);
     }
 
-    private void insertMention(com.example.se114_callingsystem.model.ServerMember member) {
+    private void insertMention(com.example.se114_callingsystem.core.model.ServerMember member) {
         String nickname = member.getNickname() != null ? member.getNickname() : member.getUserName();
         String mention = "@" + nickname + " ";
         String text = etComment.getText().toString();
@@ -220,7 +220,7 @@ public class PostCommentActivity extends AppCompatActivity {
                 etComment.setText("");
                 cancelReplyMode();
                 
-                // Tăng số đếm comment trong Post
+                // TÄƒng sá»‘ Ä‘áº¿m comment trong Post
                 db.collection("Posts").document(postId).get().addOnSuccessListener(postDoc -> {
                     if (postDoc.exists()) {
                         Long currentCount = postDoc.getLong("commentCount");
@@ -230,7 +230,7 @@ public class PostCommentActivity extends AppCompatActivity {
                 });
             })
             .addOnFailureListener(e -> {
-                Toast.makeText(PostCommentActivity.this, "Lỗi đăng bình luận: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(PostCommentActivity.this, "Lá»—i Ä‘Äƒng bÃ¬nh luáº­n: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
     }
 
@@ -238,7 +238,7 @@ public class PostCommentActivity extends AppCompatActivity {
         replyToCommentId = comment.getId();
         replyToAuthorName = authorName;
         if (layoutReplyHeader != null && tvReplyHeader != null) {
-            tvReplyHeader.setText("Đang trả lời @" + authorName);
+            tvReplyHeader.setText("Äang tráº£ lá»i @" + authorName);
             layoutReplyHeader.setVisibility(android.view.View.VISIBLE);
         }
         if (etComment != null) {
@@ -260,19 +260,19 @@ public class PostCommentActivity extends AppCompatActivity {
 
     private void showDeleteConfirmationDialog(Comment comment) {
         new androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Xóa bình luận")
-            .setMessage("Bạn có chắc chắn muốn xóa bình luận này không?")
-            .setPositiveButton("Xóa", (dialog, which) -> deleteComment(comment))
-            .setNegativeButton("Hủy", null)
+            .setTitle("XÃ³a bÃ¬nh luáº­n")
+            .setMessage("Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a bÃ¬nh luáº­n nÃ y khÃ´ng?")
+            .setPositiveButton("XÃ³a", (dialog, which) -> deleteComment(comment))
+            .setNegativeButton("Há»§y", null)
             .show();
     }
 
     private void deleteComment(Comment comment) {
         db.collection("Posts").document(postId).collection("comments").document(comment.getId()).delete()
             .addOnSuccessListener(aVoid -> {
-                Toast.makeText(PostCommentActivity.this, "Đã xóa bình luận", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PostCommentActivity.this, "ÄÃ£ xÃ³a bÃ¬nh luáº­n", Toast.LENGTH_SHORT).show();
                 
-                // Giảm số đếm comment trong Post
+                // Giáº£m sá»‘ Ä‘áº¿m comment trong Post
                 db.collection("Posts").document(postId).get().addOnSuccessListener(postDoc -> {
                     if (postDoc.exists()) {
                         Long currentCount = postDoc.getLong("commentCount");
@@ -283,7 +283,8 @@ public class PostCommentActivity extends AppCompatActivity {
                 });
             })
             .addOnFailureListener(e -> {
-                Toast.makeText(PostCommentActivity.this, "Lỗi xóa bình luận: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(PostCommentActivity.this, "Lá»—i xÃ³a bÃ¬nh luáº­n: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             });
     }
 }
+

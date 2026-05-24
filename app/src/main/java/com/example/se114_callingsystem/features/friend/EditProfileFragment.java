@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.profile;
+package com.example.se114_callingsystem.features.friend;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -16,9 +16,9 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.databinding.FragmentEditProfileBinding;
-import com.example.se114_callingsystem.model.Firebase;
-import com.example.se114_callingsystem.model.User;
+import com.example.se114_callingsystem.databinding.FragmentFriendEditProfileBinding;
+import com.example.se114_callingsystem.core.model.Firebase;
+import com.example.se114_callingsystem.core.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -30,7 +30,7 @@ public class EditProfileFragment extends Fragment {
 
     private static final String TAG = "EditProfileFragment";
 
-    private FragmentEditProfileBinding binding;
+    private FragmentFriendEditProfileBinding binding;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
     
@@ -66,7 +66,7 @@ public class EditProfileFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentEditProfileBinding.inflate(inflater, container, false);
+        binding = FragmentFriendEditProfileBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -113,7 +113,7 @@ public class EditProfileFragment extends Fragment {
                         if (!currentAvatarUrl.isEmpty()) {
                             Glide.with(this).load(currentAvatarUrl).placeholder(R.mipmap.ic_launcher).into(binding.ivEditAvatar);
                         } else {
-                            binding.ivEditAvatar.setImageResource(R.drawable.icon_user);
+                            binding.ivEditAvatar.setImageResource(R.drawable.ic_user);
                         }
                         if (!currentCoverUrl.isEmpty()) {
                             Glide.with(this).load(currentCoverUrl).into(binding.ivEditCoverPhoto);
@@ -186,3 +186,4 @@ public class EditProfileFragment extends Fragment {
         binding = null;
     }
 }
+

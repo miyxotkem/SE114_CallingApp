@@ -1,28 +1,28 @@
-package com.example.se114_callingsystem.model;
+package com.example.se114_callingsystem.core.model;
 
 public class User {
-    private String userId;      // ID duy nhất từ Firebase Auth
-    private String username;    // Tên hiển thị
-    private String email;       // Địa chỉ email
-    private String profilePic;  // Link ảnh đại diện (URL)
-    private String status;      // Trạng thái: "online" hoặc "offline"
+    private String userId;      // ID duy nháº¥t tá»« Firebase Auth
+    private String username;    // TÃªn hiá»ƒn thá»‹
+    private String email;       // Äá»‹a chá»‰ email
+    private String profilePic;  // Link áº£nh Ä‘áº¡i diá»‡n (URL)
+    private String status;      // Tráº¡ng thÃ¡i: "online" hoáº·c "offline"
     private String coverPic;
     private String bio;
     private String dob;
     private String workplace;
     private String hobbies;
 
-    // Constructor trống bắt buộc phải có để Firebase mapping dữ liệu
+    // Constructor trá»‘ng báº¯t buá»™c pháº£i cÃ³ Ä‘á»ƒ Firebase mapping dá»¯ liá»‡u
     public User() {
     }
 
-    // Constructor đầy đủ để tạo user mới khi đăng ký
+    // Constructor Ä‘áº§y Ä‘á»§ Ä‘á»ƒ táº¡o user má»›i khi Ä‘Äƒng kÃ½
     public User(String userId, String username, String email) {
         this.userId = userId;
         this.username = username;
         this.email = email;
-        this.status = "online"; // Mặc định khi mới tạo là online
-        this.profilePic = "";   // Để trống nếu chưa có ảnh
+        this.status = "online"; // Máº·c Ä‘á»‹nh khi má»›i táº¡o lÃ  online
+        this.profilePic = "";   // Äá»ƒ trá»‘ng náº¿u chÆ°a cÃ³ áº£nh
         this.coverPic = "";
         this.bio = "";
         this.dob = "";
@@ -30,7 +30,7 @@ public class User {
         this.hobbies = "";
     }
 
-    // Getter và Setter
+    // Getter vÃ  Setter
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
 

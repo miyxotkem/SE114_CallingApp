@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.util;
+package com.example.se114_callingsystem.core.util;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.ServerMember;
+import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.List;
 
@@ -34,7 +34,7 @@ public class MentionAdapter extends RecyclerView.Adapter<MentionAdapter.ViewHold
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_mention_suggestion, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_mention_suggestion, parent, false);
         return new ViewHolder(view);
     }
 
@@ -50,7 +50,7 @@ public class MentionAdapter extends RecyclerView.Adapter<MentionAdapter.ViewHold
                     if (profilePic != null && !profilePic.isEmpty()) {
                         Glide.with(holder.itemView.getContext()).load(profilePic).into(holder.ivAvatar);
                     } else {
-                        holder.ivAvatar.setImageResource(R.drawable.icon_user);
+                        holder.ivAvatar.setImageResource(R.drawable.ic_user);
                     }
                 }
             });
@@ -75,3 +75,4 @@ public class MentionAdapter extends RecyclerView.Adapter<MentionAdapter.ViewHold
         }
     }
 }
+

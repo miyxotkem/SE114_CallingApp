@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.model;
+package com.example.se114_callingsystem.core.model;
 
 public class Message {
     private String messageId;
@@ -9,7 +9,7 @@ public class Message {
     private String type; // 0: Text, 1: Image, 2: File
     private String fileUrl;
 
-    // MỚI: 3 trường cho React, Reply, Delete
+    // Má»šI: 3 trÆ°á»ng cho React, Reply, Delete
     private boolean isDeleted;
     private String reactionEmoji;
     private String repliedToContent;
@@ -18,7 +18,7 @@ public class Message {
     private long reminderTime;
 
 
-    // Constructor trống để Firebase mapping
+    // Constructor trá»‘ng Ä‘á»ƒ Firebase mapping
     public Message() {
         this.isDeleted = false;
         this.reactionEmoji = "";
@@ -28,7 +28,7 @@ public class Message {
         this.reminderTime = 0;
     }
 
-    // Constructor đầy đủ cho Text
+    // Constructor Ä‘áº§y Ä‘á»§ cho Text
     public Message(String senderId, String receiverId, String content, long timestamp) {
         this.senderId = senderId;
         this.receiverId = receiverId;
@@ -43,7 +43,7 @@ public class Message {
         this.reminderTime = 0;
     }
 
-    // Constructor đầy đủ cho Media
+    // Constructor Ä‘áº§y Ä‘á»§ cho Media
     public Message(String senderId, String receiverId, String content, long timestamp, String type, String fileUrl) {
         this.senderId = senderId;
         this.receiverId = receiverId;

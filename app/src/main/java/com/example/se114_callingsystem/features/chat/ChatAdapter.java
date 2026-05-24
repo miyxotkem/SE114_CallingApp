@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,10 +19,10 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Message;
-import com.example.se114_callingsystem.model.ServerMember;
-import com.example.se114_callingsystem.viewer.DocumentViewerActivity;
-import com.example.se114_callingsystem.viewer.ImageViewerActivity;
+import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.core.model.ServerMember;
+import com.example.se114_callingsystem.core.viewer.DocumentViewerActivity;
+import com.example.se114_callingsystem.core.viewer.ImageViewerActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -104,13 +104,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_REMINDER) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_item_chat_reminder, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_reminder, parent, false);
             return new ReminderViewHolder(view);
         } else if (viewType == TYPE_SENT) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_item_chat_bubble, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_message_sent, parent, false);
             return new SentMessageViewHolder(view);
         } else {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_item_chat_bubble_receive, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_message_received, parent, false);
             return new ReceivedMessageViewHolder(view);
         }
     }
@@ -120,10 +120,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         Message message = mMessages.get(position);
         RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) holder.itemView.getLayoutParams();
 
-        // Lấy density để quy đổi dp sang px
+        // Láº¥y density Ä‘á»ƒ quy Ä‘á»•i dp sang px
         float density = holder.itemView.getContext().getResources().getDisplayMetrics().density;
 
-        // 1. Logic gom nhóm tin nhắn
+        // 1. Logic gom nhÃ³m tin nháº¯n
         boolean isFirstInGroup = true;
         if (position > 0) {
             Message previousMsg = mMessages.get(position - 1);
@@ -140,7 +140,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-        // 2. Logic điều chỉnh Margin động dựa trên nhóm tin nhắn
+        // 2. Logic Ä‘iá»u chá»‰nh Margin Ä‘á»™ng dá»±a trÃªn nhÃ³m tin nháº¯n
         if (isFirstInGroup) {
             params.topMargin = (int) (8 * density);
         } else {
@@ -148,7 +148,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         holder.itemView.setLayoutParams(params);
 
-        // 3. Gọi hàm bind như bình thường
+        // 3. Gá»i hÃ m bind nhÆ° bÃ¬nh thÆ°á»ng
         if (holder instanceof ReminderViewHolder) {
             ((ReminderViewHolder) holder).bind(message, serverColor, listener);
         } else if (holder instanceof SentMessageViewHolder) {
@@ -178,7 +178,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         void bind(Message message, String serverColor, OnChatInteractListener listener) {
             if (message.isDeleted()) {
-                tvReminderContent.setText("Lời nhắc đã bị xóa");
+                tvReminderContent.setText("Lá»i nháº¯c Ä‘Ã£ bá»‹ xÃ³a");
                 tvReminderContent.setTypeface(null, android.graphics.Typeface.ITALIC);
                 tvReminderTime.setVisibility(View.GONE);
                 cardReminder.setOnClickListener(null);
@@ -192,12 +192,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 
                 cardReminder.setOnLongClickListener(v -> {
                     if (message.getReminderTime() < System.currentTimeMillis()) {
-                        android.widget.Toast.makeText(v.getContext(), "Không thể sửa hoặc xóa lời nhắc đã qua", android.widget.Toast.LENGTH_SHORT).show();
+                        android.widget.Toast.makeText(v.getContext(), "KhÃ´ng thá»ƒ sá»­a hoáº·c xÃ³a lá»i nháº¯c Ä‘Ã£ qua", android.widget.Toast.LENGTH_SHORT).show();
                         return true;
                     }
-                    String[] options = {"✏️ Sửa lời nhắc", "🗑️ Xóa lời nhắc"};
+                    String[] options = {"âœï¸ Sá»­a lá»i nháº¯c", "ðŸ—‘ï¸ XÃ³a lá»i nháº¯c"};
                     new com.google.android.material.dialog.MaterialAlertDialogBuilder(v.getContext())
-                            .setTitle("Tùy chọn lời nhắc")
+                            .setTitle("TÃ¹y chá»n lá»i nháº¯c")
                             .setItems(options, (dialog, which) -> {
                                 if (which == 0) {
                                     listener.onEditReminder(message);
@@ -274,7 +274,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         void bind(Message message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
             bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
-            // Xử lý Tên (Hiện ở tin đầu nhóm)
+            // Xá»­ lÃ½ TÃªn (Hiá»‡n á»Ÿ tin Ä‘áº§u nhÃ³m)
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
                 String uid = message.getSenderId();
@@ -308,7 +308,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 senderName.setVisibility(View.GONE);
             }
 
-            // Xử lý Giờ & Avatar (Hiện ở tin cuối nhóm)
+            // Xá»­ lÃ½ Giá» & Avatar (Hiá»‡n á»Ÿ tin cuá»‘i nhÃ³m)
             if (isLastInGroup) {
                 if (textTime != null) {
                     textTime.setVisibility(View.VISIBLE);
@@ -384,10 +384,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (msg.isDeleted()) {
             textMessage.setVisibility(View.VISIBLE);
-            textMessage.setText("Tin nhắn đã bị thu hồi");
+            textMessage.setText("Tin nháº¯n Ä‘Ã£ bá»‹ thu há»“i");
             textMessage.setTypeface(null, Typeface.ITALIC);
-            // Sent bubble has accent bg → use semi-transparent white
-            // Received bubble has theme bg → use text_secondary
+            // Sent bubble has accent bg â†’ use semi-transparent white
+            // Received bubble has theme bg â†’ use text_secondary
             if (isSentByMe) {
                 textMessage.setTextColor(Color.argb(180, 255, 255, 255)); // #B4FFFFFF
             } else {
@@ -402,7 +402,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             textMessage.setTypeface(null, Typeface.NORMAL);
             // Text color is set by layout XML (bubble_text_sent / bubble_text_received)
 
-            // XỬ LÝ PHÂN LOẠI TIN NHẮN (TEXT vs IMAGE vs FILE)
+            // Xá»¬ LÃ PHÃ‚N LOáº I TIN NHáº®N (TEXT vs IMAGE vs FILE)
             if ("image".equals(msg.getType())) {
                 textMessage.setVisibility(View.GONE);
                 if (layoutFile != null) layoutFile.setVisibility(View.GONE);
@@ -431,10 +431,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                         @Override
                         public boolean onDoubleTap(MotionEvent e) {
-                            if ("❤️".equals(msg.getReactionEmoji())) {
+                            if ("â¤ï¸".equals(msg.getReactionEmoji())) {
                                 listener.onReact(msg, "");
                             } else {
-                                listener.onReact(msg, "❤️");
+                                listener.onReact(msg, "â¤ï¸");
                             }
                             return true;
                         }
@@ -456,9 +456,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 if (layoutFile != null) {
                     layoutFile.setVisibility(View.VISIBLE);
 
-                    // Trích xuất tên file từ URL của Cloudinary (Thêm final để dùng trong GestureDetector)
+                    // TrÃ­ch xuáº¥t tÃªn file tá»« URL cá»§a Cloudinary (ThÃªm final Ä‘á»ƒ dÃ¹ng trong GestureDetector)
                     final String fileUrl = msg.getContent();
-                    String extractedFileName = "Tài liệu đính kèm";
+                    String extractedFileName = "TÃ i liá»‡u Ä‘Ã­nh kÃ¨m";
                     try {
                         extractedFileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
                     } catch (Exception e) {}
@@ -476,7 +476,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                         @Override
                         public boolean onSingleTapConfirmed(MotionEvent e) {
-                            // Mở trình xem trước tài liệu thay vì tải ngay
+                            // Má»Ÿ trÃ¬nh xem trÆ°á»›c tÃ i liá»‡u thay vÃ¬ táº£i ngay
                             Context context = layoutFile.getContext();
                             Intent intent = new Intent(context, DocumentViewerActivity.class);
                             intent.putExtra("FILE_URL", fileUrl);
@@ -487,10 +487,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                         @Override
                         public boolean onDoubleTap(MotionEvent e) {
-                            if ("❤️".equals(msg.getReactionEmoji())) {
+                            if ("â¤ï¸".equals(msg.getReactionEmoji())) {
                                 listener.onReact(msg, "");
                             } else {
-                                listener.onReact(msg, "❤️");
+                                listener.onReact(msg, "â¤ï¸");
                             }
                             return true;
                         }
@@ -507,7 +507,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             } else if ("post_share".equals(msg.getType())) {
                 textMessage.setVisibility(View.VISIBLE);
-                textMessage.setText("📰 Đã chia sẻ một bài viết\n(Chạm để xem chi tiết)");
+                textMessage.setText("ðŸ“° ÄÃ£ chia sáº» má»™t bÃ i viáº¿t\n(Cháº¡m Ä‘á»ƒ xem chi tiáº¿t)");
                 textMessage.setTextColor(Color.parseColor("#5865F2"));
                 textMessage.setTypeface(null, Typeface.BOLD_ITALIC);
                 if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
@@ -521,34 +521,34 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             String cId = doc.getString("channelId");
                             String sId = doc.getString("serverId");
                             if (cId != null && sId != null) {
-                                Intent intent = new Intent(ctx, com.example.se114_callingsystem.post.PostChannelActivity.class);
+                                Intent intent = new Intent(ctx, com.example.se114_callingsystem.features.post.PostChannelActivity.class);
                                 intent.putExtra("CHANNEL_ID", cId);
                                 intent.putExtra("SERVER_ID", sId);
                                 intent.putExtra("SERVER_COLOR", serverColor);
-                                intent.putExtra("CHANNEL_NAME", "Bài Viết");
+                                intent.putExtra("CHANNEL_NAME", "BÃ i Viáº¿t");
                                 ctx.startActivity(intent);
                             }
                         } else {
-                            android.widget.Toast.makeText(ctx, "Bài viết đã bị xóa", android.widget.Toast.LENGTH_SHORT).show();
+                            android.widget.Toast.makeText(ctx, "BÃ i viáº¿t Ä‘Ã£ bá»‹ xÃ³a", android.widget.Toast.LENGTH_SHORT).show();
                         }
                     });
                 });
             } else {
-                // Tin nhắn văn bản bình thường
+                // Tin nháº¯n vÄƒn báº£n bÃ¬nh thÆ°á»ng
                 textMessage.setVisibility(View.VISIBLE);
                 textMessage.setText(msg.getContent());
                 
-                // Tự động nhận diện URL, gạch chân và cho phép click
+                // Tá»± Ä‘á»™ng nháº­n diá»‡n URL, gáº¡ch chÃ¢n vÃ  cho phÃ©p click
                 android.text.util.Linkify.addLinks(textMessage, android.text.util.Linkify.WEB_URLS);
 
                 highlightMentionsInSpannable(textMessage, serverColor, serverMembers, isSentByMe);
                 
-                // Đổi màu link để dễ đọc trên các nền bubble khác nhau
+                // Äá»•i mÃ u link Ä‘á»ƒ dá»… Ä‘á»c trÃªn cÃ¡c ná»n bubble khÃ¡c nhau
                 if (isSentByMe) {
-                    // Bubble của mình màu tím -> link màu trắng cho dễ nhìn
+                    // Bubble cá»§a mÃ¬nh mÃ u tÃ­m -> link mÃ u tráº¯ng cho dá»… nhÃ¬n
                     textMessage.setLinkTextColor(android.graphics.Color.WHITE);
                 } else {
-                    // Bubble người khác -> dùng màu accent (xanh tím) cho nổi bật
+                    // Bubble ngÆ°á»i khÃ¡c -> dÃ¹ng mÃ u accent (xanh tÃ­m) cho ná»•i báº­t
                     textMessage.setLinkTextColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.accent));
                 }
 
@@ -560,7 +560,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
 
-            // Xử lý Reaction Indicator
+            // Xá»­ lÃ½ Reaction Indicator
             if (textReaction != null) {
                 if (msg.getReactionEmoji() != null && !msg.getReactionEmoji().isEmpty()) {
                     textReaction.setText(msg.getReactionEmoji());
@@ -570,7 +570,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
 
-            // Xử lý Reply Indicator - hỗ trợ hiển ảnh khi reply tin nhắn ảnh
+            // Xá»­ lÃ½ Reply Indicator - há»— trá»£ hiá»ƒn áº£nh khi reply tin nháº¯n áº£nh
             if (textRepliedTo != null) {
                 if (msg.getRepliedToContent() != null && !msg.getRepliedToContent().isEmpty()) {
                     String repliedType = msg.getRepliedToType();
@@ -579,7 +579,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     if ("image".equals(repliedType)) {
                         if(msg.getSenderId().equals(currentUserId))
                         textRepliedTo.setBackgroundColor(Color.parseColor(serverColor));
-                        textRepliedTo.setText("Đang trả lời: 📷 Hình ảnh");
+                        textRepliedTo.setText("Äang tráº£ lá»i: ðŸ“· HÃ¬nh áº£nh");
                         textRepliedTo.setVisibility(View.VISIBLE);
                         if (ivRepliedImage != null) {
                             ivRepliedImage.setVisibility(View.VISIBLE);
@@ -590,17 +590,17 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
                     } else if ("file".equals(repliedType)) {
                         // Reply to file - show file name with icon
-                        String fileName = "Tài liệu đính kèm";
+                        String fileName = "TÃ i liá»‡u Ä‘Ã­nh kÃ¨m";
                         try {
                             fileName = replyContent.substring(replyContent.lastIndexOf('/') + 1);
                         } catch (Exception e) {}
-                        textRepliedTo.setText("Đang trả lời: 📎 " + fileName);
+                        textRepliedTo.setText("Äang tráº£ lá»i: ðŸ“Ž " + fileName);
                         textRepliedTo.setVisibility(View.VISIBLE);
                         if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
                     } else {
                         // Reply to text
                         if (replyContent.length() > 30) replyContent = replyContent.substring(0, 30) + "...";
-                        textRepliedTo.setText("Đang trả lời: " + replyContent);
+                        textRepliedTo.setText("Äang tráº£ lá»i: " + replyContent);
                         textRepliedTo.setVisibility(View.VISIBLE);
                         if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
                     }
@@ -612,7 +612,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
 
-        // --- XỬ LÝ SỰ KIỆN CLICK VÀ LONG CLICK CHO BONG BÓNG CHAT ---
+        // --- Xá»¬ LÃ Sá»° KIá»†N CLICK VÃ€ LONG CLICK CHO BONG BÃ“NG CHAT ---
         if (cardBubble != null) {
             final long[] lastClickTime = {0};
             if (!"post_share".equals(msg.getType())) {
@@ -620,9 +620,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     if (msg.isDeleted()) return;
                     long clickTime = System.currentTimeMillis();
                     if (clickTime - lastClickTime[0] < 300) {
-                        // Double Click để thả tim cho văn bản
-                        if ("❤️".equals(msg.getReactionEmoji())) listener.onReact(msg, "");
-                        else listener.onReact(msg, "❤️");
+                        // Double Click Ä‘á»ƒ tháº£ tim cho vÄƒn báº£n
+                        if ("â¤ï¸".equals(msg.getReactionEmoji())) listener.onReact(msg, "");
+                        else listener.onReact(msg, "â¤ï¸");
                     }
                     lastClickTime[0] = clickTime;
                 });
@@ -631,7 +631,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             cardBubble.setOnLongClickListener(v -> {
                 if (!msg.isDeleted()) {
                     BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(v.getContext());
-                    View sheetView = LayoutInflater.from(v.getContext()).inflate(R.layout.layout_bottom_sheet_menu, null);
+                    View sheetView = LayoutInflater.from(v.getContext()).inflate(R.layout.layout_chat_bottom_sheet_menu, null);
                     bottomSheetDialog.setContentView(sheetView);
 
                     try { ((View) sheetView.getParent()).setBackgroundColor(Color.TRANSPARENT); } catch (Exception e) {}
@@ -649,21 +649,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
 
                     if (msg.isPinned()) {
-                        btnPin.setText("Bỏ ghim tin nhắn");
+                        btnPin.setText("Bá» ghim tin nháº¯n");
                     } else {
-                        btnPin.setText("Ghim tin nhắn");
+                        btnPin.setText("Ghim tin nháº¯n");
                     }
                     btnPin.setOnClickListener(view -> {
                         listener.onPinToggle(msg);
                         bottomSheetDialog.dismiss();
                     });
 
-                    sheetView.findViewById(R.id.btnReactLike).setOnClickListener(view -> { listener.onReact(msg, "👍"); bottomSheetDialog.dismiss(); });
-                    sheetView.findViewById(R.id.btnReactLove).setOnClickListener(view -> { listener.onReact(msg, "❤️"); bottomSheetDialog.dismiss(); });
-                    sheetView.findViewById(R.id.btnReactHaha).setOnClickListener(view -> { listener.onReact(msg, "😂"); bottomSheetDialog.dismiss(); });
-                    sheetView.findViewById(R.id.btnReactWow).setOnClickListener(view -> { listener.onReact(msg, "😮"); bottomSheetDialog.dismiss(); });
-                    sheetView.findViewById(R.id.btnReactSad).setOnClickListener(view -> { listener.onReact(msg, "😢"); bottomSheetDialog.dismiss(); });
-                    sheetView.findViewById(R.id.btnReactAngry).setOnClickListener(view -> { listener.onReact(msg, "😡"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactLike).setOnClickListener(view -> { listener.onReact(msg, "ðŸ‘"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactLove).setOnClickListener(view -> { listener.onReact(msg, "â¤ï¸"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactHaha).setOnClickListener(view -> { listener.onReact(msg, "ðŸ˜‚"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactWow).setOnClickListener(view -> { listener.onReact(msg, "ðŸ˜®"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactSad).setOnClickListener(view -> { listener.onReact(msg, "ðŸ˜¢"); bottomSheetDialog.dismiss(); });
+                    sheetView.findViewById(R.id.btnReactAngry).setOnClickListener(view -> { listener.onReact(msg, "ðŸ˜¡"); bottomSheetDialog.dismiss(); });
                     btnRemoveReaction.setOnClickListener(view -> { listener.onReact(msg, ""); bottomSheetDialog.dismiss(); });
                     btnDelete.setOnClickListener(view -> { listener.onDelete(msg); bottomSheetDialog.dismiss(); });
 
@@ -742,10 +742,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     spannable.setSpan(new android.text.style.ClickableSpan() {
                         @Override
                         public void onClick(@NonNull android.view.View widget) {
-                            android.content.Context context = widget.getContext();
-                            android.content.Intent intent = new android.content.Intent(context, com.example.se114_callingsystem.profile.ProfileActivity.class);
-                            intent.putExtra("USER_ID", targetUserId);
-                            context.startActivity(intent);
+                            android.os.Bundle bundle = new android.os.Bundle();
+                            bundle.putString("USER_ID", targetUserId);
+                            androidx.navigation.Navigation.findNavController(widget).navigate(R.id.nav_profile, bundle);
                         }
                         @Override
                         public void updateDrawState(@NonNull android.text.TextPaint ds) {
@@ -762,7 +761,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         // Regex fallback
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@[A-Za-z0-9_ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝàáâãèéêìíòóôõùúýĂăĐđĨĩŨũƠơƯưẠ-ỹ]+");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@[A-Za-z0-9_Ã€ÃÃ‚ÃƒÃˆÃ‰ÃŠÃŒÃÃ’Ã“Ã”Ã•Ã™ÃšÃÃ Ã¡Ã¢Ã£Ã¨Ã©ÃªÃ¬Ã­Ã²Ã³Ã´ÃµÃ¹ÃºÃ½Ä‚ÄƒÄÄ‘Ä¨Ä©Å¨Å©Æ Æ¡Æ¯Æ°áº -á»¹]+");
         java.util.regex.Matcher matcher = pattern.matcher(textStr);
         while (matcher.find()) {
             int start = matcher.start();
@@ -789,3 +788,4 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         textView.setText(spannable);
     }
 }
+

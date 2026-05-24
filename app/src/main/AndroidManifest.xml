@@ -33,62 +33,43 @@
         tools:targetApi="31"
         tools:replace="android:allowBackup, android:label, android:supportsRtl, android:theme, android:extractNativeLibs">
         <service
-            android:name=".service.MessageNotificationService"
+            android:name=".core.service.MessageNotificationService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".service.MyScreenShareService"
+            android:name=".core.service.MyScreenShareService"
             android:foregroundServiceType="mediaProjection"
             tools:node="merge"
             android:exported="false">
         </service>
-        <receiver android:name=".service.ReminderReceiver" android:exported="false" />
+        <receiver android:name=".core.service.ReminderReceiver" android:exported="false" />
         <activity
-            android:name=".chat.ChatInfoActivity"
+            android:name=".features.post.PostChannelActivity"
             android:exported="false" />
         <activity
-            android:name=".post.PostChannelActivity"
+            android:name=".features.post.CreatePostActivity"
             android:exported="false" />
         <activity
-            android:name=".post.CreatePostActivity"
+            android:name=".features.post.PostCommentActivity"
             android:exported="false" />
         <activity
-            android:name=".post.PostCommentActivity"
+            android:name=".features.chat.SearchInChatActivity"
             android:exported="false" />
         <activity
-            android:name=".chat.SearchInChatActivity"
+            android:name=".features.server.ChangeColorActivity"
             android:exported="false" />
         <activity
-            android:name=".server.ChangeColorActivity"
+            android:name=".features.friend.ManageFriendsActivity"
             android:exported="false" />
         <activity
-            android:name=".friend.ManageFriendsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".profile.ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".profile.EditProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".server.ManageMembersActivity"
+            android:name=".features.server.ManageMembersActivity"
             android:exported="false" />
 
         <activity
-            android:name=".viewer.DocumentViewerActivity"
+            android:name=".core.viewer.DocumentViewerActivity"
             android:exported="false" />
         <activity
-            android:name=".viewer.ImageViewerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".chat.ChatDetailActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".server.ServerViewerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".home.HomePageActivity"
+            android:name=".core.viewer.ImageViewerActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
@@ -99,12 +80,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".auth.LoginActivity"
-            android:exported="false" />
-        <activity
-            android:name=".auth.RegisterActivity"
-            android:exported="false" />
     </application>
 
 </manifest>

@@ -27,7 +27,7 @@
                     android:layout_height="24dp"
                     android:layout_centerVertical="true"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/icon_backbutton"
+                    android:src="@drawable/ic_back"
                     app:tint="@color/text_primary" />
 
                 <TextView

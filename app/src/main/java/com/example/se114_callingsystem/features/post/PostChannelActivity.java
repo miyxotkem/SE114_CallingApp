@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.post;
+package com.example.se114_callingsystem.features.post;
 
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -8,8 +8,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Post;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.Post;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.content.Intent;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -20,16 +20,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import com.example.se114_callingsystem.model.ChatChannel;
-import com.example.se114_callingsystem.model.Message;
-import com.example.se114_callingsystem.model.ServerMember;
+import com.example.se114_callingsystem.core.model.ChatChannel;
+import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 public class PostChannelActivity extends AppCompatActivity {
 
     private String channelId, channelName, serverId, serverColor;
     private RecyclerView rvPosts;
-    private PostAdapter postAdapter;
+    private PostListAdapter PostListAdapter;
     private List<Post> postList = new ArrayList<>();
     private FirebaseFirestore db;
     private String currentUserId;
@@ -47,7 +47,7 @@ public class PostChannelActivity extends AppCompatActivity {
 
         TextView tvChannelName = findViewById(R.id.tvChannelName);
         if (channelName != null) {
-            tvChannelName.setText("📰 " + channelName);
+            tvChannelName.setText("ðŸ“° " + channelName);
         }
 
         ImageView btnBack = findViewById(R.id.btnBack);
@@ -81,7 +81,7 @@ public class PostChannelActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         rvPosts = findViewById(R.id.rvPosts);
-        postAdapter = new PostAdapter(this, postList, serverColor, new PostAdapter.OnPostInteractionListener() {
+        PostListAdapter = new PostListAdapter(this, postList, serverColor, new PostListAdapter.OnPostInteractionListener() {
             @Override
             public void onLikeClick(Post post, String emoji) {
                 handleLike(post, emoji);
@@ -118,7 +118,7 @@ public class PostChannelActivity extends AppCompatActivity {
             }
         });
         rvPosts.setLayoutManager(new LinearLayoutManager(this));
-        rvPosts.setAdapter(postAdapter);
+        rvPosts.setAdapter(PostListAdapter);
     }
 
     private void loadPosts() {
@@ -133,7 +133,7 @@ public class PostChannelActivity extends AppCompatActivity {
                       if (p != null) { p.setId(doc.getId()); postList.add(p); }
                   }
                   java.util.Collections.sort(postList, (a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
-                  postAdapter.notifyDataSetChanged();
+                  PostListAdapter.notifyDataSetChanged();
               }
           });
 
@@ -145,7 +145,7 @@ public class PostChannelActivity extends AppCompatActivity {
                     members.add(member);
                 }
             }
-            postAdapter.setServerMembers(members);
+            PostListAdapter.setServerMembers(members);
         });
     }
 
@@ -167,12 +167,12 @@ public class PostChannelActivity extends AppCompatActivity {
 
     private void showEmojiPicker(Post post, android.view.View anchor) {
         android.widget.PopupMenu popup = new android.widget.PopupMenu(this, anchor);
-        popup.getMenu().add("👍");
-        popup.getMenu().add("❤️");
-        popup.getMenu().add("😂");
-        popup.getMenu().add("😮");
-        popup.getMenu().add("😢");
-        popup.getMenu().add("😡");
+        popup.getMenu().add("ðŸ‘");
+        popup.getMenu().add("â¤ï¸");
+        popup.getMenu().add("ðŸ˜‚");
+        popup.getMenu().add("ðŸ˜®");
+        popup.getMenu().add("ðŸ˜¢");
+        popup.getMenu().add("ðŸ˜¡");
         popup.setOnMenuItemClickListener(item -> {
             handleLike(post, item.getTitle().toString());
             return true;
@@ -182,10 +182,10 @@ public class PostChannelActivity extends AppCompatActivity {
 
     private void showPostOptions(Post post, android.view.View anchor) {
         android.widget.PopupMenu popup = new android.widget.PopupMenu(this, anchor);
-        popup.getMenu().add("Chỉnh sửa");
-        popup.getMenu().add("Xóa");
+        popup.getMenu().add("Chá»‰nh sá»­a");
+        popup.getMenu().add("XÃ³a");
         popup.setOnMenuItemClickListener(item -> {
-            if (item.getTitle().equals("Chỉnh sửa")) {
+            if (item.getTitle().equals("Chá»‰nh sá»­a")) {
                 Intent intent = new Intent(this, CreatePostActivity.class);
                 intent.putExtra("CHANNEL_ID", channelId);
                 intent.putExtra("SERVER_ID", serverId);
@@ -193,7 +193,7 @@ public class PostChannelActivity extends AppCompatActivity {
                 intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("POST_CONTENT", post.getContent());
                 startActivity(intent);
-            } else if (item.getTitle().equals("Xóa")) {
+            } else if (item.getTitle().equals("XÃ³a")) {
                 db.collection("Posts").document(post.getId()).delete();
             }
             return true;
@@ -203,7 +203,7 @@ public class PostChannelActivity extends AppCompatActivity {
 
     private void showShareBottomSheet(Post post) {
         BottomSheetDialog bottomSheet = new BottomSheetDialog(this);
-        android.view.View view = getLayoutInflater().inflate(R.layout.dialog_share_post, null);
+        android.view.View view = getLayoutInflater().inflate(R.layout.dialog_post_share, null);
         bottomSheet.setContentView(view);
         
         android.widget.ListView lvChannels = view.findViewById(R.id.lvChannels);
@@ -239,7 +239,8 @@ public class PostChannelActivity extends AppCompatActivity {
         com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chats")
             .child(channel.getChatId()).push().setValue(msg)
             .addOnSuccessListener(a -> {
-                Toast.makeText(this, "Đã chia sẻ bài viết vào " + channel.getChatName(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "ÄÃ£ chia sáº» bÃ i viáº¿t vÃ o " + channel.getChatName(), Toast.LENGTH_SHORT).show();
             });
     }
 }
+

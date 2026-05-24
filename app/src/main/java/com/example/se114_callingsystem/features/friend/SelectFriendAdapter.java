@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.friend;
+package com.example.se114_callingsystem.features.friend;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.User;
+import com.example.se114_callingsystem.core.model.User;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,3 +77,4 @@ public class SelectFriendAdapter extends RecyclerView.Adapter<SelectFriendAdapte
         }
     }
 }
+

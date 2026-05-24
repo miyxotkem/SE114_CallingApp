@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.profile;
+package com.example.se114_callingsystem.features.friend;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,10 +13,9 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.auth.LoginActivity;
-import com.example.se114_callingsystem.databinding.FragmentProfileBinding;
-import com.example.se114_callingsystem.model.User;
-import com.example.se114_callingsystem.service.MessageNotificationService;
+import com.example.se114_callingsystem.databinding.FragmentFriendProfileBinding;
+import com.example.se114_callingsystem.core.model.User;
+import com.example.se114_callingsystem.core.service.MessageNotificationService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -25,7 +24,7 @@ public class ProfileFragment extends Fragment {
 
     private static final String TAG = "ProfileFragment";
 
-    private FragmentProfileBinding binding;
+    private FragmentFriendProfileBinding binding;
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
     private String displayUid;
@@ -34,7 +33,7 @@ public class ProfileFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentProfileBinding.inflate(inflater, container, false);
+        binding = FragmentFriendProfileBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -134,26 +133,26 @@ public class ProfileFragment extends Fragment {
                         if (user.getWorkplace() != null && !user.getWorkplace().isEmpty()) {
                             binding.tvWorkplace.setText(user.getWorkplace());
                         } else {
-                            binding.tvWorkplace.setText("Chưa cập nhật nơi làm việc/học tập");
+                            binding.tvWorkplace.setText("ChÆ°a cáº­p nháº­t nÆ¡i lÃ m viá»‡c/há»c táº­p");
                         }
 
                         if (user.getHobbies() != null && !user.getHobbies().isEmpty()) {
                             binding.tvHobbies.setText(user.getHobbies());
                         } else {
-                            binding.tvHobbies.setText("Trống");
+                            binding.tvHobbies.setText("Trá»‘ng");
                         }
 
                         if (user.getDob() != null && !user.getDob().isEmpty()) {
                             binding.tvDob.setText(user.getDob());
                         } else {
-                            binding.tvDob.setText("Chưa cập nhật ngày sinh");
+                            binding.tvDob.setText("ChÆ°a cáº­p nháº­t ngÃ y sinh");
                         }
 
                         try {
                             if (user.getProfilePic() != null && !user.getProfilePic().isEmpty()) {
                                 Glide.with(this).load(user.getProfilePic()).placeholder(R.mipmap.ic_launcher).into(binding.ivAvatar);
                             } else {
-                                binding.ivAvatar.setImageResource(R.drawable.icon_user);
+                                binding.ivAvatar.setImageResource(R.drawable.ic_user);
                             }
                             if (user.getCoverPic() != null && !user.getCoverPic().isEmpty()) {
                                 Glide.with(this).load(user.getCoverPic()).into(binding.ivCoverPhoto);
@@ -169,7 +168,7 @@ public class ProfileFragment extends Fragment {
             })
             .addOnFailureListener(e -> {
                 if (getContext() != null) {
-                    Toast.makeText(getContext(), "Không thể tải thông tin: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "KhÃ´ng thá»ƒ táº£i thÃ´ng tin: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
     }
@@ -180,3 +179,4 @@ public class ProfileFragment extends Fragment {
         binding = null;
     }
 }
+

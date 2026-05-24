@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,8 +13,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Message;
-import com.example.se114_callingsystem.viewer.DocumentViewerActivity;
+import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.core.viewer.DocumentViewerActivity;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -44,9 +44,7 @@ public class SharedFilesFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (getActivity() instanceof ChatInfoActivity) {
-            fileMessages = ((ChatInfoActivity) getActivity()).getFileMessages();
-        } else if (getParentFragment() instanceof ChatInfoFragment) {
+        if (getParentFragment() instanceof ChatInfoFragment) {
             fileMessages = ((ChatInfoFragment) getParentFragment()).getFileMessages();
         }
         adapter.notifyDataSetChanged();
@@ -60,7 +58,7 @@ public class SharedFilesFragment extends Fragment {
         @NonNull
         @Override
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_shared_file, parent, false);
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_shared_file, parent, false);
             return new VH(v);
         }
 
@@ -102,3 +100,4 @@ public class SharedFilesFragment extends Fragment {
         }
     }
 }
+

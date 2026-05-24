@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,7 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.ChatChannel;
+import com.example.se114_callingsystem.core.model.ChatChannel;
 import java.util.List;
 
 public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHolder> {
@@ -35,7 +35,7 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_list_item_chat_channels, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_server_chat_channel, parent, false);
         return new ViewHolder(view);
     }
 
@@ -89,3 +89,4 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
         }
     }
 }
+

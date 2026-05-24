@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.friend;
+package com.example.se114_callingsystem.features.friend;
 
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -8,9 +8,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Firebase;
-import com.example.se114_callingsystem.model.User;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.Firebase;
+import com.example.se114_callingsystem.core.model.User;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -22,7 +22,7 @@ import java.util.List;
 public class ManageFriendsActivity extends AppCompatActivity {
 
     private RecyclerView rvFriendRequests, rvFriends;
-    private FriendAdapter requestAdapter, friendAdapter;
+    private FriendListAdapter requestAdapter, FriendListAdapter;
     private List<User> requestList = new ArrayList<>();
     private List<User> friendList = new ArrayList<>();
     private FirebaseUser currentUser;
@@ -31,7 +31,7 @@ public class ManageFriendsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manage_friends);
+        setContentView(R.layout.activity_friend_manage);
 
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
@@ -60,7 +60,7 @@ public class ManageFriendsActivity extends AppCompatActivity {
     }
 
     private void setupAdapters() {
-        requestAdapter = new FriendAdapter(requestList, true, new FriendAdapter.OnFriendActionListener() {
+        requestAdapter = new FriendListAdapter(requestList, true, new FriendListAdapter.OnFriendActionListener() {
             @Override
             public void onAccept(User user) {
                 String myUid = currentUser.getUid();
@@ -73,13 +73,13 @@ public class ManageFriendsActivity extends AppCompatActivity {
                 // Remove from requests
                 Firebase.getUserFriendRequestsRef(myUid).child(friendUid).removeValue();
                 
-                Toast.makeText(ManageFriendsActivity.this, "Đã chấp nhận kết bạn", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManageFriendsActivity.this, "ÄÃ£ cháº¥p nháº­n káº¿t báº¡n", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onReject(User user) {
                 Firebase.getUserFriendRequestsRef(currentUser.getUid()).child(user.getUserId()).removeValue();
-                Toast.makeText(ManageFriendsActivity.this, "Đã từ chối", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManageFriendsActivity.this, "ÄÃ£ tá»« chá»‘i", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -89,7 +89,7 @@ public class ManageFriendsActivity extends AppCompatActivity {
         });
         rvFriendRequests.setAdapter(requestAdapter);
 
-        friendAdapter = new FriendAdapter(friendList, false, new FriendAdapter.OnFriendActionListener() {
+        FriendListAdapter = new FriendListAdapter(friendList, false, new FriendListAdapter.OnFriendActionListener() {
             @Override
             public void onAccept(User user) {}
 
@@ -103,10 +103,10 @@ public class ManageFriendsActivity extends AppCompatActivity {
                 
                 Firebase.getUserFriendsRef(myUid).child(friendUid).removeValue();
                 Firebase.getUserFriendsRef(friendUid).child(myUid).removeValue();
-                Toast.makeText(ManageFriendsActivity.this, "Đã xóa bạn bè", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManageFriendsActivity.this, "ÄÃ£ xÃ³a báº¡n bÃ¨", Toast.LENGTH_SHORT).show();
             }
         });
-        rvFriends.setAdapter(friendAdapter);
+        rvFriends.setAdapter(FriendListAdapter);
     }
 
     private void loadFriendRequests() {
@@ -140,11 +140,11 @@ public class ManageFriendsActivity extends AppCompatActivity {
                     for (DataSnapshot snap : snapshot.getChildren()) {
                         String friendUid = snap.getKey();
                         if (friendUid != null) {
-                            loadUserAndAddToList(friendUid, friendList, friendAdapter);
+                            loadUserAndAddToList(friendUid, friendList, FriendListAdapter);
                         }
                     }
                 } else {
-                    friendAdapter.notifyDataSetChanged();
+                    FriendListAdapter.notifyDataSetChanged();
                 }
             }
 
@@ -153,7 +153,7 @@ public class ManageFriendsActivity extends AppCompatActivity {
         });
     }
 
-    private void loadUserAndAddToList(String uid, List<User> list, FriendAdapter adapter) {
+    private void loadUserAndAddToList(String uid, List<User> list, FriendListAdapter adapter) {
         com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).get()
             .addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
@@ -176,3 +176,4 @@ public class ManageFriendsActivity extends AppCompatActivity {
             });
     }
 }
+

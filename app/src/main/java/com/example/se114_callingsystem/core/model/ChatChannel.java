@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.model;
+package com.example.se114_callingsystem.core.model;
 
 import com.google.firebase.database.Exclude;
 

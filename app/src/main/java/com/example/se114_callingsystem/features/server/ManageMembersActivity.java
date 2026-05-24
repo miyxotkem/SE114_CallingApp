@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.server;
+package com.example.se114_callingsystem.features.server;
 
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.ServerMember;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.ServerMember;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class ManageMembersActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manage_members);
+        setContentView(R.layout.activity_server_manage_members);
 
         serverId = getIntent().getStringExtra("SERVER_ID");
         db = FirebaseFirestore.getInstance();
@@ -47,7 +47,7 @@ public class ManageMembersActivity extends AppCompatActivity {
         adapter = new ServerMemberAdapter(memberList, this, new ServerMemberAdapter.OnMemberActionListener() {
             @Override
             public void onPromote(ServerMember member) {
-                // Update role thành admin
+                // Update role thÃ nh admin
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                         .update("role", "admin")
                         .addOnSuccessListener(a -> {
@@ -58,7 +58,7 @@ public class ManageMembersActivity extends AppCompatActivity {
 
             @Override
             public void onDemote(ServerMember member) {
-                // Update role thành member
+                // Update role thÃ nh member
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                         .update("role", "member")
                         .addOnSuccessListener(a -> {
@@ -69,11 +69,11 @@ public class ManageMembersActivity extends AppCompatActivity {
 
             @Override
             public void onKick(ServerMember member) {
-                // Xóa khỏi bảng members
+                // XÃ³a khá»i báº£ng members
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                         .delete()
                         .addOnSuccessListener(a -> {
-                            // Cập nhật lại mảng members ở server document để xóa userId này
+                            // Cáº­p nháº­t láº¡i máº£ng members á»Ÿ server document Ä‘á»ƒ xÃ³a userId nÃ y
                             db.collection("servers").document(serverId)
                                 .update("members", com.google.firebase.firestore.FieldValue.arrayRemove(member.getUserId()));
                                 
@@ -85,26 +85,26 @@ public class ManageMembersActivity extends AppCompatActivity {
             @Override
             public void onSetNickname(ServerMember member) {
                 androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(ManageMembersActivity.this);
-                builder.setTitle("Đặt biệt danh cho " + (member.getUserName() != null ? member.getUserName() : "thành viên"));
+                builder.setTitle("Äáº·t biá»‡t danh cho " + (member.getUserName() != null ? member.getUserName() : "thÃ nh viÃªn"));
 
                 final android.widget.EditText input = new android.widget.EditText(ManageMembersActivity.this);
                 input.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
                 input.setText(member.getNickname() != null ? member.getNickname() : "");
                 builder.setView(input);
 
-                builder.setPositiveButton("Lưu", (dialog, which) -> {
+                builder.setPositiveButton("LÆ°u", (dialog, which) -> {
                     String nickname = input.getText().toString().trim();
                     db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                             .update("nickname", nickname)
                             .addOnSuccessListener(a -> {
-                                Toast.makeText(ManageMembersActivity.this, "Đã cập nhật biệt danh", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ManageMembersActivity.this, "ÄÃ£ cáº­p nháº­t biá»‡t danh", Toast.LENGTH_SHORT).show();
                                 loadMembers();
                             })
                             .addOnFailureListener(e -> {
-                                Toast.makeText(ManageMembersActivity.this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ManageMembersActivity.this, "Lá»—i: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                             });
                 });
-                builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
+                builder.setNegativeButton("Há»§y", (dialog, which) -> dialog.cancel());
                 builder.show();
             }
         });
@@ -114,7 +114,7 @@ public class ManageMembersActivity extends AppCompatActivity {
     }
 
     private void loadMembers() {
-        // Giả định bạn lưu thành viên ở collection "members" bên trong "servers"
+        // Giáº£ Ä‘á»‹nh báº¡n lÆ°u thÃ nh viÃªn á»Ÿ collection "members" bÃªn trong "servers"
         db.collection("servers").document(serverId).collection("members").get()
                 .addOnSuccessListener(snapshots -> {
                     memberList.clear();
@@ -147,3 +147,4 @@ public class ManageMembersActivity extends AppCompatActivity {
                 });
     }
 }
+

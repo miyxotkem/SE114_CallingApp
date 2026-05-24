@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.call;
+package com.example.se114_callingsystem.features.call;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -12,7 +12,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Participant;
+import com.example.se114_callingsystem.core.model.Participant;
 import com.google.android.material.card.MaterialCardView;
 import io.agora.rtc2.Constants;
 import io.agora.rtc2.RtcEngine;
@@ -34,9 +34,9 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     @NonNull
     @Override
     public CallViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.activity_item_call_participant, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_call_participant, parent, false);
 
-        // Tính toán chiều cao để các ô video chia đều màn hình
+        // TÃ­nh toÃ¡n chiá»u cao Ä‘á»ƒ cÃ¡c Ã´ video chia Ä‘á»u mÃ n hÃ¬nh
         int totalItems = participantList.size();
         int rows = getRowsCount(totalItems);
 
@@ -44,14 +44,14 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         if (parent.getHeight() > 0) {
             layoutParams.height = parent.getHeight() / rows;
         } else {
-            // Backup nếu parent chưa kịp tính height
+            // Backup náº¿u parent chÆ°a ká»‹p tÃ­nh height
             layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
         }
         view.setLayoutParams(layoutParams);
         return new CallViewHolder(view);
     }
 
-    // --- 1. Hàm hỗ trợ cập nhật nhanh khi click nút (Payload) ---
+    // --- 1. HÃ m há»— trá»£ cáº­p nháº­t nhanh khi click nÃºt (Payload) ---
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position, @NonNull List<Object> payloads) {
         if (!payloads.isEmpty()) {
@@ -60,52 +60,52 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
 
             if (payload.equals("border_update")) {
                 updateSpeakingBorder(holder, participant.isSpeaking);
-                return; // Chỉ cập nhật viền, không vẽ lại video
+                return; // Chá»‰ cáº­p nháº­t viá»n, khÃ´ng váº½ láº¡i video
             }
             else if (payload.equals("state_update")) {
-                // Cập nhật ngay lập tức trạng thái ẩn/hiện cam và mic mà không làm giật hình
+                // Cáº­p nháº­t ngay láº­p tá»©c tráº¡ng thÃ¡i áº©n/hiá»‡n cam vÃ  mic mÃ  khÃ´ng lÃ m giáº­t hÃ¬nh
                 holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
                 holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
                 holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
                 return;
             }
         }
-        // Nếu không có payload, thực hiện bind đầy đủ như bên dưới
+        // Náº¿u khÃ´ng cÃ³ payload, thá»±c hiá»‡n bind Ä‘áº§y Ä‘á»§ nhÆ° bÃªn dÆ°á»›i
         super.onBindViewHolder(holder, position, payloads);
     }
 
-    // --- 2. Hàm Bind đầy đủ (Chạy khi mới vào phòng hoặc lướt danh sách) ---
+    // --- 2. HÃ m Bind Ä‘áº§y Ä‘á»§ (Cháº¡y khi má»›i vÃ o phÃ²ng hoáº·c lÆ°á»›t danh sÃ¡ch) ---
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position) {
         Participant participant = participantList.get(position);
 
-        // 1. Dọn dẹp container để tránh chồng chéo khi cuộn RecyclerView
+        // 1. Dá»n dáº¹p container Ä‘á»ƒ trÃ¡nh chá»“ng chÃ©o khi cuá»™n RecyclerView
         holder.videoContainer.removeAllViews();
 
-        // 2. Tạo SurfaceView mới
+        // 2. Táº¡o SurfaceView má»›i
         SurfaceView surfaceView = new SurfaceView(context);
         holder.videoContainer.addView(surfaceView);
 
-        // 3. Thiết lập video từ Agora
+        // 3. Thiáº¿t láº­p video tá»« Agora
         if (rtcEngine != null) {
-            if (participant.name.equals("Màn hình của tôi")) {
-                // ĐÂY LÀ Ô CỦA SCREEN SHARE (Cục bộ): Cần chỉ định nguồn là màn hình thay vì camera
-                // Không set ZOrderMediaOverlay cho screen share để tránh xung đột render
+            if (participant.name.equals("MÃ n hÃ¬nh cá»§a tÃ´i")) {
+                // ÄÃ‚Y LÃ€ Ã” Cá»¦A SCREEN SHARE (Cá»¥c bá»™): Cáº§n chá»‰ Ä‘á»‹nh nguá»“n lÃ  mÃ n hÃ¬nh thay vÃ¬ camera
+                // KhÃ´ng set ZOrderMediaOverlay cho screen share Ä‘á»ƒ trÃ¡nh xung Ä‘á»™t render
                 VideoCanvas canvas = new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_FIT, 0);
                 canvas.sourceType = Constants.VIDEO_SOURCE_SCREEN_PRIMARY;
                 rtcEngine.setupLocalVideo(canvas);
-                // QUAN TRỌNG: Phải gọi startPreview với nguồn SCREEN để SDK bắt đầu vẽ khung hình
+                // QUAN TRá»ŒNG: Pháº£i gá»i startPreview vá»›i nguá»“n SCREEN Ä‘á»ƒ SDK báº¯t Ä‘áº§u váº½ khung hÃ¬nh
                 rtcEngine.startPreview(Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY);
 
             } else if (participant.name.contains("Me")) {
-                // ĐÂY LÀ Ô CAMERA CỦA BẠN (Cục bộ)
+                // ÄÃ‚Y LÃ€ Ã” CAMERA Cá»¦A Báº N (Cá»¥c bá»™)
                 surfaceView.setZOrderMediaOverlay(true);
                 rtcEngine.setupLocalVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
 
             } else {
-                // ĐÂY LÀ Ô CỦA NGƯỜI KHÁC (Bao gồm cả camera người khác và màn hình người khác)
+                // ÄÃ‚Y LÃ€ Ã” Cá»¦A NGÆ¯á»œI KHÃC (Bao gá»“m cáº£ camera ngÆ°á»i khÃ¡c vÃ  mÃ n hÃ¬nh ngÆ°á»i khÃ¡c)
                 surfaceView.setZOrderMediaOverlay(true);
-                // Dùng RENDER_MODE_FIT cho luồng screen share (UID > 1000), RENDER_MODE_HIDDEN cho camera
+                // DÃ¹ng RENDER_MODE_FIT cho luá»“ng screen share (UID > 1000), RENDER_MODE_HIDDEN cho camera
                 int renderMode = (participant.uid >= 1000) ? VideoCanvas.RENDER_MODE_FIT : VideoCanvas.RENDER_MODE_HIDDEN;
                 rtcEngine.setupRemoteVideo(new VideoCanvas(surfaceView, renderMode, participant.uid));
             }
@@ -113,7 +113,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
 
         holder.tvUserName.setText(participant.name);
 
-        // 4. Thiết lập trạng thái hiển thị ban đầu (ẩn/hiện mic, cam)
+        // 4. Thiáº¿t láº­p tráº¡ng thÃ¡i hiá»ƒn thá»‹ ban Ä‘áº§u (áº©n/hiá»‡n mic, cam)
         holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
         holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
         holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
@@ -123,10 +123,10 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
 
     private void updateSpeakingBorder(CallViewHolder holder, boolean isSpeaking) {
         if (isSpeaking) {
-            holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // Màu xanh lá sáng
+            holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // MÃ u xanh lÃ¡ sÃ¡ng
             holder.cardView.setStrokeWidth(12);
         } else {
-            holder.cardView.setStrokeColor(Color.parseColor("#3A3A3A")); // Màu xám tối
+            holder.cardView.setStrokeColor(Color.parseColor("#3A3A3A")); // MÃ u xÃ¡m tá»‘i
             holder.cardView.setStrokeWidth(2);
         }
     }
@@ -160,3 +160,4 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         }
     }
 }
+

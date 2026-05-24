@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.home;
+package com.example.se114_callingsystem.features.home;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,12 +11,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.se114_callingsystem.databinding.FragmentHomeBinding;
-import com.example.se114_callingsystem.friend.ManageFriendsActivity;
-import com.example.se114_callingsystem.model.Server;
-import com.example.se114_callingsystem.profile.ProfileActivity;
-import com.example.se114_callingsystem.server.CreateServerDialog;
-import com.example.se114_callingsystem.server.ServerAdapter;
-import com.example.se114_callingsystem.service.MessageNotificationService;
+import com.example.se114_callingsystem.features.friend.ManageFriendsActivity;
+import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.features.server.CreateServerDialog;
+import com.example.se114_callingsystem.features.server.ServerAdapter;
+import com.example.se114_callingsystem.core.service.MessageNotificationService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
@@ -64,7 +63,7 @@ public class HomeFragment extends Fragment {
         });
 
         binding.btnAddFriend.setOnClickListener(v -> {
-            com.example.se114_callingsystem.friend.AddFriendDialog dialog = new com.example.se114_callingsystem.friend.AddFriendDialog();
+            com.example.se114_callingsystem.features.friend.AddFriendDialog dialog = new com.example.se114_callingsystem.features.friend.AddFriendDialog();
             dialog.show(getParentFragmentManager(), "Add_friend_dialog");
         });
     }
@@ -115,3 +114,4 @@ public class HomeFragment extends Fragment {
         binding = null;
     }
 }
+

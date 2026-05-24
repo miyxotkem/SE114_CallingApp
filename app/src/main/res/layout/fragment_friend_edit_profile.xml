@@ -26,7 +26,7 @@
                 android:id="@+id/btnBack"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/icon_backbutton"
+                android:src="@drawable/ic_back"
                 app:tint="@color/discord_text_primary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -129,7 +129,7 @@
                                 android:layout_width="16dp"
                                 android:layout_height="16dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/icon_edit"
+                                android:src="@drawable/ic_edit"
                                 app:tint="@color/white" />
                         </com.google.android.material.card.MaterialCardView>
 
@@ -149,7 +149,7 @@
                                 android:scaleType="centerCrop"
                                 android:padding="2dp"
                                 android:background="@color/discord_dark_alt"
-                                android:src="@drawable/icon_user"
+                                android:src="@drawable/ic_user"
                                 app:strokeColor="@color/discord_dark_alt"
                                 app:strokeWidth="4dp"
                                 app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize50Percent"

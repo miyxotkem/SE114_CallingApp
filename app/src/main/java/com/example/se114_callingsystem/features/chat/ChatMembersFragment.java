@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.ServerMember;
+import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -161,10 +161,10 @@ public class ChatMembersFragment extends Fragment {
                     if (profilePic != null && !profilePic.isEmpty()) {
                         Glide.with(ChatMembersFragment.this)
                             .load(profilePic)
-                            .placeholder(R.drawable.icon_user)
+                            .placeholder(R.drawable.ic_user)
                             .into(holder.ivAvatar);
                     } else {
-                        holder.ivAvatar.setImageResource(R.drawable.icon_user);
+                        holder.ivAvatar.setImageResource(R.drawable.ic_user);
                     }
 
                     // Live status sync
@@ -197,3 +197,4 @@ public class ChatMembersFragment extends Fragment {
         }
     }
 }
+

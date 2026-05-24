@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.util;
+package com.example.se114_callingsystem.core.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -58,3 +58,4 @@ public class ThemeHelper {
         return prefs.getBoolean(KEY_DARK_MODE, false);
     }
 }
+

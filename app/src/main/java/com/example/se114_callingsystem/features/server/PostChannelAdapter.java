@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.server;
+package com.example.se114_callingsystem.features.server;
 
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -9,8 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.PostChannel;
-import com.example.se114_callingsystem.post.PostChannelActivity;
+import com.example.se114_callingsystem.core.model.PostChannel;
+import com.example.se114_callingsystem.features.post.PostChannelActivity;
 import java.util.List;
 
 public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.ViewHolder> {
@@ -36,14 +36,14 @@ public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_list_item_chat_channels, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_server_chat_channel, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         PostChannel channel = channels.get(position);
-        holder.name.setText("📰 " + channel.getName()); // Use 📰 icon for posts
+        holder.name.setText("ðŸ“° " + channel.getName()); // Use ðŸ“° icon for posts
 
         holder.btnRename.setOnClickListener(v -> {
             int currentPos = holder.getAdapterPosition();
@@ -99,3 +99,4 @@ public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.
         }
     }
 }
+

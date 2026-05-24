@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,7 +16,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.viewer.ImageViewerActivity;
+import com.example.se114_callingsystem.core.viewer.ImageViewerActivity;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,9 +43,7 @@ public class MediaGridFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (getActivity() instanceof ChatInfoActivity) {
-            mediaUrls = ((ChatInfoActivity) getActivity()).getMediaUrls();
-        } else if (getParentFragment() instanceof ChatInfoFragment) {
+        if (getParentFragment() instanceof ChatInfoFragment) {
             mediaUrls = ((ChatInfoFragment) getParentFragment()).getMediaUrls();
         }
         adapter.notifyDataSetChanged();
@@ -57,7 +55,7 @@ public class MediaGridFragment extends Fragment {
         @NonNull
         @Override
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_media_grid, parent, false);
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_media_grid, parent, false);
             // Make it square
             int size = parent.getMeasuredWidth() / 3;
             v.setLayoutParams(new ViewGroup.LayoutParams(size, size));
@@ -93,3 +91,4 @@ public class MediaGridFragment extends Fragment {
         }
     }
 }
+

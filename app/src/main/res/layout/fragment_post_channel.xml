@@ -28,7 +28,7 @@
                 android:layout_centerVertical="true"
                 android:padding="6dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/icon_backbutton"
+                android:src="@drawable/ic_back"
                 app:tint="@color/discord_text_primary" />
 
             <TextView
@@ -63,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="24dp"
-        android:src="@drawable/icon_add"
+        android:src="@drawable/ic_add_black"
         app:backgroundTint="@color/discord_blurple"
         app:tint="@color/white"
         app:elevation="6dp"

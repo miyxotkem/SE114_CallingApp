@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.model;
+package com.example.se114_callingsystem.core.model;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,3 +45,4 @@ public class Comment {
     public String getParentCommentAuthorName() { return parentCommentAuthorName; }
     public void setParentCommentAuthorName(String parentCommentAuthorName) { this.parentCommentAuthorName = parentCommentAuthorName; }
 }
+

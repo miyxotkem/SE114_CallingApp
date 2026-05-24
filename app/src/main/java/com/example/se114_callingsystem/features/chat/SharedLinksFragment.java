@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -39,9 +39,7 @@ public class SharedLinksFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (getActivity() instanceof ChatInfoActivity) {
-            linkItems = ((ChatInfoActivity) getActivity()).getLinkItems();
-        } else if (getParentFragment() instanceof ChatInfoFragment) {
+        if (getParentFragment() instanceof ChatInfoFragment) {
             linkItems = ((ChatInfoFragment) getParentFragment()).getLinkItems();
         }
         adapter.notifyDataSetChanged();
@@ -53,7 +51,7 @@ public class SharedLinksFragment extends Fragment {
         @NonNull
         @Override
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_shared_link, parent, false);
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_shared_link, parent, false);
             return new VH(v);
         }
 
@@ -91,3 +89,4 @@ public class SharedLinksFragment extends Fragment {
         }
     }
 }
+

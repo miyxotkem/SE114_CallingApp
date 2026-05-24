@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.server;
+package com.example.se114_callingsystem.features.server;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,10 +10,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Server;
-import com.example.se114_callingsystem.model.ServerMember;
-import com.example.se114_callingsystem.model.User;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.core.model.ServerMember;
+import com.example.se114_callingsystem.core.model.User;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import java.util.List;
 
 public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapter.ViewHolder> {
@@ -52,7 +52,7 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
         }
         holder.tvName.setText(displayName);
 
-        // Hiện Role Badge
+        // Hiá»‡n Role Badge
         if ("owner".equals(member.getRole()) || "admin".equals(member.getRole())) {
             holder.tvRole.setVisibility(View.VISIBLE);
             holder.tvRole.setText(member.getRole().toUpperCase());
@@ -60,7 +60,7 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
             holder.tvRole.setVisibility(View.GONE);
         }
 
-        // Nhấp vào dòng thành viên để đặt biệt danh (Messenger-style)
+        // Nháº¥p vÃ o dÃ²ng thÃ nh viÃªn Ä‘á»ƒ Ä‘áº·t biá»‡t danh (Messenger-style)
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onSetNickname(member);
@@ -71,7 +71,7 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
         holder.btnOptions.setVisibility(View.VISIBLE);
         holder.btnOptions.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(context, holder.btnOptions);
-            popup.getMenu().add("Đặt biệt danh");
+            popup.getMenu().add("Äáº·t biá»‡t danh");
 
             if (!"owner".equals(member.getRole())) {
                 if (!"admin".equals(member.getRole())) {
@@ -83,7 +83,7 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
             }
 
             popup.setOnMenuItemClickListener(item -> {
-                if (item.getTitle().equals("Đặt biệt danh")) {
+                if (item.getTitle().equals("Äáº·t biá»‡t danh")) {
                     if (listener != null) listener.onSetNickname(member);
                 } else if (item.getTitle().equals("Promote to Admin")) {
                     if (listener != null) listener.onPromote(member);
@@ -112,3 +112,4 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
         }
     }
 }
+

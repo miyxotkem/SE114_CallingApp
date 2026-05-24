@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.service;
+package com.example.se114_callingsystem.core.service;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -12,9 +12,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import com.example.se114_callingsystem.chat.ChatDetailActivity;
-import com.example.se114_callingsystem.model.Firebase;
-import com.example.se114_callingsystem.model.Message;
+import com.example.se114_callingsystem.features.chat.ChatFragment;
+import com.example.se114_callingsystem.MainActivity;
+import com.example.se114_callingsystem.core.model.Firebase;
+import com.example.se114_callingsystem.core.model.Message;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -96,7 +97,7 @@ public class MessageNotificationService extends Service {
                     CHANNEL_NAME,
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Thông báo khi có tin nhắn mới");
+            channel.setDescription("ThÃ´ng bÃ¡o khi cÃ³ tin nháº¯n má»›i");
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
@@ -168,7 +169,7 @@ public class MessageNotificationService extends Service {
                 }
 
                 // Ignore if the user is currently viewing this chat room
-                if (chatId.equals(ChatDetailActivity.activeChatId)) {
+                if (chatId.equals(ChatFragment.activeChatId)) {
                     return;
                 }
 
@@ -209,7 +210,7 @@ public class MessageNotificationService extends Service {
         String senderId = message.getSenderId();
         FirebaseFirestore.getInstance().collection("users").document(senderId).get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    String senderName = "Ai đó";
+                    String senderName = "Ai Ä‘Ã³";
                     if (documentSnapshot.exists()) {
                         String name = documentSnapshot.getString("username");
                         if (name != null && !name.isEmpty()) {
@@ -219,16 +220,16 @@ public class MessageNotificationService extends Service {
                     sendNotification(chatId, chatName, senderName, message);
                 })
                 .addOnFailureListener(e -> {
-                    sendNotification(chatId, chatName, "Ai đó", message);
+                    sendNotification(chatId, chatName, "Ai Ä‘Ã³", message);
                 });
     }
 
     private void sendNotification(String chatId, String chatName, String senderName, Message message) {
         String contentText;
         if ("image".equals(message.getType())) {
-            contentText = "📷 Đã gửi một ảnh";
+            contentText = "ðŸ“· ÄÃ£ gá»­i má»™t áº£nh";
         } else if ("file".equals(message.getType())) {
-            contentText = "📎 Đã gửi một tài liệu";
+            contentText = "ðŸ“Ž ÄÃ£ gá»­i má»™t tÃ i liá»‡u";
         } else {
             contentText = message.getContent();
         }
@@ -237,11 +238,11 @@ public class MessageNotificationService extends Service {
         if (currentUserUsername != null && !currentUserUsername.isEmpty()) {
             String mentionTag = "@" + currentUserUsername.toLowerCase();
             if (contentText != null && contentText.toLowerCase().contains(mentionTag)) {
-                title = "📌 Nhắc tới bạn: " + senderName + " (#" + chatName + ")";
+                title = "ðŸ“Œ Nháº¯c tá»›i báº¡n: " + senderName + " (#" + chatName + ")";
             }
         }
 
-        Intent intent = new Intent(this, ChatDetailActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("CHAT_ID", chatId);
         intent.putExtra("CHAT_NAME", chatName);
         intent.putExtra("SERVER_COLOR", "#6C63FF");
@@ -304,3 +305,4 @@ public class MessageNotificationService extends Service {
         }
     }
 }
+

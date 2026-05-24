@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.post;
+package com.example.se114_callingsystem.features.post;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,8 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Post;
-import com.example.se114_callingsystem.model.User;
+import com.example.se114_callingsystem.core.model.Post;
+import com.example.se114_callingsystem.core.model.User;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -23,14 +23,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
+public class PostListAdapter extends RecyclerView.Adapter<PostListAdapter.PostViewHolder> {
 
     private List<Post> postList;
     private Context context;
     private OnPostInteractionListener listener;
     private String currentUserId;
     private FirebaseFirestore db;
-    private List<com.example.se114_callingsystem.model.ServerMember> serverMembers = new ArrayList<>();
+    private List<com.example.se114_callingsystem.core.model.ServerMember> serverMembers = new ArrayList<>();
     private String serverColor = "#6C63FF";
 
     public interface OnPostInteractionListener {
@@ -42,7 +42,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         void onOptionsClick(Post post, View anchorView);
     }
 
-    public PostAdapter(Context context, List<Post> postList, String serverColor, OnPostInteractionListener listener) {
+    public PostListAdapter(Context context, List<Post> postList, String serverColor, OnPostInteractionListener listener) {
         this.context = context;
         this.postList = postList;
         this.serverColor = serverColor != null ? serverColor : "#6C63FF";
@@ -51,7 +51,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.db = FirebaseFirestore.getInstance();
     }
 
-    public void setServerMembers(List<com.example.se114_callingsystem.model.ServerMember> members) {
+    public void setServerMembers(List<com.example.se114_callingsystem.core.model.ServerMember> members) {
         this.serverMembers = members != null ? members : new ArrayList<>();
         notifyDataSetChanged();
     }
@@ -88,7 +88,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                 if (user.getProfilePic() != null && !user.getProfilePic().isEmpty()) {
                     Glide.with(context).load(user.getProfilePic()).into(holder.ivAuthorAvatar);
                 } else {
-                    holder.ivAuthorAvatar.setImageResource(R.drawable.icon_user);
+                    holder.ivAuthorAvatar.setImageResource(R.drawable.ic_user);
                 }
             }
         });
@@ -117,20 +117,20 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         boolean isLikedByMe = post.getReactions() != null && post.getReactions().containsKey(currentUserId);
         if (isLikedByMe) {
             String myEmoji = post.getReactions().get(currentUserId);
-            holder.tvLikeIcon.setText(myEmoji != null ? myEmoji : "❤️");
+            holder.tvLikeIcon.setText(myEmoji != null ? myEmoji : "â¤ï¸");
             holder.tvLikeCount.setTextColor(android.graphics.Color.parseColor("#ED4245"));
         } else {
-            holder.tvLikeIcon.setText("🤍");
+            holder.tvLikeIcon.setText("ðŸ¤");
             holder.tvLikeCount.setTextColor(context.getResources().getColor(R.color.text_secondary));
         }
         int likeCount = post.getReactions() != null ? post.getReactions().size() : 0;
-        holder.tvLikeCount.setText(likeCount > 0 ? String.valueOf(likeCount) : "Thích");
+        holder.tvLikeCount.setText(likeCount > 0 ? String.valueOf(likeCount) : "ThÃ­ch");
 
         // Handle Comments count
-        holder.tvCommentCount.setText(post.getCommentCount() > 0 ? String.valueOf(post.getCommentCount()) : "Bình luận");
+        holder.tvCommentCount.setText(post.getCommentCount() > 0 ? String.valueOf(post.getCommentCount()) : "BÃ¬nh luáº­n");
 
         // Button clicks
-        holder.btnLike.setOnClickListener(v -> listener.onLikeClick(post, "❤️"));
+        holder.btnLike.setOnClickListener(v -> listener.onLikeClick(post, "â¤ï¸"));
         holder.btnLike.setOnLongClickListener(v -> {
             listener.onLikeLongClick(post, holder.btnLike);
             return true;
@@ -178,7 +178,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
     }
 
-    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<com.example.se114_callingsystem.model.ServerMember> serverMembers) {
+    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<com.example.se114_callingsystem.core.model.ServerMember> serverMembers) {
         if (textView == null) return;
         CharSequence text = textView.getText();
         if (text == null) return;
@@ -204,7 +204,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         List<MemberNameMapping> nameMappings = new ArrayList<>();
         if (serverMembers != null) {
-            for (com.example.se114_callingsystem.model.ServerMember m : serverMembers) {
+            for (com.example.se114_callingsystem.core.model.ServerMember m : serverMembers) {
                 if (m.getUserId() == null) continue;
                 if (m.getNickname() != null && !m.getNickname().trim().isEmpty()) {
                     nameMappings.add(new MemberNameMapping(m.getNickname(), m.getUserId()));
@@ -237,10 +237,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
                     spannable.setSpan(new android.text.style.ClickableSpan() {
                         @Override
                         public void onClick(@NonNull View widget) {
-                            Context context = widget.getContext();
-                            Intent intent = new Intent(context, com.example.se114_callingsystem.profile.ProfileActivity.class);
-                            intent.putExtra("USER_ID", targetUserId);
-                            context.startActivity(intent);
+                            android.os.Bundle bundle = new android.os.Bundle();
+                            bundle.putString("USER_ID", targetUserId);
+                            androidx.navigation.Navigation.findNavController(widget).navigate(R.id.nav_profile, bundle);
                         }
                         @Override
                         public void updateDrawState(@NonNull android.text.TextPaint ds) {
@@ -257,7 +256,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         }
 
         // Regex fallback
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@[A-Za-z0-9_ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝàáâãèéêìíòóôõùúýĂăĐđĨĩŨũƠơƯưẠ-ỹ]+");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@[A-Za-z0-9_Ã€ÃÃ‚ÃƒÃˆÃ‰ÃŠÃŒÃÃ’Ã“Ã”Ã•Ã™ÃšÃÃ Ã¡Ã¢Ã£Ã¨Ã©ÃªÃ¬Ã­Ã²Ã³Ã´ÃµÃ¹ÃºÃ½Ä‚ÄƒÄÄ‘Ä¨Ä©Å¨Å©Æ Æ¡Æ¯Æ°áº -á»¹]+");
         java.util.regex.Matcher matcher = pattern.matcher(textStr);
         while (matcher.find()) {
             int start = matcher.start();
@@ -279,3 +278,5 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         textView.setText(spannable);
     }
 }
+
+

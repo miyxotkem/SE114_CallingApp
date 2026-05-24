@@ -1,10 +1,10 @@
-package com.example.se114_callingsystem.chat;
+package com.example.se114_callingsystem.features.chat;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
-import com.example.se114_callingsystem.model.Message;
+import com.example.se114_callingsystem.core.model.Message;
 import java.util.List;
 
 public class ChatInfoPagerAdapter extends FragmentStateAdapter {
@@ -50,3 +50,4 @@ public class ChatInfoPagerAdapter extends FragmentStateAdapter {
         return 4;
     }
 }
+

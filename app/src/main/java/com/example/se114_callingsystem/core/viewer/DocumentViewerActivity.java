@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.viewer;
+package com.example.se114_callingsystem.core.viewer;
 
 import android.app.DownloadManager;
 import android.content.Context;
@@ -16,7 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import java.net.URLEncoder;
 
 public class DocumentViewerActivity extends AppCompatActivity {
@@ -86,7 +86,7 @@ public class DocumentViewerActivity extends AppCompatActivity {
             webView.loadUrl(docUrl);
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Lỗi khi tải tài liệu", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lá»—i khi táº£i tÃ i liá»‡u", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -94,17 +94,18 @@ public class DocumentViewerActivity extends AppCompatActivity {
         try {
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(fileUrl));
             request.setTitle(fileName);
-            request.setDescription("Đang tải tệp tin...");
+            request.setDescription("Äang táº£i tá»‡p tin...");
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
             DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             if (manager != null) {
                 manager.enqueue(request);
-                Toast.makeText(this, "Đang tải xuống...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Äang táº£i xuá»‘ng...", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Toast.makeText(this, "Không thể tải xuống tệp tin", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "KhÃ´ng thá»ƒ táº£i xuá»‘ng tá»‡p tin", Toast.LENGTH_SHORT).show();
         }
     }
 }
+

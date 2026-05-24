@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.post;
+package com.example.se114_callingsystem.features.post;
 
 import android.content.Context;
 import android.content.Intent;
@@ -16,8 +16,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Comment;
-import com.example.se114_callingsystem.model.User;
+import com.example.se114_callingsystem.core.model.Comment;
+import com.example.se114_callingsystem.core.model.User;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
+public class CommentListAdapter extends RecyclerView.Adapter<CommentListAdapter.CommentViewHolder> {
 
     public interface OnCommentInteractionListener {
         void onReplyClick(Comment comment, String authorName);
@@ -40,9 +40,9 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     private String serverColor;
     private OnCommentInteractionListener listener;
     private FirebaseFirestore db;
-    private List<com.example.se114_callingsystem.model.ServerMember> serverMembers = new java.util.ArrayList<>();
+    private List<com.example.se114_callingsystem.core.model.ServerMember> serverMembers = new java.util.ArrayList<>();
 
-    public CommentAdapter(Context context, List<Comment> comments, String postAuthorId, String serverColor, OnCommentInteractionListener listener) {
+    public CommentListAdapter(Context context, List<Comment> comments, String postAuthorId, String serverColor, OnCommentInteractionListener listener) {
         this.context = context;
         this.comments = comments;
         this.postAuthorId = postAuthorId;
@@ -51,7 +51,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         this.db = FirebaseFirestore.getInstance();
     }
 
-    public void setServerMembers(List<com.example.se114_callingsystem.model.ServerMember> members) {
+    public void setServerMembers(List<com.example.se114_callingsystem.core.model.ServerMember> members) {
         this.serverMembers = members != null ? members : new java.util.ArrayList<>();
         notifyDataSetChanged();
     }
@@ -59,7 +59,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     @NonNull
     @Override
     public CommentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_comment, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_post_comment, parent, false);
         return new CommentViewHolder(view);
     }
 
@@ -80,7 +80,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             int indent = (int) (36 * context.getResources().getDisplayMetrics().density);
             holder.itemView.setPadding(indent, holder.itemView.getPaddingTop(), holder.itemView.getPaddingRight(), holder.itemView.getPaddingBottom());
             holder.layoutReplyIndicator.setVisibility(View.VISIBLE);
-            holder.tvReplyAuthorName.setText("@" + (comment.getParentCommentAuthorName() != null ? comment.getParentCommentAuthorName() : "người dùng"));
+            holder.tvReplyAuthorName.setText("@" + (comment.getParentCommentAuthorName() != null ? comment.getParentCommentAuthorName() : "ngÆ°á»i dÃ¹ng"));
         } else {
             int normalPadding = (int) (12 * context.getResources().getDisplayMetrics().density);
             holder.itemView.setPadding(normalPadding, holder.itemView.getPaddingTop(), holder.itemView.getPaddingRight(), holder.itemView.getPaddingBottom());
@@ -90,7 +90,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         // Default click action for Reply (before author name is fetched)
         holder.btnCommentReply.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onReplyClick(comment, "Người dùng");
+                listener.onReplyClick(comment, "NgÆ°á»i dÃ¹ng");
             }
         });
 
@@ -109,7 +109,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 if (user.getProfilePic() != null && !user.getProfilePic().isEmpty()) {
                     Glide.with(context).load(user.getProfilePic()).into(holder.ivCommentAvatar);
                 } else {
-                    holder.ivCommentAvatar.setImageResource(R.drawable.icon_user);
+                    holder.ivCommentAvatar.setImageResource(R.drawable.ic_user);
                 }
 
                 // Update click action for Reply with exact authorName
@@ -142,7 +142,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         String myReaction = (comment.getReactions() != null && currentUid != null) ? comment.getReactions().get(currentUid) : null;
         
         if (myReaction != null) {
-            holder.btnCommentLike.setText(myReaction + " Thích");
+            holder.btnCommentLike.setText(myReaction + " ThÃ­ch");
             if (serverColor != null && !serverColor.isEmpty()) {
                 try {
                     holder.btnCommentLike.setTextColor(android.graphics.Color.parseColor(serverColor));
@@ -153,11 +153,11 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 holder.btnCommentLike.setTextColor(context.getResources().getColor(R.color.accent));
             }
         } else {
-            holder.btnCommentLike.setText("Thích");
+            holder.btnCommentLike.setText("ThÃ­ch");
             holder.btnCommentLike.setTextColor(context.getResources().getColor(R.color.text_secondary));
         }
 
-        // Like button click listener (toggle default ❤️ reaction)
+        // Like button click listener (toggle default â¤ï¸ reaction)
         holder.btnCommentLike.setOnClickListener(v -> {
             if (currentUid == null) return;
 
@@ -168,7 +168,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             if (comment.getReactions().containsKey(currentUid)) {
                 comment.getReactions().remove(currentUid);
             } else {
-                comment.getReactions().put(currentUid, "❤️");
+                comment.getReactions().put(currentUid, "â¤ï¸");
             }
 
             db.collection("Posts").document(comment.getPostId()).collection("comments").document(comment.getId())
@@ -187,21 +187,21 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             
             android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context);
             List<String> options = new java.util.ArrayList<>();
-            options.add("Sao chép văn bản");
+            options.add("Sao chÃ©p vÄƒn báº£n");
             if (canDelete) {
-                options.add("Xóa bình luận");
+                options.add("XÃ³a bÃ¬nh luáº­n");
             }
             
             builder.setItems(options.toArray(new String[0]), (dialog, which) -> {
                 String selectedOption = options.get(which);
-                if (selectedOption.equals("Sao chép văn bản")) {
+                if (selectedOption.equals("Sao chÃ©p vÄƒn báº£n")) {
                     android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                     android.content.ClipData clip = android.content.ClipData.newPlainText("Comment", comment.getContent());
                     if (clipboard != null) {
                         clipboard.setPrimaryClip(clip);
-                        android.widget.Toast.makeText(context, "Đã sao chép bình luận", android.widget.Toast.LENGTH_SHORT).show();
+                        android.widget.Toast.makeText(context, "ÄÃ£ sao chÃ©p bÃ¬nh luáº­n", android.widget.Toast.LENGTH_SHORT).show();
                     }
-                } else if (selectedOption.equals("Xóa bình luận")) {
+                } else if (selectedOption.equals("XÃ³a bÃ¬nh luáº­n")) {
                     if (listener != null) {
                         listener.onDeleteClick(comment);
                     }
@@ -227,7 +227,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         gd.setStroke(1, context.getResources().getColor(R.color.reaction_stroke));
         layout.setBackground(gd);
 
-        String[] emojis = {"👍", "❤️", "😂", "😮", "😢", "😡"};
+        String[] emojis = {"ðŸ‘", "â¤ï¸", "ðŸ˜‚", "ðŸ˜®", "ðŸ˜¢", "ðŸ˜¡"};
         PopupWindow popup = new PopupWindow(
                 layout,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -306,7 +306,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         }
     }
 
-    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<com.example.se114_callingsystem.model.ServerMember> serverMembers) {
+    private static void highlightMentionsInSpannable(TextView textView, String serverColorStr, List<com.example.se114_callingsystem.core.model.ServerMember> serverMembers) {
         if (textView == null) return;
         CharSequence text = textView.getText();
         if (text == null) return;
@@ -332,7 +332,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
 
         List<MemberNameMapping> nameMappings = new java.util.ArrayList<>();
         if (serverMembers != null) {
-            for (com.example.se114_callingsystem.model.ServerMember m : serverMembers) {
+            for (com.example.se114_callingsystem.core.model.ServerMember m : serverMembers) {
                 if (m.getUserId() == null) continue;
                 if (m.getNickname() != null && !m.getNickname().trim().isEmpty()) {
                     nameMappings.add(new MemberNameMapping(m.getNickname(), m.getUserId()));
@@ -365,10 +365,9 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                     spannable.setSpan(new android.text.style.ClickableSpan() {
                         @Override
                         public void onClick(@NonNull View widget) {
-                            Context context = widget.getContext();
-                            Intent intent = new Intent(context, com.example.se114_callingsystem.profile.ProfileActivity.class);
-                            intent.putExtra("USER_ID", targetUserId);
-                            context.startActivity(intent);
+                            android.os.Bundle bundle = new android.os.Bundle();
+                            bundle.putString("USER_ID", targetUserId);
+                            androidx.navigation.Navigation.findNavController(widget).navigate(R.id.nav_profile, bundle);
                         }
                         @Override
                         public void updateDrawState(@NonNull android.text.TextPaint ds) {
@@ -385,7 +384,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         }
 
         // Regex fallback
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@[A-Za-z0-9_ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝàáâãèéêìíòóôõùúýĂăĐđĨĩŨũƠơƯưẠ-ỹ]+");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@[A-Za-z0-9_Ã€ÃÃ‚ÃƒÃˆÃ‰ÃŠÃŒÃÃ’Ã“Ã”Ã•Ã™ÃšÃÃ Ã¡Ã¢Ã£Ã¨Ã©ÃªÃ¬Ã­Ã²Ã³Ã´ÃµÃ¹ÃºÃ½Ä‚ÄƒÄÄ‘Ä¨Ä©Å¨Å©Æ Æ¡Æ¯Æ°áº -á»¹]+");
         java.util.regex.Matcher matcher = pattern.matcher(textStr);
         while (matcher.find()) {
             int start = matcher.start();
@@ -407,3 +406,5 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         textView.setText(spannable);
     }
 }
+
+

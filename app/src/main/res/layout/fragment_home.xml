@@ -129,7 +129,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/icon_searchbutton"
+                    android:src="@drawable/ic_search"
                     app:tint="@color/discord_text_muted" />
 
                 <TextView
@@ -280,7 +280,7 @@
                     <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@drawable/icon_user"
+                        android:src="@drawable/ic_user"
                         app:tint="@color/discord_text_muted"
                         android:alpha="0.5" />
 

@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.server;
+package com.example.se114_callingsystem.features.server;
 
 import android.app.AlertDialog;
 import android.graphics.Color;
@@ -15,11 +15,11 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.friend.SelectFriendAdapter;
-import com.example.se114_callingsystem.model.Firebase;
-import com.example.se114_callingsystem.model.Server;
-import com.example.se114_callingsystem.model.ServerMember;
-import com.example.se114_callingsystem.model.User;
+import com.example.se114_callingsystem.features.friend.SelectFriendAdapter;
+import com.example.se114_callingsystem.core.model.Firebase;
+import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.core.model.ServerMember;
+import com.example.se114_callingsystem.core.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -48,7 +48,7 @@ public class AddServerMemberDialog extends DialogFragment {
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-        return inflater.inflate(R.layout.activity_add_server_member, container, false);
+        return inflater.inflate(R.layout.dialog_server_add_member, container, false);
     }
 
     @Override
@@ -67,15 +67,15 @@ public class AddServerMemberDialog extends DialogFragment {
         btnAddConfirm.setOnClickListener(v -> {
             List<User> selectedUsers = adapter.getSelectedUsers();
             if (selectedUsers.isEmpty()) {
-                Toast.makeText(getContext(), "Vui lòng chọn ít nhất một người", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Vui lÃ²ng chá»n Ã­t nháº¥t má»™t ngÆ°á»i", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             new AlertDialog.Builder(getContext())
-                    .setTitle("Xác nhận")
-                    .setMessage("Thêm " + selectedUsers.size() + " người vào server?")
-                    .setPositiveButton("Thêm", (dialog, which) -> addSelectedUsersToServer(selectedUsers))
-                    .setNegativeButton("Hủy", null)
+                    .setTitle("XÃ¡c nháº­n")
+                    .setMessage("ThÃªm " + selectedUsers.size() + " ngÆ°á»i vÃ o server?")
+                    .setPositiveButton("ThÃªm", (dialog, which) -> addSelectedUsersToServer(selectedUsers))
+                    .setNegativeButton("Há»§y", null)
                     .show();
         });
     }
@@ -117,16 +117,16 @@ public class AddServerMemberDialog extends DialogFragment {
                                 }
                             }
                             if (!hasFriendsToAdd) {
-                                Toast.makeText(getContext(), "Tất cả bạn bè của bạn đã có trong server này", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), "Táº¥t cáº£ báº¡n bÃ¨ cá»§a báº¡n Ä‘Ã£ cÃ³ trong server nÃ y", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            Toast.makeText(getContext(), "Bạn chưa có bạn bè nào để thêm", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Báº¡n chÆ°a cÃ³ báº¡n bÃ¨ nÃ o Ä‘á»ƒ thÃªm", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        Toast.makeText(getContext(), "Lỗi tải danh sách bạn bè", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Lá»—i táº£i danh sÃ¡ch báº¡n bÃ¨", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -153,12 +153,12 @@ public class AddServerMemberDialog extends DialogFragment {
             db.collection("servers").document(serverId).update("members", FieldValue.arrayUnion(uidsToAdd.toArray(new Object[0])))
                 .addOnSuccessListener(aVoid -> {
                     if (getActivity() != null) {
-                        Toast.makeText(getContext(), "Đã thêm " + selectedUsers.size() + " người vào server", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "ÄÃ£ thÃªm " + selectedUsers.size() + " ngÆ°á»i vÃ o server", Toast.LENGTH_SHORT).show();
                     }
                     dismiss();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Lá»—i: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
         }
     }
@@ -174,3 +174,4 @@ public class AddServerMemberDialog extends DialogFragment {
         }
     }
 }
+

@@ -64,7 +64,7 @@
                     android:layout_gravity="center"
                     android:padding="2dp"
                     android:background="@color/discord_dark_deep"
-                    android:src="@drawable/icon_user"
+                    android:src="@drawable/ic_user"
                     android:scaleType="centerCrop"
                     app:strokeColor="@color/discord_dark_deep"
                     app:strokeWidth="4dp"
@@ -288,7 +288,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@drawable/icon_palette"
+                            android:src="@drawable/ic_palette"
                             app:tint="@color/discord_text_secondary" />
 
                         <LinearLayout
@@ -428,7 +428,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@drawable/icon_edit"
+                            android:src="@drawable/ic_edit"
                             app:tint="@color/discord_blurple" />
 
                         <LinearLayout

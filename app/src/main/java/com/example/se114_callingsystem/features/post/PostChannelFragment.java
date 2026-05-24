@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.post;
+package com.example.se114_callingsystem.features.post;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -15,10 +15,10 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.databinding.FragmentPostChannelBinding;
-import com.example.se114_callingsystem.model.ChatChannel;
-import com.example.se114_callingsystem.model.Message;
-import com.example.se114_callingsystem.model.Post;
-import com.example.se114_callingsystem.model.ServerMember;
+import com.example.se114_callingsystem.core.model.ChatChannel;
+import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.core.model.Post;
+import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -34,7 +34,7 @@ public class PostChannelFragment extends Fragment {
 
     private FragmentPostChannelBinding binding;
     private String channelId, channelName, serverId, serverColor;
-    private PostAdapter postAdapter;
+    private PostListAdapter PostListAdapter;
     private List<Post> postList = new ArrayList<>();
     private FirebaseFirestore db;
     private String currentUserId;
@@ -59,7 +59,7 @@ public class PostChannelFragment extends Fragment {
         }
 
         if (channelName != null) {
-            binding.tvChannelName.setText("📰 " + channelName);
+            binding.tvChannelName.setText("ðŸ“° " + channelName);
         }
 
         binding.btnBack.setOnClickListener(v -> {
@@ -103,7 +103,7 @@ public class PostChannelFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        postAdapter = new PostAdapter(requireContext(), postList, serverColor, new PostAdapter.OnPostInteractionListener() {
+        PostListAdapter = new PostListAdapter(requireContext(), postList, serverColor, new PostListAdapter.OnPostInteractionListener() {
             @Override
             public void onLikeClick(Post post, String emoji) {
                 handleLike(post, emoji);
@@ -140,7 +140,7 @@ public class PostChannelFragment extends Fragment {
             }
         });
         binding.rvPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
-        binding.rvPosts.setAdapter(postAdapter);
+        binding.rvPosts.setAdapter(PostListAdapter);
     }
 
     private void loadPosts() {
@@ -160,7 +160,7 @@ public class PostChannelFragment extends Fragment {
                       }
                   }
                   Collections.sort(postList, (a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
-                  postAdapter.notifyDataSetChanged();
+                  PostListAdapter.notifyDataSetChanged();
               }
           });
 
@@ -174,7 +174,7 @@ public class PostChannelFragment extends Fragment {
                             members.add(member);
                         }
                     }
-                    postAdapter.setServerMembers(members);
+                    PostListAdapter.setServerMembers(members);
                 }
             });
         }
@@ -196,12 +196,12 @@ public class PostChannelFragment extends Fragment {
 
     private void showEmojiPicker(Post post, View anchor) {
         android.widget.PopupMenu popup = new android.widget.PopupMenu(requireContext(), anchor);
-        popup.getMenu().add("👍");
-        popup.getMenu().add("❤️");
-        popup.getMenu().add("😂");
-        popup.getMenu().add("😮");
-        popup.getMenu().add("😢");
-        popup.getMenu().add("😡");
+        popup.getMenu().add("ðŸ‘");
+        popup.getMenu().add("â¤ï¸");
+        popup.getMenu().add("ðŸ˜‚");
+        popup.getMenu().add("ðŸ˜®");
+        popup.getMenu().add("ðŸ˜¢");
+        popup.getMenu().add("ðŸ˜¡");
         popup.setOnMenuItemClickListener(item -> {
             handleLike(post, item.getTitle().toString());
             return true;
@@ -211,10 +211,10 @@ public class PostChannelFragment extends Fragment {
 
     private void showPostOptions(Post post, View anchor) {
         android.widget.PopupMenu popup = new android.widget.PopupMenu(requireContext(), anchor);
-        popup.getMenu().add("Chỉnh sửa");
-        popup.getMenu().add("Xóa");
+        popup.getMenu().add("Chá»‰nh sá»­a");
+        popup.getMenu().add("XÃ³a");
         popup.setOnMenuItemClickListener(item -> {
-            if (item.getTitle().equals("Chỉnh sửa")) {
+            if (item.getTitle().equals("Chá»‰nh sá»­a")) {
                 Intent intent = new Intent(requireContext(), CreatePostActivity.class);
                 intent.putExtra("CHANNEL_ID", channelId);
                 intent.putExtra("SERVER_ID", serverId);
@@ -222,7 +222,7 @@ public class PostChannelFragment extends Fragment {
                 intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("POST_CONTENT", post.getContent());
                 startActivity(intent);
-            } else if (item.getTitle().equals("Xóa")) {
+            } else if (item.getTitle().equals("XÃ³a")) {
                 db.collection("Posts").document(post.getId()).delete();
             }
             return true;
@@ -232,7 +232,7 @@ public class PostChannelFragment extends Fragment {
 
     private void showShareBottomSheet(Post post) {
         BottomSheetDialog bottomSheet = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.dialog_share_post, null);
+        View view = getLayoutInflater().inflate(R.layout.dialog_post_share, null);
         bottomSheet.setContentView(view);
         
         android.widget.ListView lvChannels = view.findViewById(R.id.lvChannels);
@@ -271,7 +271,7 @@ public class PostChannelFragment extends Fragment {
             .child(channel.getChatId()).push().setValue(msg)
             .addOnSuccessListener(a -> {
                 if (getContext() != null) {
-                    Toast.makeText(getContext(), "Đã chia sẻ bài viết vào " + channel.getChatName(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "ÄÃ£ chia sáº» bÃ i viáº¿t vÃ o " + channel.getChatName(), Toast.LENGTH_SHORT).show();
                 }
             });
     }
@@ -282,3 +282,4 @@ public class PostChannelFragment extends Fragment {
         binding = null;
     }
 }
+

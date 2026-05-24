@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.call;
+package com.example.se114_callingsystem.features.call;
 
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -9,10 +9,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.CallChannel;
+import com.example.se114_callingsystem.core.model.CallChannel;
 import java.util.List;
 
-public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
+public class CallChannelAdapter extends RecyclerView.Adapter<CallChannelAdapter.ViewHolder> {
     private List<CallChannel> channels;
     private OnCallActionListener listener;
     private String serverColor = "#6C63FF";
@@ -28,7 +28,7 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
         notifyDataSetChanged();
     }
 
-    public CallAdapter(List<CallChannel> channels, OnCallActionListener listener) {
+    public CallChannelAdapter(List<CallChannel> channels, OnCallActionListener listener) {
         this.channels = channels;
         this.listener = listener;
     }
@@ -36,14 +36,14 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_list_item_chat_channels, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_server_chat_channel, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CallChannel channel = channels.get(position);
-        holder.name.setText("🔊 " + channel.getCallName());
+        holder.name.setText("ðŸ”Š " + channel.getCallName());
 
         holder.btnRename.setOnClickListener(v -> {
             if (holder.getAdapterPosition() != RecyclerView.NO_POSITION)
@@ -77,3 +77,5 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
         }
     }
 }
+
+

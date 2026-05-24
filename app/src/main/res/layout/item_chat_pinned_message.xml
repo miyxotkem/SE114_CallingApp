@@ -22,7 +22,7 @@
             android:id="@+id/ivAvatar"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/icon_user"
+            android:src="@drawable/ic_user"
             android:scaleType="centerCrop"
             app:shapeAppearanceOverlay="@style/CircleImage"
             android:layout_marginEnd="12dp"/>

@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.service;
+package com.example.se114_callingsystem.core.service;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -8,11 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
-import com.example.se114_callingsystem.chat.ChatDetailActivity;
+import com.example.se114_callingsystem.MainActivity;
 
 public class ReminderReceiver extends BroadcastReceiver {
     private static final String CHANNEL_ID = "ReminderChannel";
-    private static final String CHANNEL_NAME = "Lịch hẹn";
+    private static final String CHANNEL_NAME = "Lá»‹ch háº¹n";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -27,14 +27,14 @@ public class ReminderReceiver extends BroadcastReceiver {
                     CHANNEL_NAME,
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Thông báo lời nhắc");
+            channel.setDescription("ThÃ´ng bÃ¡o lá»i nháº¯c");
             NotificationManager manager = context.getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
         }
 
-        Intent openIntent = new Intent(context, ChatDetailActivity.class);
+        Intent openIntent = new Intent(context, MainActivity.class);
         if (chatId != null) openIntent.putExtra("CHAT_ID", chatId);
         if (chatName != null) openIntent.putExtra("CHAT_NAME", chatName);
         openIntent.putExtra("SERVER_COLOR", "#6C63FF");
@@ -49,8 +49,8 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle("⏰ Lời nhắc trong #" + (chatName != null ? chatName : ""))
-                .setContentText(content != null ? content : "Bạn có một lời nhắc.")
+                .setContentTitle("â° Lá»i nháº¯c trong #" + (chatName != null ? chatName : ""))
+                .setContentText(content != null ? content : "Báº¡n cÃ³ má»™t lá»i nháº¯c.")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent);
@@ -61,3 +61,4 @@ public class ReminderReceiver extends BroadcastReceiver {
         }
     }
 }
+

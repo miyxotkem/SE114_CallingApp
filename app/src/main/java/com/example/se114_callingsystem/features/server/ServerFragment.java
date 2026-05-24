@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.server;
+package com.example.se114_callingsystem.features.server;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -20,14 +20,14 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.call.CallAdapter;
-import com.example.se114_callingsystem.chat.ChatZoneAdapter;
+import com.example.se114_callingsystem.features.call.CallChannelAdapter;
+import com.example.se114_callingsystem.features.chat.ChatZoneAdapter;
 import com.example.se114_callingsystem.databinding.FragmentServerBinding;
-import com.example.se114_callingsystem.model.CallChannel;
-import com.example.se114_callingsystem.model.ChatChannel;
-import com.example.se114_callingsystem.model.PostChannel;
-import com.example.se114_callingsystem.model.Server;
-import com.example.se114_callingsystem.util.ThemeHelper;
+import com.example.se114_callingsystem.core.model.CallChannel;
+import com.example.se114_callingsystem.core.model.ChatChannel;
+import com.example.se114_callingsystem.core.model.PostChannel;
+import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -55,12 +55,12 @@ public class ServerFragment extends Fragment {
     private boolean isChatExpanded = true;
 
     // Call Channel Variables
-    private CallAdapter callAdapter;
+    private CallChannelAdapter CallChannelAdapter;
     private List<CallChannel> callList = new ArrayList<>();
     private boolean isCallExpanded = true;
 
     // Post Channel Variables
-    private PostChannelAdapter postAdapter;
+    private PostChannelAdapter PostListAdapter;
     private List<PostChannel> postList = new ArrayList<>();
     private boolean isPostExpanded = true;
 
@@ -145,8 +145,8 @@ public class ServerFragment extends Fragment {
             binding.postNeonStrip.setBackgroundColor(color);
 
             if (chatAdapter != null) chatAdapter.setServerColor(currentAccentColor);
-            if (callAdapter != null) callAdapter.setServerColor(currentAccentColor);
-            if (postAdapter != null) postAdapter.setServerColor(currentAccentColor);
+            if (CallChannelAdapter != null) CallChannelAdapter.setServerColor(currentAccentColor);
+            if (PostListAdapter != null) PostListAdapter.setServerColor(currentAccentColor);
 
             if (getActivity() != null) {
                 getActivity().getWindow().setStatusBarColor(color);
@@ -200,7 +200,7 @@ public class ServerFragment extends Fragment {
     private void showServerSettingsDialog() {
         if (getContext() == null) return;
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.activity_bottom_sheet_server_settings, null);
+        View view = getLayoutInflater().inflate(R.layout.dialog_server_settings, null);
         dialog.setContentView(view);
 
         EditText etServerNameSettings = view.findViewById(R.id.etServerNameSettings);
@@ -341,7 +341,7 @@ public class ServerFragment extends Fragment {
 
     private void setupCallRecyclerView() {
         if (binding == null) return;
-        callAdapter = new CallAdapter(callList, new CallAdapter.OnCallActionListener() {
+        CallChannelAdapter = new CallChannelAdapter(callList, new CallChannelAdapter.OnCallActionListener() {
             @Override public void onRename(CallChannel channel) { showBaseRenameDialog(channel.getCallId(), channel.getCallName(), "CallChannels", "call"); }
             @Override public void onRemove(CallChannel channel) { db.collection("CallChannels").document(channel.getCallId()).delete().addOnSuccessListener(a -> loadCallData()); }
             @Override
@@ -354,8 +354,8 @@ public class ServerFragment extends Fragment {
             }
         });
         binding.rvCallChannels.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.rvCallChannels.setAdapter(callAdapter);
-        setupDragAndDrop(binding.rvCallChannels, callList, callAdapter, "call");
+        binding.rvCallChannels.setAdapter(CallChannelAdapter);
+        setupDragAndDrop(binding.rvCallChannels, callList, CallChannelAdapter, "call");
     }
 
     private void loadCallData() {
@@ -368,19 +368,19 @@ public class ServerFragment extends Fragment {
                         CallChannel c = doc.toObject(CallChannel.class);
                         if (c != null) { c.setCallId(doc.getId()); callList.add(c); }
                     }
-                    callAdapter.notifyDataSetChanged();
+                    CallChannelAdapter.notifyDataSetChanged();
                 });
     }
 
     private void setupPostRecyclerView() {
         if (binding == null) return;
-        postAdapter = new PostChannelAdapter(postList, new PostChannelAdapter.OnChannelActionListener() {
+        PostListAdapter = new PostChannelAdapter(postList, new PostChannelAdapter.OnChannelActionListener() {
             @Override public void onRename(PostChannel channel) { showBaseRenameDialog(channel.getId(), channel.getName(), "PostChannels", "post"); }
             @Override public void onRemove(PostChannel channel) { db.collection("PostChannels").document(channel.getId()).delete().addOnSuccessListener(a -> loadPostData()); }
         });
         binding.rvPostChannels.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.rvPostChannels.setAdapter(postAdapter);
-        setupDragAndDrop(binding.rvPostChannels, postList, postAdapter, "post");
+        binding.rvPostChannels.setAdapter(PostListAdapter);
+        setupDragAndDrop(binding.rvPostChannels, postList, PostListAdapter, "post");
     }
 
     private void loadPostData() {
@@ -394,7 +394,7 @@ public class ServerFragment extends Fragment {
                         if (c != null) { c.setId(doc.getId()); postList.add(c); }
                     }
                     Collections.sort(postList, (a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()));
-                    postAdapter.notifyDataSetChanged();
+                    PostListAdapter.notifyDataSetChanged();
                 });
     }
 
@@ -425,7 +425,7 @@ public class ServerFragment extends Fragment {
     private void showAddChannelDialog(String type) {
         if (getContext() == null) return;
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
+        View view = getLayoutInflater().inflate(R.layout.dialog_server_add_channel, null);
         dialog.setContentView(view);
 
         TextView title = view.findViewById(R.id.tvBottomSheetTitle);
@@ -466,7 +466,7 @@ public class ServerFragment extends Fragment {
     private void showBaseRenameDialog(String id, String currentName, String collection, String type) {
         if (getContext() == null) return;
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
+        View view = getLayoutInflater().inflate(R.layout.dialog_server_add_channel, null);
         dialog.setContentView(view);
 
         TextView tvTitle = view.findViewById(R.id.tvBottomSheetTitle);
@@ -514,3 +514,4 @@ public class ServerFragment extends Fragment {
         binding = null;
     }
 }
+

@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.friend;
+package com.example.se114_callingsystem.features.friend;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Firebase;
+import com.example.se114_callingsystem.core.model.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -28,7 +28,7 @@ public class AddFriendDialog extends DialogFragment {
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-        return inflater.inflate(R.layout.activity_add_friend, container, false);
+        return inflater.inflate(R.layout.dialog_friend_add, container, false);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class AddFriendDialog extends DialogFragment {
         btnAddFriendConfirm.setOnClickListener(v -> {
             String email = etFriendEmail.getText().toString().trim();
             if (email.isEmpty()) {
-                etFriendEmail.setError("Vui lòng nhập email");
+                etFriendEmail.setError("Vui lÃ²ng nháº­p email");
                 return;
             }
 
@@ -50,7 +50,7 @@ public class AddFriendDialog extends DialogFragment {
             if (currentUser == null) return;
             
             if (email.equals(currentUser.getEmail())) {
-                Toast.makeText(getContext(), "Không thể thêm chính mình", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "KhÃ´ng thá»ƒ thÃªm chÃ­nh mÃ¬nh", Toast.LENGTH_SHORT).show();
                 btnAddFriendConfirm.setEnabled(true);
                 return;
             }
@@ -67,19 +67,19 @@ public class AddFriendDialog extends DialogFragment {
                                 Firebase.getUserFriendRequestsRef(friendUid).child(currentUser.getUid()).setValue(true);
                                 
                                 if (getActivity() != null) {
-                                    Toast.makeText(getContext(), "Đã gửi lời mời kết bạn!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getContext(), "ÄÃ£ gá»­i lá»i má»i káº¿t báº¡n!", Toast.LENGTH_SHORT).show();
                                 }
                                 dismiss();
                                 return;
                             }
                         }
                     } else {
-                        Toast.makeText(getContext(), "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng", Toast.LENGTH_SHORT).show();
                         btnAddFriendConfirm.setEnabled(true);
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Lá»—i: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     btnAddFriendConfirm.setEnabled(true);
                 });
         });
@@ -96,3 +96,4 @@ public class AddFriendDialog extends DialogFragment {
         }
     }
 }
+

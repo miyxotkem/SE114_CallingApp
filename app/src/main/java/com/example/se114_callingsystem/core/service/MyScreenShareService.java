@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.service;
+package com.example.se114_callingsystem.core.service;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -20,7 +20,7 @@ public class MyScreenShareService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        // Tạo channel ngay khi service vừa được tạo ra
+        // Táº¡o channel ngay khi service vá»«a Ä‘Æ°á»£c táº¡o ra
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID, "Screen Share Service",
@@ -34,29 +34,30 @@ public class MyScreenShareService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Screen Sharing")
-                .setContentText("Hệ thống đang chia sẻ màn hình của bạn")
+                .setContentText("Há»‡ thá»‘ng Ä‘ang chia sáº» mÃ n hÃ¬nh cá»§a báº¡n")
                 .setSmallIcon(android.R.drawable.ic_menu_share)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setOngoing(true) // Quan trọng: Giữ notification không bị gạt mất
+                .setOngoing(true) // Quan trá»ng: Giá»¯ notification khÃ´ng bá»‹ gáº¡t máº¥t
                 .build();
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Đảm bảo dùng đúng Type là MEDIA_PROJECTION
+                // Äáº£m báº£o dÃ¹ng Ä‘Ãºng Type lÃ  MEDIA_PROJECTION
                 startForeground(NOTIFICATION_ID, notification,
                         ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
             } else {
                 startForeground(NOTIFICATION_ID, notification);
             }
         } catch (Exception e) {
-            Log.e("SERVICE_ERROR", "Lỗi FGS: " + e.getMessage());
-            // Nếu vẫn crash, hãy thử gọi stopSelf() để tránh treo app
+            Log.e("SERVICE_ERROR", "Lá»—i FGS: " + e.getMessage());
+            // Náº¿u váº«n crash, hÃ£y thá»­ gá»i stopSelf() Ä‘á»ƒ trÃ¡nh treo app
         }
 
-        return START_STICKY; // Đổi sang START_STICKY để service tự khởi động lại nếu bị kill
+        return START_STICKY; // Äá»•i sang START_STICKY Ä‘á»ƒ service tá»± khá»Ÿi Ä‘á»™ng láº¡i náº¿u bá»‹ kill
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) { return null; }
 }
+

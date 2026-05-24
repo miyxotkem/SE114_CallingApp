@@ -64,7 +64,7 @@
                             android:id="@+id/expandChatZone"
                             android:layout_width="16dp"
                             android:layout_height="16dp"
-                            android:src="@drawable/icon_expandbutton"
+                            android:src="@drawable/ic_chevron_down"
                             app:tint="@color/discord_text_secondary" />
 
                         <TextView
@@ -84,7 +84,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/icon_add"
+                            android:src="@drawable/ic_add_black"
                             app:tint="@color/discord_text_secondary" />
                     </LinearLayout>
 
@@ -113,7 +113,7 @@
                             android:id="@+id/expandCallZone"
                             android:layout_width="16dp"
                             android:layout_height="16dp"
-                            android:src="@drawable/icon_expandbutton"
+                            android:src="@drawable/ic_chevron_down"
                             app:tint="@color/discord_text_secondary" />
 
                         <TextView
@@ -133,7 +133,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/icon_add"
+                            android:src="@drawable/ic_add_black"
                             app:tint="@color/discord_text_secondary" />
                     </LinearLayout>
 
@@ -162,7 +162,7 @@
                             android:id="@+id/expandPostZone"
                             android:layout_width="16dp"
                             android:layout_height="16dp"
-                            android:src="@drawable/icon_expandbutton"
+                            android:src="@drawable/ic_chevron_down"
                             app:tint="@color/discord_text_secondary" />
 
                         <TextView
@@ -182,7 +182,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:background="?attr/selectableItemBackgroundBorderless"
-                            android:src="@drawable/icon_add"
+                            android:src="@drawable/ic_add_black"
                             app:tint="@color/discord_text_secondary" />
                     </LinearLayout>
 
@@ -286,7 +286,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:src="@drawable/icon_backbutton"
+            android:src="@drawable/ic_back"
             app:tint="@color/white" />
     </com.google.android.material.card.MaterialCardView>
 
@@ -306,7 +306,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="center"
-            android:src="@drawable/icon_more_vert"
+            android:src="@drawable/ic_more_vert"
             app:tint="@color/white" />
     </com.google.android.material.card.MaterialCardView>
 

@@ -1,4 +1,4 @@
-package com.example.se114_callingsystem.server;
+package com.example.se114_callingsystem.features.server;
 
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -15,8 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.model.Server;
-import com.example.se114_callingsystem.model.ServerMember;
+import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.Random;
 
@@ -24,7 +24,7 @@ public class CreateServerDialog extends DialogFragment {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    // BẢNG 10 MÀU XỊN XÒ ĐỂ RANDOM (Giống hệt ở bảng chọn màu)
+    // Báº¢NG 10 MÃ€U Xá»ŠN XÃ’ Äá»‚ RANDOM (Giá»‘ng há»‡t á»Ÿ báº£ng chá»n mÃ u)
     private final String[] palette = {
             "#7289DA", "#F44336", "#E91E63", "#9C27B0", "#673AB7",
             "#2196F3", "#00BCD4", "#4CAF50", "#FF9800", "#795548"
@@ -36,7 +36,7 @@ public class CreateServerDialog extends DialogFragment {
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
-        return inflater.inflate(R.layout.activity_create_server, container, false);
+        return inflater.inflate(R.layout.dialog_server_create, container, false);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class CreateServerDialog extends DialogFragment {
             db.collection("servers").get().addOnSuccessListener(queryDocumentSnapshots -> {
                 int currentOrder = queryDocumentSnapshots.size();
 
-                // 2. TỰ ĐỘNG RANDOM MÀU ACCENT TẠI ĐÂY
+                // 2. Tá»° Äá»˜NG RANDOM MÃ€U ACCENT Táº I ÄÃ‚Y
                 String randomAccentColor = palette[new Random().nextInt(palette.length)];
 
                 // 3. Create Server object using your Model
@@ -70,7 +70,7 @@ public class CreateServerDialog extends DialogFragment {
                         ownerId, // ownerId
                         "default_icon_url",
                         etPurpose.getText().toString().trim(),
-                        randomAccentColor // Thay màu cứng thành màu ngẫu nhiên vừa bốc được
+                        randomAccentColor // Thay mÃ u cá»©ng thÃ nh mÃ u ngáº«u nhiÃªn vá»«a bá»‘c Ä‘Æ°á»£c
                 );
                 newServer.setOrderIndex(currentOrder);
 
@@ -83,7 +83,7 @@ public class CreateServerDialog extends DialogFragment {
                             // Add owner to members subcollection
                             String ownerName = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null && com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() != null ? 
                                 com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : "Owner";
-                            com.example.se114_callingsystem.model.ServerMember ownerMember = new com.example.se114_callingsystem.model.ServerMember(ownerId, ownerName, "owner");
+                            com.example.se114_callingsystem.core.model.ServerMember ownerMember = new com.example.se114_callingsystem.core.model.ServerMember(ownerId, ownerName, "owner");
                             db.collection("servers").document(documentReference.getId()).collection("members").document(ownerId)
                                 .set(ownerMember)
                                 .addOnSuccessListener(aVoid -> {
@@ -159,3 +159,4 @@ public class CreateServerDialog extends DialogFragment {
         }
     }
 }
+
