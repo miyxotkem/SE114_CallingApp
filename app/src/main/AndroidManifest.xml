@@ -73,9 +73,7 @@
         <activity
             android:name=".server.ManageMembersActivity"
             android:exported="false" />
-        <activity
-            android:name=".call.CallDetailActivity"
-            android:exported="false" />
+
         <activity
             android:name=".viewer.DocumentViewerActivity"
             android:exported="false" />

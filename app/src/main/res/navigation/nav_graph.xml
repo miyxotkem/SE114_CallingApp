@@ -77,6 +77,20 @@
         android:name="com.example.se114_callingsystem.chat.ChatDetailFragment"
         android:label="Chat Detail"
         tools:layout="@layout/fragment_chat_detail">
+        <argument
+            android:name="CHAT_ID"
+            app:argType="string" />
+        <argument
+            android:name="CHAT_NAME"
+            app:argType="string" />
+        <argument
+            android:name="SERVER_ID"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="SERVER_COLOR"
+            app:argType="string"
+            android:defaultValue="#5865F2" />
         <action
             android:id="@+id/action_chat_to_voice_call"
             app:destination="@id/nav_voice_call" />
@@ -89,7 +103,20 @@
         android:id="@+id/nav_voice_call"
         android:name="com.example.se114_callingsystem.call.VoiceCallFragment"
         android:label="Voice Call"
-        tools:layout="@layout/fragment_voice_call" />
+        tools:layout="@layout/fragment_voice_call">
+        <argument
+            android:name="CALL_CHANNEL_NAME"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="SERVER_ID"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="SERVER_COLOR"
+            app:argType="string"
+            android:defaultValue="#5865F2" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_server"
@@ -104,31 +131,15 @@
             app:argType="string" />
         <action
             android:id="@+id/action_server_to_server_chat"
-            app:destination="@id/nav_server_chat" />
+            app:destination="@id/nav_chat_detail" />
+        <action
+            android:id="@+id/action_server_to_post_channel"
+            app:destination="@id/nav_post_channel" />
+        <action
+            android:id="@+id/action_server_to_voice_call"
+            app:destination="@id/nav_voice_call" />
     </fragment>
 
-    <fragment
-        android:id="@+id/nav_server_chat"
-        android:name="com.example.se114_callingsystem.server.ServerChatFragment"
-        android:label="Server Chat"
-        tools:layout="@layout/fragment_server_chat">
-        <argument
-            android:name="CHAT_ID"
-            app:argType="string" />
-        <argument
-            android:name="CHAT_NAME"
-            app:argType="string" />
-        <argument
-            android:name="SERVER_ID"
-            app:argType="string" />
-        <argument
-            android:name="SERVER_COLOR"
-            app:argType="string"
-            android:defaultValue="#5865F2" />
-        <action
-            android:id="@+id/action_server_chat_to_chat_info"
-            app:destination="@id/nav_chat_info" />
-    </fragment>
 
     <fragment
         android:id="@+id/nav_chat_info"
@@ -145,6 +156,26 @@
             android:name="SERVER_ID"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="SERVER_COLOR"
+            app:argType="string"
+            android:defaultValue="#5865F2" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_post_channel"
+        android:name="com.example.se114_callingsystem.post.PostChannelFragment"
+        android:label="Post Channel"
+        tools:layout="@layout/fragment_post_channel">
+        <argument
+            android:name="CHANNEL_ID"
+            app:argType="string" />
+        <argument
+            android:name="CHANNEL_NAME"
+            app:argType="string" />
+        <argument
+            android:name="SERVER_ID"
+            app:argType="string" />
         <argument
             android:name="SERVER_COLOR"
             app:argType="string"

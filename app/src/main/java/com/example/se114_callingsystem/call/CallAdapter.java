@@ -20,6 +20,7 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
     public interface OnCallActionListener {
         void onRename(CallChannel channel);
         void onRemove(CallChannel channel);
+        void onJoinCall(CallChannel channel);
     }
 
     public void setServerColor(String color) {
@@ -57,12 +58,7 @@ public class CallAdapter extends RecyclerView.Adapter<CallAdapter.ViewHolder> {
         holder.itemView.setOnClickListener(v->{
             int currentPos = holder.getAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION) {
-                Intent intent = new Intent(holder.itemView.getContext(), CallDetailActivity.class);
-                intent.putExtra("CALL_CHANNEL_NAME", channels.get(currentPos).getCallName());
-                intent.putExtra("SERVER_COLOR", serverColor);
-                intent.putExtra("SERVER_ID", channels.get(currentPos).getServerId());
-
-                holder.itemView.getContext().startActivity(intent);
+                listener.onJoinCall(channels.get(currentPos));
             }
         });
     }

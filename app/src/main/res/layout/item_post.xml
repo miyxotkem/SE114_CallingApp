@@ -5,10 +5,10 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
     android:layout_marginTop="12dp"
-    app:cardBackgroundColor="@color/bg_secondary"
+    app:cardBackgroundColor="@color/discord_dark_elevated"
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:strokeColor="@color/bg_tertiary"
+    app:strokeColor="@color/discord_divider"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -50,17 +50,18 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Tên người dùng"
-                    android:textColor="@color/text_primary"
+                    android:textColor="@color/discord_text_primary"
                     android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="sans-serif-bold" />
 
                 <TextView
                     android:id="@+id/tvTimestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Vừa xong"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:textColor="@color/discord_text_secondary"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" />
             </LinearLayout>
 
             <!-- Nút Tùy chọn (Sửa/Xóa) -->
@@ -70,7 +71,7 @@
                 android:layout_height="24dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/icon_more_vert"
-                app:tint="@color/text_secondary" />
+                app:tint="@color/discord_text_secondary" />
 
         </LinearLayout>
 
@@ -81,8 +82,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Nội dung bài viết ở đây..."
-            android:textColor="@color/text_primary"
-            android:textSize="15sp" />
+            android:textColor="@color/discord_text_primary"
+            android:textSize="15sp"
+            android:lineSpacingMultiplier="1.2"
+            android:fontFamily="sans-serif" />
 
         <!-- Media: Ảnh hoặc Video (nếu có) -->
         <com.google.android.material.card.MaterialCardView
@@ -118,7 +121,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
-            android:background="@color/bg_tertiary" />
+            android:background="@color/discord_divider" />
 
         <!-- Actions: Like, Comment, Share -->
         <LinearLayout
@@ -151,9 +154,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Thích"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/discord_text_secondary"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="sans-serif-bold" />
             </LinearLayout>
 
             <!-- Comment Button -->
@@ -171,7 +174,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/icon_edit"
-                    app:tint="@color/text_secondary" />
+                    app:tint="@color/discord_text_secondary" />
 
                 <TextView
                     android:id="@+id/tvCommentCount"
@@ -179,9 +182,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Bình luận"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/discord_text_secondary"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="sans-serif-bold" />
             </LinearLayout>
 
             <!-- Share Button -->
@@ -199,16 +202,16 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@android:drawable/ic_menu_share"
-                    app:tint="@color/text_secondary" />
+                    app:tint="@color/discord_text_secondary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="Chia sẻ"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/discord_text_secondary"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:fontFamily="sans-serif-bold" />
             </LinearLayout>
 
         </LinearLayout>

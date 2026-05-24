@@ -25,6 +25,7 @@ import com.example.se114_callingsystem.chat.ChatZoneAdapter;
 import com.example.se114_callingsystem.databinding.FragmentServerBinding;
 import com.example.se114_callingsystem.model.CallChannel;
 import com.example.se114_callingsystem.model.ChatChannel;
+import com.example.se114_callingsystem.model.PostChannel;
 import com.example.se114_callingsystem.model.Server;
 import com.example.se114_callingsystem.util.ThemeHelper;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -57,6 +58,11 @@ public class ServerFragment extends Fragment {
     private CallAdapter callAdapter;
     private List<CallChannel> callList = new ArrayList<>();
     private boolean isCallExpanded = true;
+
+    // Post Channel Variables
+    private PostChannelAdapter postAdapter;
+    private List<PostChannel> postList = new ArrayList<>();
+    private boolean isPostExpanded = true;
 
     @Nullable
     @Override
@@ -91,9 +97,11 @@ public class ServerFragment extends Fragment {
         initViews();
         setupChatRecyclerView();
         setupCallRecyclerView();
+        setupPostRecyclerView();
 
         loadChatData();
         loadCallData();
+        loadPostData();
     }
 
     @Override
@@ -134,9 +142,11 @@ public class ServerFragment extends Fragment {
 
             binding.chatNeonStrip.setBackgroundColor(color);
             binding.callNeonStrip.setBackgroundColor(color);
+            binding.postNeonStrip.setBackgroundColor(color);
 
             if (chatAdapter != null) chatAdapter.setServerColor(currentAccentColor);
             if (callAdapter != null) callAdapter.setServerColor(currentAccentColor);
+            if (postAdapter != null) postAdapter.setServerColor(currentAccentColor);
 
             if (getActivity() != null) {
                 getActivity().getWindow().setStatusBarColor(color);
@@ -154,8 +164,9 @@ public class ServerFragment extends Fragment {
             Navigation.findNavController(v).popBackStack();
         });
 
-        binding.btnAddChannel.setOnClickListener(v -> showAddChannelDialog(true));
-        binding.btnAddCallChannel.setOnClickListener(v -> showAddChannelDialog(false));
+        binding.btnAddChannel.setOnClickListener(v -> showAddChannelDialog("chat"));
+        binding.btnAddCallChannel.setOnClickListener(v -> showAddChannelDialog("call"));
+        binding.btnAddPostChannel.setOnClickListener(v -> showAddChannelDialog("post"));
 
         binding.btnServerSettings.setOnClickListener(v -> showServerSettingsDialog());
 
@@ -169,8 +180,14 @@ public class ServerFragment extends Fragment {
             toggleVisibility(binding.rvCallChannels, binding.expandCallZone, isCallExpanded);
         });
 
+        binding.expandPostZone.setOnClickListener(v -> {
+            isPostExpanded = !isPostExpanded;
+            toggleVisibility(binding.rvPostChannels, binding.expandPostZone, isPostExpanded);
+        });
+
         binding.expandChatZone.setRotation(90f);
         binding.expandCallZone.setRotation(90f);
+        binding.expandPostZone.setRotation(90f);
     }
 
     private void toggleVisibility(View view, View icon, boolean expanded) {
@@ -300,12 +317,12 @@ public class ServerFragment extends Fragment {
     private void setupChatRecyclerView() {
         if (binding == null) return;
         chatAdapter = new ChatZoneAdapter(chatList, new ChatZoneAdapter.OnChannelActionListener() {
-            @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", true); }
+            @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", "chat"); }
             @Override public void onRemove(ChatChannel channel) { db.collection("Channels").document(channel.getChatId()).delete().addOnSuccessListener(a -> loadChatData()); }
         });
         binding.rvChatChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvChatChannels.setAdapter(chatAdapter);
-        setupDragAndDrop(binding.rvChatChannels, chatList, chatAdapter, true);
+        setupDragAndDrop(binding.rvChatChannels, chatList, chatAdapter, "chat");
     }
 
     private void loadChatData() {
@@ -325,12 +342,20 @@ public class ServerFragment extends Fragment {
     private void setupCallRecyclerView() {
         if (binding == null) return;
         callAdapter = new CallAdapter(callList, new CallAdapter.OnCallActionListener() {
-            @Override public void onRename(CallChannel channel) { showBaseRenameDialog(channel.getCallId(), channel.getCallName(), "CallChannels", false); }
+            @Override public void onRename(CallChannel channel) { showBaseRenameDialog(channel.getCallId(), channel.getCallName(), "CallChannels", "call"); }
             @Override public void onRemove(CallChannel channel) { db.collection("CallChannels").document(channel.getCallId()).delete().addOnSuccessListener(a -> loadCallData()); }
+            @Override
+            public void onJoinCall(CallChannel channel) {
+                Bundle args = new Bundle();
+                args.putString("CALL_CHANNEL_NAME", channel.getCallName());
+                args.putString("SERVER_ID", channel.getServerId());
+                args.putString("SERVER_COLOR", currentAccentColor);
+                Navigation.findNavController(requireView()).navigate(R.id.action_server_to_voice_call, args);
+            }
         });
         binding.rvCallChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvCallChannels.setAdapter(callAdapter);
-        setupDragAndDrop(binding.rvCallChannels, callList, callAdapter, false);
+        setupDragAndDrop(binding.rvCallChannels, callList, callAdapter, "call");
     }
 
     private void loadCallData() {
@@ -347,7 +372,33 @@ public class ServerFragment extends Fragment {
                 });
     }
 
-    private void setupDragAndDrop(RecyclerView rv, List<?> list, RecyclerView.Adapter<?> adapter, boolean isChat) {
+    private void setupPostRecyclerView() {
+        if (binding == null) return;
+        postAdapter = new PostChannelAdapter(postList, new PostChannelAdapter.OnChannelActionListener() {
+            @Override public void onRename(PostChannel channel) { showBaseRenameDialog(channel.getId(), channel.getName(), "PostChannels", "post"); }
+            @Override public void onRemove(PostChannel channel) { db.collection("PostChannels").document(channel.getId()).delete().addOnSuccessListener(a -> loadPostData()); }
+        });
+        binding.rvPostChannels.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding.rvPostChannels.setAdapter(postAdapter);
+        setupDragAndDrop(binding.rvPostChannels, postList, postAdapter, "post");
+    }
+
+    private void loadPostData() {
+        if (serverId == null) return;
+        db.collection("PostChannels").whereEqualTo("serverId", serverId).get()
+                .addOnSuccessListener(snapshots -> {
+                    if (binding == null) return;
+                    postList.clear();
+                    for (DocumentSnapshot doc : snapshots) {
+                        PostChannel c = doc.toObject(PostChannel.class);
+                        if (c != null) { c.setId(doc.getId()); postList.add(c); }
+                    }
+                    Collections.sort(postList, (a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()));
+                    postAdapter.notifyDataSetChanged();
+                });
+    }
+
+    private void setupDragAndDrop(RecyclerView rv, List<?> list, RecyclerView.Adapter<?> adapter, String type) {
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
             @Override public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh, @NonNull RecyclerView.ViewHolder target) {
                 Collections.swap(list, vh.getAdapterPosition(), target.getAdapterPosition());
@@ -356,19 +407,22 @@ public class ServerFragment extends Fragment {
             @Override public void clearView(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
                 super.clearView(rv, vh);
                 WriteBatch batch = db.batch();
-                if (isChat) {
+                if ("chat".equals(type)) {
                     for (int i = 0; i < chatList.size(); i++) batch.update(db.collection("Channels").document(chatList.get(i).getChatId()), "orderIndex", i);
                     batch.commit().addOnSuccessListener(a -> loadChatData());
-                } else {
+                } else if ("call".equals(type)) {
                     for (int i = 0; i < callList.size(); i++) batch.update(db.collection("CallChannels").document(callList.get(i).getCallId()), "orderIndex", i);
                     batch.commit().addOnSuccessListener(a -> loadCallData());
+                } else {
+                    for (int i = 0; i < postList.size(); i++) batch.update(db.collection("PostChannels").document(postList.get(i).getId()), "orderIndex", i);
+                    batch.commit().addOnSuccessListener(a -> loadPostData());
                 }
             }
             @Override public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int dir) {}
         }).attachToRecyclerView(rv);
     }
 
-    private void showAddChannelDialog(boolean isChat) {
+    private void showAddChannelDialog(String type) {
         if (getContext() == null) return;
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
@@ -377,7 +431,11 @@ public class ServerFragment extends Fragment {
         TextView title = view.findViewById(R.id.tvBottomSheetTitle);
         EditText etName = view.findViewById(R.id.etChannelName);
         MaterialButton btn = view.findViewById(R.id.btnCreateConfirm);
-        if (title != null) title.setText(isChat ? "Create Chat Channel" : "Create Call Channel");
+        if (title != null) {
+            if ("chat".equals(type)) title.setText("Create Chat Channel");
+            else if ("call".equals(type)) title.setText("Create Call Channel");
+            else title.setText("Create Post Channel");
+        }
 
         try {
             int color = Color.parseColor(currentAccentColor);
@@ -388,14 +446,15 @@ public class ServerFragment extends Fragment {
             btn.setOnClickListener(v -> {
                 String name = etName.getText().toString().trim();
                 if (name.isEmpty()) return;
-                String col = isChat ? "Channels" : "CallChannels";
-                String field = isChat ? "chatName" : "callName";
+                String col = "chat".equals(type) ? "Channels" : ("call".equals(type) ? "CallChannels" : "PostChannels");
+                String field = "chat".equals(type) ? "chatName" : ("call".equals(type) ? "callName" : "name");
 
                 db.collection(col).whereEqualTo("serverId", serverId).whereEqualTo(field, name).get().addOnSuccessListener(snaps -> {
                     if (!snaps.isEmpty()) etName.setError("Name exists!");
                     else {
-                        if (isChat) db.collection(col).add(new ChatChannel(name, serverId, chatList.size())).addOnSuccessListener(r -> loadChatData());
-                        else db.collection(col).add(new CallChannel(name, serverId, callList.size())).addOnSuccessListener(r -> loadCallData());
+                        if ("chat".equals(type)) db.collection(col).add(new ChatChannel(name, serverId, chatList.size())).addOnSuccessListener(r -> loadChatData());
+                        else if ("call".equals(type)) db.collection(col).add(new CallChannel(name, serverId, callList.size())).addOnSuccessListener(r -> loadCallData());
+                        else db.collection(col).add(new PostChannel(name, serverId, postList.size())).addOnSuccessListener(r -> loadPostData());
                         dialog.dismiss();
                     }
                 });
@@ -404,7 +463,7 @@ public class ServerFragment extends Fragment {
         dialog.show();
     }
 
-    private void showBaseRenameDialog(String id, String currentName, String collection, boolean isChat) {
+    private void showBaseRenameDialog(String id, String currentName, String collection, String type) {
         if (getContext() == null) return;
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.activity_add_channel_bottom_sheet, null);
@@ -414,7 +473,11 @@ public class ServerFragment extends Fragment {
         EditText etName = view.findViewById(R.id.etChannelName);
         MaterialButton btnConfirm = view.findViewById(R.id.btnCreateConfirm);
 
-        if (tvTitle != null) tvTitle.setText(isChat ? "Rename Chat Channel" : "Rename Call Channel");
+        if (tvTitle != null) {
+            if ("chat".equals(type)) tvTitle.setText("Rename Chat Channel");
+            else if ("call".equals(type)) tvTitle.setText("Rename Call Channel");
+            else tvTitle.setText("Rename Post Channel");
+        }
         if (btnConfirm != null) btnConfirm.setText("Rename");
         if (etName != null) etName.setText(currentName);
 
@@ -426,14 +489,16 @@ public class ServerFragment extends Fragment {
         if (btnConfirm != null) {
             btnConfirm.setOnClickListener(v -> {
                 String newName = etName.getText().toString().trim();
-                String field = isChat ? "chatName" : "callName";
+                String field = "chat".equals(type) ? "chatName" : ("call".equals(type) ? "callName" : "name");
                 if (newName.isEmpty() || newName.equalsIgnoreCase(currentName)) { dialog.dismiss(); return; }
 
                 db.collection(collection).whereEqualTo("serverId", serverId).whereEqualTo(field, newName).get().addOnSuccessListener(snaps -> {
                     if (!snaps.isEmpty()) etName.setError("Name exists!");
                     else {
                         db.collection(collection).document(id).update(field, newName).addOnSuccessListener(a -> {
-                            if (isChat) loadChatData(); else loadCallData();
+                            if ("chat".equals(type)) loadChatData();
+                            else if ("call".equals(type)) loadCallData();
+                            else loadPostData();
                             dialog.dismiss();
                         });
                     }

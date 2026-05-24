@@ -343,6 +343,7 @@ public class ServerViewerActivity extends AppCompatActivity {
         callAdapter = new CallAdapter(callList, new CallAdapter.OnCallActionListener() {
             @Override public void onRename(CallChannel channel) { showBaseRenameDialog(channel.getCallId(), channel.getCallName(), "CallChannels", "call"); }
             @Override public void onRemove(CallChannel channel) { db.collection("CallChannels").document(channel.getCallId()).delete().addOnSuccessListener(a -> loadCallData()); }
+            @Override public void onJoinCall(CallChannel channel) {}
         });
         rvCallChannels.setLayoutManager(new LinearLayoutManager(this));
         rvCallChannels.setAdapter(callAdapter);

@@ -63,12 +63,21 @@ public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.
             int currentPos = holder.getAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION) {
                 PostChannel currentChannel = channels.get(currentPos);
-                Intent intent = new Intent(holder.itemView.getContext(), PostChannelActivity.class);
-                intent.putExtra("CHANNEL_NAME", currentChannel.getName());
-                intent.putExtra("CHANNEL_ID", currentChannel.getId());
-                intent.putExtra("SERVER_ID", currentChannel.getServerId());
-                intent.putExtra("SERVER_COLOR", serverColor);
-                holder.itemView.getContext().startActivity(intent);
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putString("CHANNEL_NAME", currentChannel.getName());
+                bundle.putString("CHANNEL_ID", currentChannel.getId());
+                bundle.putString("SERVER_ID", currentChannel.getServerId());
+                bundle.putString("SERVER_COLOR", serverColor);
+                try {
+                    androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_server_to_post_channel, bundle);
+                } catch (Exception e) {
+                    Intent intent = new Intent(holder.itemView.getContext(), PostChannelActivity.class);
+                    intent.putExtra("CHANNEL_NAME", currentChannel.getName());
+                    intent.putExtra("CHANNEL_ID", currentChannel.getId());
+                    intent.putExtra("SERVER_ID", currentChannel.getServerId());
+                    intent.putExtra("SERVER_COLOR", serverColor);
+                    holder.itemView.getContext().startActivity(intent);
+                }
             }
         });
     }

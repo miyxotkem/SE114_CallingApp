@@ -73,7 +73,11 @@ public class VoiceCallFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        uid = FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            uid = FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode();
+        } else {
+            uid = ("GUEST_" + System.currentTimeMillis()).hashCode();
+        }
     }
 
     @Nullable

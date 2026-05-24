@@ -101,7 +101,19 @@ public class ChatDetailFragment extends Fragment {
             serverId = getArguments().getString("SERVER_ID");
 
             if (channelName != null) {
-                binding.tvChannelName.setText(channelName.toLowerCase());
+                if (serverId == null) {
+                    // Chat DM 1-1 (Private Chat)
+                    binding.tvChannelHash.setVisibility(View.GONE);
+                    binding.ivOnlineStatus.setVisibility(View.VISIBLE);
+                    binding.tvChannelName.setText(channelName);
+                    binding.edtMessage.setHint("Message " + channelName);
+                } else {
+                    // Chat Server Channel
+                    binding.tvChannelHash.setVisibility(View.VISIBLE);
+                    binding.ivOnlineStatus.setVisibility(View.GONE);
+                    binding.tvChannelName.setText(channelName.toLowerCase());
+                    binding.edtMessage.setHint("Message #" + channelName.toLowerCase());
+                }
             }
         }
 
@@ -150,6 +162,8 @@ public class ChatDetailFragment extends Fragment {
                     groupChatRef.child(message.getMessageId()).child("pinned").setValue(!message.isPinned());
                 }
             }
+            @Override
+            public void onEditReminder(Message message) {}
         });
 
         binding.chatRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
