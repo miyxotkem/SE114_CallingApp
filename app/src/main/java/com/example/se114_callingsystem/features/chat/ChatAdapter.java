@@ -21,8 +21,6 @@ import com.bumptech.glide.request.RequestOptions;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Message;
 import com.example.se114_callingsystem.core.model.ServerMember;
-import com.example.se114_callingsystem.core.viewer.DocumentViewerActivity;
-import com.example.se114_callingsystem.core.viewer.ImageViewerActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -422,10 +420,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                         @Override
                         public boolean onSingleTapConfirmed(MotionEvent e) {
-                            Context context = ivMessageImage.getContext();
-                            Intent intent = new Intent(context, ImageViewerActivity.class);
-                            intent.putExtra("IMAGE_URL", msg.getContent());
-                            context.startActivity(intent);
+                            android.os.Bundle bundle = new android.os.Bundle();
+                            bundle.putString("IMAGE_URL", msg.getContent());
+                            androidx.navigation.Navigation.findNavController(ivMessageImage).navigate(R.id.nav_core_image_viewer, bundle);
                             return true;
                         }
 
@@ -477,11 +474,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         @Override
                         public boolean onSingleTapConfirmed(MotionEvent e) {
                             // Má»Ÿ trÃ¬nh xem trÆ°á»›c tÃ i liá»‡u thay vÃ¬ táº£i ngay
-                            Context context = layoutFile.getContext();
-                            Intent intent = new Intent(context, DocumentViewerActivity.class);
-                            intent.putExtra("FILE_URL", fileUrl);
-                            intent.putExtra("FILE_NAME", fileName);
-                            context.startActivity(intent);
+                            android.os.Bundle bundle = new android.os.Bundle();
+                            bundle.putString("DOC_URL", fileUrl);
+                            bundle.putString("FILE_NAME", fileName);
+                            androidx.navigation.Navigation.findNavController(layoutFile).navigate(R.id.nav_core_document_viewer, bundle);
                             return true;
                         }
 
@@ -521,12 +517,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             String cId = doc.getString("channelId");
                             String sId = doc.getString("serverId");
                             if (cId != null && sId != null) {
-                                Intent intent = new Intent(ctx, com.example.se114_callingsystem.features.post.PostChannelActivity.class);
-                                intent.putExtra("CHANNEL_ID", cId);
-                                intent.putExtra("SERVER_ID", sId);
-                                intent.putExtra("SERVER_COLOR", serverColor);
-                                intent.putExtra("CHANNEL_NAME", "BÃ i Viáº¿t");
-                                ctx.startActivity(intent);
+                                android.os.Bundle bundle = new android.os.Bundle();
+                                bundle.putString("CHANNEL_ID", cId);
+                                bundle.putString("SERVER_ID", sId);
+                                bundle.putString("SERVER_COLOR", serverColor);
+                                bundle.putString("CHANNEL_NAME", "BÃ i Viáº¿t");
+                                androidx.navigation.Navigation.findNavController(cardBubble).navigate(R.id.nav_post_channel, bundle);
                             }
                         } else {
                             android.widget.Toast.makeText(ctx, "BÃ i viáº¿t Ä‘Ã£ bá»‹ xÃ³a", android.widget.Toast.LENGTH_SHORT).show();

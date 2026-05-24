@@ -1,15 +1,20 @@
 package com.example.se114_callingsystem.features.post;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Comment;
-import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -17,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class PostCommentActivity extends AppCompatActivity {
+public class PostCommentFragment extends Fragment {
 
     private String postId;
     private String postAuthorId;
@@ -44,44 +49,52 @@ public class PostCommentActivity extends AppCompatActivity {
     private List<com.example.se114_callingsystem.core.model.ServerMember> filteredMembers = new ArrayList<>();
     private int mentionStartIndex = -1;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applyTheme(this);
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_post_comment);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_post_comment, container, false);
+    }
 
-        postId = getIntent().getStringExtra("POST_ID");
-        postAuthorId = getIntent().getStringExtra("POST_AUTHOR_ID");
-        serverId = getIntent().getStringExtra("SERVER_ID");
-        serverColor = getIntent().getStringExtra("SERVER_COLOR");
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (getArguments() != null) {
+            postId = getArguments().getString("POST_ID");
+            postAuthorId = getArguments().getString("POST_AUTHOR_ID");
+            serverId = getArguments().getString("SERVER_ID");
+            serverColor = getArguments().getString("SERVER_COLOR");
+        }
 
         if (postId == null) {
-            Toast.makeText(this, "KhÃ´ng tÃ¬m tháº¥y bÃ i viáº¿t", Toast.LENGTH_SHORT).show();
-            finish();
+            if (getContext() != null) {
+                Toast.makeText(requireContext(), "Không tìm thấy bài viết", Toast.LENGTH_SHORT).show();
+            }
+            Navigation.findNavController(view).popBackStack();
             return;
         }
         db = FirebaseFirestore.getInstance();
 
-        ImageView btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
+        ImageView btnBack = view.findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
 
-        etComment = findViewById(R.id.etComment);
-        ImageView btnSendComment = findViewById(R.id.btnSendComment);
+        etComment = view.findViewById(R.id.etComment);
+        ImageView btnSendComment = view.findViewById(R.id.btnSendComment);
         btnSendComment.setOnClickListener(v -> postComment());
 
         // Bind reply layout elements
-        layoutReplyHeader = findViewById(R.id.layoutReplyHeader);
-        tvReplyHeader = findViewById(R.id.tvReplyHeader);
-        btnCancelReply = findViewById(R.id.btnCancelReply);
+        layoutReplyHeader = view.findViewById(R.id.layoutReplyHeader);
+        tvReplyHeader = view.findViewById(R.id.tvReplyHeader);
+        btnCancelReply = view.findViewById(R.id.btnCancelReply);
         if (btnCancelReply != null) {
             btnCancelReply.setOnClickListener(v -> cancelReplyMode());
         }
 
-        setupMentionSuggestions();
+        setupMentionSuggestions(view);
         fetchServerMembers();
 
-        rvComments = findViewById(R.id.rvComments);
-        CommentListAdapter = new CommentListAdapter(this, commentList, postAuthorId, serverColor, new CommentListAdapter.OnCommentInteractionListener() {
+        rvComments = view.findViewById(R.id.rvComments);
+        CommentListAdapter = new CommentListAdapter(requireContext(), commentList, postAuthorId, serverColor, new CommentListAdapter.OnCommentInteractionListener() {
             @Override
             public void onReplyClick(Comment comment, String authorName) {
                 setReplyMode(comment, authorName);
@@ -92,7 +105,7 @@ public class PostCommentActivity extends AppCompatActivity {
                 showDeleteConfirmationDialog(comment);
             }
         });
-        rvComments.setLayoutManager(new LinearLayoutManager(this));
+        rvComments.setLayoutManager(new LinearLayoutManager(getContext()));
         rvComments.setAdapter(CommentListAdapter);
 
         loadComments();
@@ -101,8 +114,11 @@ public class PostCommentActivity extends AppCompatActivity {
     private void loadComments() {
         db.collection("Posts").document(postId).collection("comments")
           .addSnapshotListener((snapshots, error) -> {
+              if (getView() == null) return;
               if (error != null) {
-                  Toast.makeText(PostCommentActivity.this, "Lá»—i táº£i bÃ¬nh luáº­n: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                  if (getContext() != null) {
+                      Toast.makeText(requireContext(), "Lỗi tải bình luận: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                  }
                   return;
               }
               if (snapshots != null) {
@@ -123,6 +139,7 @@ public class PostCommentActivity extends AppCompatActivity {
     private void fetchServerMembers() {
         if (serverId != null) {
             db.collection("servers").document(serverId).collection("members").get().addOnSuccessListener(snapshots -> {
+                if (getView() == null) return;
                 serverMembers.clear();
                 for (com.google.firebase.firestore.DocumentSnapshot doc : snapshots) {
                     com.example.se114_callingsystem.core.model.ServerMember member = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
@@ -135,12 +152,12 @@ public class PostCommentActivity extends AppCompatActivity {
         }
     }
 
-    private void setupMentionSuggestions() {
-        cardMentionSuggestions = findViewById(R.id.cardMentionSuggestions);
-        rvMentionSuggestions = findViewById(R.id.rvMentionSuggestions);
+    private void setupMentionSuggestions(View view) {
+        cardMentionSuggestions = view.findViewById(R.id.cardMentionSuggestions);
+        rvMentionSuggestions = view.findViewById(R.id.rvMentionSuggestions);
         
         mentionAdapter = new com.example.se114_callingsystem.core.util.MentionAdapter(filteredMembers, member -> insertMention(member));
-        rvMentionSuggestions.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        rvMentionSuggestions.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(getContext()));
         rvMentionSuggestions.setAdapter(mentionAdapter);
 
         etComment.addTextChangedListener(new android.text.TextWatcher() {
@@ -220,7 +237,7 @@ public class PostCommentActivity extends AppCompatActivity {
                 etComment.setText("");
                 cancelReplyMode();
                 
-                // TÄƒng sá»‘ Ä‘áº¿m comment trong Post
+                // Tăng số đếm comment trong Post
                 db.collection("Posts").document(postId).get().addOnSuccessListener(postDoc -> {
                     if (postDoc.exists()) {
                         Long currentCount = postDoc.getLong("commentCount");
@@ -230,7 +247,9 @@ public class PostCommentActivity extends AppCompatActivity {
                 });
             })
             .addOnFailureListener(e -> {
-                Toast.makeText(PostCommentActivity.this, "Lá»—i Ä‘Äƒng bÃ¬nh luáº­n: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(requireContext(), "Lỗi đăng bình luận: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
             });
     }
 
@@ -238,14 +257,16 @@ public class PostCommentActivity extends AppCompatActivity {
         replyToCommentId = comment.getId();
         replyToAuthorName = authorName;
         if (layoutReplyHeader != null && tvReplyHeader != null) {
-            tvReplyHeader.setText("Äang tráº£ lá»i @" + authorName);
+            tvReplyHeader.setText("Đang trả lời @" + authorName);
             layoutReplyHeader.setVisibility(android.view.View.VISIBLE);
         }
         if (etComment != null) {
             etComment.requestFocus();
-            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.showSoftInput(etComment, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            if (getContext() != null) {
+                android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.showSoftInput(etComment, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+                }
             }
         }
     }
@@ -259,20 +280,22 @@ public class PostCommentActivity extends AppCompatActivity {
     }
 
     private void showDeleteConfirmationDialog(Comment comment) {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("XÃ³a bÃ¬nh luáº­n")
-            .setMessage("Báº¡n cÃ³ cháº¯c cháº¯n muá»‘n xÃ³a bÃ¬nh luáº­n nÃ y khÃ´ng?")
-            .setPositiveButton("XÃ³a", (dialog, which) -> deleteComment(comment))
-            .setNegativeButton("Há»§y", null)
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Xóa bình luận")
+            .setMessage("Bạn có chắc chắn muốn xóa bình luận này không?")
+            .setPositiveButton("Xóa", (dialog, which) -> deleteComment(comment))
+            .setNegativeButton("Hủy", null)
             .show();
     }
 
     private void deleteComment(Comment comment) {
         db.collection("Posts").document(postId).collection("comments").document(comment.getId()).delete()
             .addOnSuccessListener(aVoid -> {
-                Toast.makeText(PostCommentActivity.this, "ÄÃ£ xÃ³a bÃ¬nh luáº­n", Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(requireContext(), "Đã xóa bình luận", Toast.LENGTH_SHORT).show();
+                }
                 
-                // Giáº£m sá»‘ Ä‘áº¿m comment trong Post
+                // Giảm số đếm comment trong Post
                 db.collection("Posts").document(postId).get().addOnSuccessListener(postDoc -> {
                     if (postDoc.exists()) {
                         Long currentCount = postDoc.getLong("commentCount");
@@ -283,8 +306,9 @@ public class PostCommentActivity extends AppCompatActivity {
                 });
             })
             .addOnFailureListener(e -> {
-                Toast.makeText(PostCommentActivity.this, "Lá»—i xÃ³a bÃ¬nh luáº­n: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(requireContext(), "Lỗi xóa bình luận: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
             });
     }
 }
-

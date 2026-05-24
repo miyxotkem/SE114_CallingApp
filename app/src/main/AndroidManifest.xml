@@ -43,34 +43,7 @@
             android:exported="false">
         </service>
         <receiver android:name=".core.service.ReminderReceiver" android:exported="false" />
-        <activity
-            android:name=".features.post.PostChannelActivity"
-            android:exported="false" />
-        <activity
-            android:name=".features.post.CreatePostActivity"
-            android:exported="false" />
-        <activity
-            android:name=".features.post.PostCommentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".features.chat.SearchInChatActivity"
-            android:exported="false" />
-        <activity
-            android:name=".features.server.ChangeColorActivity"
-            android:exported="false" />
-        <activity
-            android:name=".features.friend.ManageFriendsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".features.server.ManageMembersActivity"
-            android:exported="false" />
 
-        <activity
-            android:name=".core.viewer.DocumentViewerActivity"
-            android:exported="false" />
-        <activity
-            android:name=".core.viewer.ImageViewerActivity"
-            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

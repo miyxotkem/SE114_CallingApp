@@ -5,7 +5,9 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -14,39 +16,46 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.core.util.ThemeHelper;
 import java.net.URLEncoder;
 
-public class DocumentViewerActivity extends AppCompatActivity {
+public class DocumentViewerFragment extends Fragment {
 
     private WebView webView;
     private ProgressBar progressBar;
     private String fileUrl;
     private String fileName;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applyTheme(this);
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_document_viewer);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_core_document_viewer, container, false);
+    }
 
-        webView = findViewById(R.id.webViewDoc);
-        progressBar = findViewById(R.id.progressBar);
-        TextView tvDocTitle = findViewById(R.id.tvDocTitle);
-        ImageButton btnBack = findViewById(R.id.btnBackFromDoc);
-        ImageButton btnDownload = findViewById(R.id.btnDownloadDoc);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        // Get data passed from Chat_adapter
-        fileUrl = getIntent().getStringExtra("FILE_URL");
-        fileName = getIntent().getStringExtra("FILE_NAME");
+        webView = view.findViewById(R.id.webViewDoc);
+        progressBar = view.findViewById(R.id.progressBar);
+        TextView tvDocTitle = view.findViewById(R.id.tvDocTitle);
+        ImageButton btnBack = view.findViewById(R.id.btnBackFromDoc);
+        ImageButton btnDownload = view.findViewById(R.id.btnDownloadDoc);
+
+        if (getArguments() != null) {
+            fileUrl = getArguments().getString("DOC_URL");
+            fileName = getArguments().getString("FILE_NAME");
+        }
 
         if (fileName != null) {
             tvDocTitle.setText(fileName);
         }
 
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
         btnDownload.setOnClickListener(v -> downloadFile());
 
         setupWebView();
@@ -86,7 +95,9 @@ public class DocumentViewerActivity extends AppCompatActivity {
             webView.loadUrl(docUrl);
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "Lá»—i khi táº£i tÃ i liá»‡u", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                Toast.makeText(requireContext(), "Lỗi khi tải tài liệu", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -94,18 +105,21 @@ public class DocumentViewerActivity extends AppCompatActivity {
         try {
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(fileUrl));
             request.setTitle(fileName);
-            request.setDescription("Äang táº£i tá»‡p tin...");
+            request.setDescription("Đang tải tệp tin...");
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
-            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            if (manager != null) {
-                manager.enqueue(request);
-                Toast.makeText(this, "Äang táº£i xuá»‘ng...", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                DownloadManager manager = (DownloadManager) requireContext().getSystemService(Context.DOWNLOAD_SERVICE);
+                if (manager != null) {
+                    manager.enqueue(request);
+                    Toast.makeText(requireContext(), "Đang tải xuống...", Toast.LENGTH_SHORT).show();
+                }
             }
         } catch (Exception e) {
-            Toast.makeText(this, "KhÃ´ng thá»ƒ táº£i xuá»‘ng tá»‡p tin", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                Toast.makeText(requireContext(), "Không thể tải xuống tệp tin", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
-

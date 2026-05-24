@@ -1,6 +1,5 @@
 package com.example.se114_callingsystem.features.chat;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Message;
-import com.example.se114_callingsystem.core.viewer.DocumentViewerActivity;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -78,10 +76,10 @@ public class SharedFilesFragment extends Fragment {
             holder.tvDate.setText(dateFormat.format(new Date(msg.getTimestamp())));
 
             holder.itemView.setOnClickListener(v -> {
-                Intent intent = new Intent(requireContext(), DocumentViewerActivity.class);
-                intent.putExtra("FILE_URL", fileUrl);
-                intent.putExtra("FILE_NAME", fileName);
-                startActivity(intent);
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putString("DOC_URL", fileUrl);
+                bundle.putString("FILE_NAME", fileName);
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_core_document_viewer, bundle);
             });
         }
 

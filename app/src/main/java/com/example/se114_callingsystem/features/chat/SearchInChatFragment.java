@@ -1,6 +1,5 @@
 package com.example.se114_callingsystem.features.chat;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,16 +12,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Firebase;
 import com.example.se114_callingsystem.core.model.Message;
-import com.example.se114_callingsystem.core.model.Server;
 import com.example.se114_callingsystem.core.model.ServerMember;
-import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,7 +34,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class SearchInChatActivity extends AppCompatActivity {
+public class SearchInChatFragment extends Fragment {
 
     private String chatId, chatName, serverId, serverColor;
     private EditText edtSearch;
@@ -50,33 +49,39 @@ public class SearchInChatActivity extends AppCompatActivity {
 
     private SearchResultsAdapter adapter;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applyTheme(this);
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat_search);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_chat_search, container, false);
+    }
 
-        chatId = getIntent().getStringExtra("CHAT_ID");
-        chatName = getIntent().getStringExtra("CHAT_NAME");
-        serverId = getIntent().getStringExtra("SERVER_ID");
-        serverColor = getIntent().getStringExtra("SERVER_COLOR");
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (getArguments() != null) {
+            chatId = getArguments().getString("CHAT_ID");
+            chatName = getArguments().getString("CHAT_NAME");
+            serverId = getArguments().getString("SERVER_ID");
+            serverColor = getArguments().getString("SERVER_COLOR");
+        }
         if (serverColor == null) serverColor = "#6C63FF";
 
-        initViews();
+        initViews(view);
         setupRecyclerView();
         loadServerMembers();
         loadMessages();
     }
 
-    private void initViews() {
-        btnBack = findViewById(R.id.btnBack);
-        btnClear = findViewById(R.id.btnClear);
-        edtSearch = findViewById(R.id.edtSearch);
-        rvSearchResults = findViewById(R.id.rvSearchResults);
-        tvEmptyState = findViewById(R.id.tvEmptyState);
-        layoutEmptyState = findViewById(R.id.layoutEmptyState);
+    private void initViews(View view) {
+        btnBack = view.findViewById(R.id.btnBack);
+        btnClear = view.findViewById(R.id.btnClear);
+        edtSearch = view.findViewById(R.id.edtSearch);
+        rvSearchResults = view.findViewById(R.id.rvSearchResults);
+        tvEmptyState = view.findViewById(R.id.tvEmptyState);
+        layoutEmptyState = view.findViewById(R.id.layoutEmptyState);
 
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
         
         btnClear.setOnClickListener(v -> {
             edtSearch.setText("");
@@ -101,7 +106,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         });
 
         // Apply Server Color theme to Search Bar Border
-        com.google.android.material.card.MaterialCardView cardSearchBar = findViewById(R.id.cardSearchBar);
+        com.google.android.material.card.MaterialCardView cardSearchBar = view.findViewById(R.id.cardSearchBar);
         if (cardSearchBar != null) {
             try {
                 cardSearchBar.setStrokeColor(Color.parseColor(serverColor));
@@ -111,7 +116,7 @@ public class SearchInChatActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         adapter = new SearchResultsAdapter();
-        rvSearchResults.setLayoutManager(new LinearLayoutManager(this));
+        rvSearchResults.setLayoutManager(new LinearLayoutManager(getContext()));
         rvSearchResults.setAdapter(adapter);
     }
 
@@ -120,6 +125,7 @@ public class SearchInChatActivity extends AppCompatActivity {
             FirebaseFirestore.getInstance().collection("servers").document(serverId).collection("members")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (getView() == null) return;
                     serverMembers.clear();
                     for (DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
                         ServerMember m = doc.toObject(ServerMember.class);
@@ -138,6 +144,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         chatRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (getView() == null) return;
                 allMessages.clear();
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Message msg = data.getValue(Message.class);
@@ -159,7 +166,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         if (query == null || query.trim().isEmpty()) {
             searchResults.clear();
             adapter.notifyDataSetChanged();
-            tvEmptyState.setText("Nháº­p tá»« khÃ³a Ä‘á»ƒ tÃ¬m kiáº¿m tin nháº¯n");
+            tvEmptyState.setText("Nhập từ khóa để tìm kiếm tin nhắn");
             if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.VISIBLE);
             return;
         }
@@ -198,7 +205,7 @@ public class SearchInChatActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
 
         if (searchResults.isEmpty()) {
-            tvEmptyState.setText("KhÃ´ng tÃ¬m tháº¥y káº¿t quáº£ phÃ¹ há»£p");
+            tvEmptyState.setText("Không tìm thấy kết quả phù hợp");
             if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.VISIBLE);
         } else {
             if (layoutEmptyState != null) layoutEmptyState.setVisibility(View.GONE);
@@ -251,14 +258,14 @@ public class SearchInChatActivity extends AppCompatActivity {
 
             // Bind text
             if ("image".equals(msg.getType())) {
-                holder.tvMessageBody.setText("ðŸ“· [HÃ¬nh áº£nh]");
+                holder.tvMessageBody.setText("📷 [Hình ảnh]");
             } else if ("file".equals(msg.getType())) {
                 String fileUrl = msg.getContent();
-                String fileName = "TÃ i liá»‡u Ä‘Ã­nh kÃ¨m";
+                String fileName = "Tài liệu đính kèm";
                 try {
                     fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
                 } catch (Exception e) {}
-                holder.tvMessageBody.setText("ðŸ“Ž [TÃ i liá»‡u] " + fileName);
+                holder.tvMessageBody.setText("📎 [Tài liệu] " + fileName);
             } else {
                 holder.tvMessageBody.setText(msg.getContent());
             }
@@ -277,7 +284,7 @@ public class SearchInChatActivity extends AppCompatActivity {
 
             FirebaseFirestore.getInstance().collection("users").document(uid).get()
                 .addOnSuccessListener(doc -> {
-                    if (doc.exists() && uid.equals(holder.ivAvatar.getTag())) {
+                    if (doc.exists() && uid.equals(holder.ivAvatar.getTag()) && getContext() != null) {
                         String profilePic = doc.getString("profilePic");
                         if (profilePic != null && !profilePic.isEmpty()) {
                             holder.ivAvatar.setColorFilter(null);
@@ -290,10 +297,11 @@ public class SearchInChatActivity extends AppCompatActivity {
                 });
 
             holder.itemView.setOnClickListener(v -> {
-                Intent data = new Intent();
-                data.putExtra("SCROLL_TO_MESSAGE_ID", msg.getMessageId());
-                setResult(RESULT_OK, data);
-                finish();
+                NavController navController = Navigation.findNavController(requireView());
+                if (navController.getPreviousBackStackEntry() != null) {
+                    navController.getPreviousBackStackEntry().getSavedStateHandle().set("GOTO_MESSAGE_ID", msg.getMessageId());
+                }
+                navController.popBackStack();
             });
         }
 
@@ -316,4 +324,3 @@ public class SearchInChatActivity extends AppCompatActivity {
         }
     }
 }
-

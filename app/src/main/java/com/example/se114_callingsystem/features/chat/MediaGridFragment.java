@@ -1,6 +1,5 @@
 package com.example.se114_callingsystem.features.chat;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +15,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.example.se114_callingsystem.R;
-import com.example.se114_callingsystem.core.viewer.ImageViewerActivity;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,9 +69,9 @@ public class MediaGridFragment extends Fragment {
                     .into(holder.iv);
 
             holder.itemView.setOnClickListener(v -> {
-                Intent intent = new Intent(requireContext(), ImageViewerActivity.class);
-                intent.putExtra("IMAGE_URL", url);
-                startActivity(intent);
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putString("IMAGE_URL", url);
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_core_image_viewer, bundle);
             });
         }
 

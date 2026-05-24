@@ -64,6 +64,9 @@
         <action
             android:id="@+id/action_profile_to_edit_profile"
             app:destination="@id/nav_edit_profile" />
+        <action
+            android:id="@+id/action_profile_to_manage_friends"
+            app:destination="@id/nav_friend_manage" />
     </fragment>
 
     <fragment
@@ -97,6 +100,9 @@
         <action
             android:id="@+id/action_chat_to_chat_info"
             app:destination="@id/nav_chat_info" />
+        <action
+            android:id="@+id/action_chat_to_search"
+            app:destination="@id/nav_chat_search" />
     </fragment>
 
     <fragment
@@ -138,6 +144,12 @@
         <action
             android:id="@+id/action_server_to_voice_call"
             app:destination="@id/nav_voice_call" />
+        <action
+            android:id="@+id/action_server_to_change_color"
+            app:destination="@id/nav_server_change_color" />
+        <action
+            android:id="@+id/action_server_to_manage_members"
+            app:destination="@id/nav_server_manage_members" />
     </fragment>
 
 
@@ -180,6 +192,94 @@
             android:name="SERVER_COLOR"
             app:argType="string"
             android:defaultValue="#5865F2" />
+        <action
+            android:id="@+id/action_post_channel_to_post_create"
+            app:destination="@id/nav_post_create" />
+        <action
+            android:id="@+id/action_post_channel_to_post_comment"
+            app:destination="@id/nav_post_comment" />
+    </fragment>
+
+    <!-- 1. Đổi màu theme máy chủ -->
+    <fragment
+        android:id="@+id/nav_server_change_color"
+        android:name="com.example.se114_callingsystem.features.server.ChangeColorFragment"
+        android:label="Change Server Color"
+        tools:layout="@layout/fragment_server_change_color">
+        <argument android:name="SERVER_ID" app:argType="string" />
+        <argument android:name="CURRENT_COLOR" app:argType="string" />
+    </fragment>
+
+    <!-- 2. Quản lý thành viên máy chủ -->
+    <fragment
+        android:id="@+id/nav_server_manage_members"
+        android:name="com.example.se114_callingsystem.features.server.ManageMembersFragment"
+        android:label="Manage Server Members"
+        tools:layout="@layout/fragment_server_manage_members">
+        <argument android:name="SERVER_ID" app:argType="string" />
+    </fragment>
+
+    <!-- 3. Quản lý bạn bè -->
+    <fragment
+        android:id="@+id/nav_friend_manage"
+        android:name="com.example.se114_callingsystem.features.friend.ManageFriendsFragment"
+        android:label="Manage Friends"
+        tools:layout="@layout/fragment_friend_manage" />
+
+    <!-- 4. Tìm kiếm tin nhắn chat -->
+    <fragment
+        android:id="@+id/nav_chat_search"
+        android:name="com.example.se114_callingsystem.features.chat.SearchInChatFragment"
+        android:label="Search in Chat"
+        tools:layout="@layout/fragment_chat_search">
+        <argument android:name="CHAT_ID" app:argType="string" />
+        <argument android:name="CHAT_NAME" app:argType="string" />
+        <argument android:name="SERVER_ID" app:argType="string" app:nullable="true" />
+        <argument android:name="SERVER_COLOR" app:argType="string" app:nullable="true" />
+    </fragment>
+
+    <!-- 5. Tạo bài viết mới -->
+    <fragment
+        android:id="@+id/nav_post_create"
+        android:name="com.example.se114_callingsystem.features.post.CreatePostFragment"
+        android:label="Create Post"
+        tools:layout="@layout/fragment_post_create">
+        <argument android:name="CHANNEL_ID" app:argType="string" />
+        <argument android:name="SERVER_ID" app:argType="string" />
+        <argument android:name="SERVER_COLOR" app:argType="string" />
+        <argument android:name="POST_ID" app:argType="string" app:nullable="true" />
+        <argument android:name="POST_CONTENT" app:argType="string" app:nullable="true" />
+    </fragment>
+
+    <!-- 6. Bình luận bài viết -->
+    <fragment
+        android:id="@+id/nav_post_comment"
+        android:name="com.example.se114_callingsystem.features.post.PostCommentFragment"
+        android:label="Post Comments"
+        tools:layout="@layout/fragment_post_comment">
+        <argument android:name="POST_ID" app:argType="string" />
+        <argument android:name="POST_AUTHOR_ID" app:argType="string" />
+        <argument android:name="SERVER_ID" app:argType="string" />
+        <argument android:name="SERVER_COLOR" app:argType="string" />
+    </fragment>
+
+    <!-- 7. Xem tài liệu đính kèm -->
+    <fragment
+        android:id="@+id/nav_core_document_viewer"
+        android:name="com.example.se114_callingsystem.core.viewer.DocumentViewerFragment"
+        android:label="Document Viewer"
+        tools:layout="@layout/fragment_core_document_viewer">
+        <argument android:name="DOC_URL" app:argType="string" />
+        <argument android:name="FILE_NAME" app:argType="string" />
+    </fragment>
+
+    <!-- 8. Xem ảnh fullscreen -->
+    <fragment
+        android:id="@+id/nav_core_image_viewer"
+        android:name="com.example.se114_callingsystem.core.viewer.ImageViewerFragment"
+        android:label="Image Viewer"
+        tools:layout="@layout/fragment_core_image_viewer">
+        <argument android:name="IMAGE_URL" app:argType="string" />
     </fragment>
 
 </navigation>

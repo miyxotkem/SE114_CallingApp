@@ -266,19 +266,19 @@ public class ServerFragment extends Fragment {
         if (btnManageMembers != null) {
             btnManageMembers.setOnClickListener(v -> {
                 dialog.dismiss();
-                Intent intent = new Intent(requireContext(), ManageMembersActivity.class);
-                intent.putExtra("SERVER_ID", serverId);
-                startActivity(intent);
+                Bundle args = new Bundle();
+                args.putString("SERVER_ID", serverId);
+                Navigation.findNavController(binding.getRoot()).navigate(R.id.action_server_to_manage_members, args);
             });
         }
 
         if (btnChangeColor != null) {
             btnChangeColor.setOnClickListener(v -> {
                 dialog.dismiss();
-                Intent intent = new Intent(requireContext(), ChangeColorActivity.class);
-                intent.putExtra("SERVER_ID", serverId);
-                intent.putExtra("CURRENT_COLOR", currentAccentColor);
-                startActivity(intent);
+                Bundle args = new Bundle();
+                args.putString("SERVER_ID", serverId);
+                args.putString("CURRENT_COLOR", currentAccentColor);
+                Navigation.findNavController(binding.getRoot()).navigate(R.id.action_server_to_change_color, args);
             });
         }
 

@@ -67,11 +67,11 @@ public class PostChannelFragment extends Fragment {
         });
 
         binding.fabCreatePost.setOnClickListener(v -> {
-            Intent intent = new Intent(requireContext(), CreatePostActivity.class);
-            intent.putExtra("CHANNEL_ID", channelId);
-            intent.putExtra("SERVER_ID", serverId);
-            intent.putExtra("SERVER_COLOR", serverColor);
-            startActivity(intent);
+            Bundle bundle = new Bundle();
+            bundle.putString("CHANNEL_ID", channelId);
+            bundle.putString("SERVER_ID", serverId);
+            bundle.putString("SERVER_COLOR", serverColor);
+            Navigation.findNavController(v).navigate(R.id.action_post_channel_to_post_create, bundle);
         });
 
         try {
@@ -121,12 +121,12 @@ public class PostChannelFragment extends Fragment {
 
             @Override
             public void onCommentClick(Post post) {
-                Intent intent = new Intent(requireContext(), PostCommentActivity.class);
-                intent.putExtra("POST_ID", post.getId());
-                intent.putExtra("POST_AUTHOR_ID", post.getAuthorId());
-                intent.putExtra("SERVER_ID", post.getServerId());
-                intent.putExtra("SERVER_COLOR", serverColor);
-                startActivity(intent);
+                Bundle bundle = new Bundle();
+                bundle.putString("POST_ID", post.getId());
+                bundle.putString("POST_AUTHOR_ID", post.getAuthorId());
+                bundle.putString("SERVER_ID", post.getServerId());
+                bundle.putString("SERVER_COLOR", serverColor);
+                Navigation.findNavController(binding.getRoot()).navigate(R.id.action_post_channel_to_post_comment, bundle);
             }
 
             @Override
@@ -215,13 +215,13 @@ public class PostChannelFragment extends Fragment {
         popup.getMenu().add("XÃ³a");
         popup.setOnMenuItemClickListener(item -> {
             if (item.getTitle().equals("Chá»‰nh sá»­a")) {
-                Intent intent = new Intent(requireContext(), CreatePostActivity.class);
-                intent.putExtra("CHANNEL_ID", channelId);
-                intent.putExtra("SERVER_ID", serverId);
-                intent.putExtra("SERVER_COLOR", serverColor);
-                intent.putExtra("POST_ID", post.getId());
-                intent.putExtra("POST_CONTENT", post.getContent());
-                startActivity(intent);
+                Bundle bundle = new Bundle();
+                bundle.putString("CHANNEL_ID", channelId);
+                bundle.putString("SERVER_ID", serverId);
+                bundle.putString("SERVER_COLOR", serverColor);
+                bundle.putString("POST_ID", post.getId());
+                bundle.putString("POST_CONTENT", post.getContent());
+                Navigation.findNavController(binding.getRoot()).navigate(R.id.action_post_channel_to_post_create, bundle);
             } else if (item.getTitle().equals("XÃ³a")) {
                 db.collection("Posts").document(post.getId()).delete();
             }

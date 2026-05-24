@@ -4,18 +4,24 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Post;
-import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -24,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CreatePostActivity extends AppCompatActivity {
+public class CreatePostFragment extends Fragment {
 
     private String channelId, serverId, serverColor, editPostId;
     private EditText etContent;
@@ -43,40 +49,67 @@ public class CreatePostActivity extends AppCompatActivity {
     private List<com.example.se114_callingsystem.core.model.ServerMember> filteredMembers = new ArrayList<>();
     private int mentionStartIndex = -1;
 
+    private ActivityResultLauncher<Intent> mediaPickerLauncher;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applyTheme(this);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_post_create);
+        mediaPickerLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
+                Intent data = result.getData();
+                if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    for (int i = 0; i < count; i++) {
+                        Uri uri = data.getClipData().getItemAt(i).getUri();
+                        addMediaToSelection(uri);
+                    }
+                } else if (data.getData() != null) {
+                    addMediaToSelection(data.getData());
+                }
+            }
+        });
+    }
 
-        channelId = getIntent().getStringExtra("CHANNEL_ID");
-        serverId = getIntent().getStringExtra("SERVER_ID");
-        serverColor = getIntent().getStringExtra("SERVER_COLOR");
-        editPostId = getIntent().getStringExtra("POST_ID");
-        String editContent = getIntent().getStringExtra("POST_CONTENT");
-        db = FirebaseFirestore.getInstance();
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_post_create, container, false);
+    }
 
-        initCloudinary();
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        etContent = findViewById(R.id.etContent);
-        if (editContent != null) {
-            etContent.setText(editContent);
+        if (getArguments() != null) {
+            channelId = getArguments().getString("CHANNEL_ID");
+            serverId = getArguments().getString("SERVER_ID");
+            serverColor = getArguments().getString("SERVER_COLOR");
+            editPostId = getArguments().getString("POST_ID");
+            String editContent = getArguments().getString("POST_CONTENT");
+            
+            etContent = view.findViewById(R.id.etContent);
+            if (editContent != null && etContent != null) {
+                etContent.setText(editContent);
+            }
         }
         
-        ImageView btnBack = findViewById(R.id.btnBack);
-        MaterialButton btnPost = findViewById(R.id.btnPost);
-        ImageView btnAddImage = findViewById(R.id.btnAddImage);
-        ImageView btnAddVideo = findViewById(R.id.btnAddVideo);
-        mediaPreviewContainer = findViewById(R.id.mediaPreviewContainer); // Need to add this to XML
+        db = FirebaseFirestore.getInstance();
+        initCloudinary();
+
+        ImageView btnBack = view.findViewById(R.id.btnBack);
+        MaterialButton btnPost = view.findViewById(R.id.btnPost);
+        ImageView btnAddImage = view.findViewById(R.id.btnAddImage);
+        ImageView btnAddVideo = view.findViewById(R.id.btnAddVideo);
+        mediaPreviewContainer = view.findViewById(R.id.mediaPreviewContainer);
 
         try {
             int color = android.graphics.Color.parseColor(serverColor);
             btnPost.setTextColor(color);
         } catch (Exception e) {}
 
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
         
-        setupMentionSuggestions();
+        setupMentionSuggestions(view);
         fetchServerMembers();
 
         btnAddImage.setOnClickListener(v -> pickMedia("image/*"));
@@ -91,13 +124,14 @@ public class CreatePostActivity extends AppCompatActivity {
         config.put("api_key", "359217744855482");
         config.put("api_secret", "eTG0UvW_hdsHm4hl0r2XJCvidR0");
         try {
-            MediaManager.init(this, config);
+            MediaManager.init(requireContext(), config);
         } catch (IllegalStateException e) {}
     }
 
     private void fetchServerMembers() {
         if (serverId != null) {
             db.collection("servers").document(serverId).collection("members").get().addOnSuccessListener(snapshots -> {
+                if (getView() == null) return;
                 serverMembers.clear();
                 for (com.google.firebase.firestore.DocumentSnapshot doc : snapshots) {
                     com.example.se114_callingsystem.core.model.ServerMember member = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
@@ -107,12 +141,12 @@ public class CreatePostActivity extends AppCompatActivity {
         }
     }
 
-    private void setupMentionSuggestions() {
-        cardMentionSuggestions = findViewById(R.id.cardMentionSuggestions);
-        rvMentionSuggestions = findViewById(R.id.rvMentionSuggestions);
+    private void setupMentionSuggestions(View view) {
+        cardMentionSuggestions = view.findViewById(R.id.cardMentionSuggestions);
+        rvMentionSuggestions = view.findViewById(R.id.rvMentionSuggestions);
         
         mentionAdapter = new com.example.se114_callingsystem.core.util.MentionAdapter(filteredMembers, member -> insertMention(member));
-        rvMentionSuggestions.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        rvMentionSuggestions.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(getContext()));
         rvMentionSuggestions.setAdapter(mentionAdapter);
 
         etContent.addTextChangedListener(new android.text.TextWatcher() {
@@ -174,34 +208,19 @@ public class CreatePostActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType(type);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        startActivityForResult(intent, 100);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
-            if (data.getClipData() != null) {
-                int count = data.getClipData().getItemCount();
-                for (int i = 0; i < count; i++) {
-                    Uri uri = data.getClipData().getItemAt(i).getUri();
-                    addMediaToSelection(uri);
-                }
-            } else if (data.getData() != null) {
-                addMediaToSelection(data.getData());
-            }
-        }
+        mediaPickerLauncher.launch(intent);
     }
 
     private void addMediaToSelection(Uri uri) {
+        if (getContext() == null) return;
         selectedMediaUris.add(uri);
-        String type = getContentResolver().getType(uri);
+        String type = getContext().getContentResolver().getType(uri);
         if (type != null && type.startsWith("video")) selectedMediaTypes.add("video");
         else selectedMediaTypes.add("image");
 
         // Add a small preview
         if (mediaPreviewContainer != null) {
-            ImageView preview = new ImageView(this);
+            ImageView preview = new ImageView(getContext());
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(200, 200);
             params.setMargins(0, 0, 16, 0);
             preview.setLayoutParams(params);
@@ -214,12 +233,12 @@ public class CreatePostActivity extends AppCompatActivity {
     private void handlePost() {
         String content = etContent.getText().toString().trim();
         if (content.isEmpty() && selectedMediaUris.isEmpty()) {
-            Toast.makeText(this, "Vui lÃ²ng nháº­p ná»™i dung hoáº·c chá»n áº£nh/video", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "Vui lòng nhập nội dung hoặc chọn ảnh/video", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        ProgressDialog pd = new ProgressDialog(this);
-        pd.setMessage("Äang Ä‘Äƒng bÃ i...");
+        ProgressDialog pd = new ProgressDialog(requireContext());
+        pd.setMessage("Đang đăng bài...");
         pd.setCancelable(false);
         pd.show();
 
@@ -240,7 +259,7 @@ public class CreatePostActivity extends AppCompatActivity {
         Uri uri = selectedMediaUris.get(index);
         MediaManager.get().upload(uri).option("resource_type", "auto").callback(new UploadCallback() {
             @Override public void onStart(String requestId) {
-                pd.setMessage("Äang táº£i lÃªn " + (index + 1) + "/" + selectedMediaUris.size() + "...");
+                pd.setMessage("Đang tải lên " + (index + 1) + "/" + selectedMediaUris.size() + "...");
             }
             @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
             @Override public void onSuccess(String requestId, Map resultData) {
@@ -249,7 +268,9 @@ public class CreatePostActivity extends AppCompatActivity {
             }
             @Override public void onError(String requestId, ErrorInfo error) {
                 pd.dismiss();
-                Toast.makeText(CreatePostActivity.this, "Upload lá»—i: " + error.getDescription(), Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(requireContext(), "Upload lỗi: " + error.getDescription(), Toast.LENGTH_SHORT).show();
+                }
             }
             @Override public void onReschedule(String requestId, ErrorInfo error) {}
         }).dispatch();
@@ -263,11 +284,15 @@ public class CreatePostActivity extends AppCompatActivity {
             // Update existing post
             db.collection("Posts").document(editPostId).update("content", content).addOnSuccessListener(a -> {
                 pd.dismiss();
-                Toast.makeText(this, "ÄÃ£ cáº­p nháº­t bÃ i viáº¿t!", Toast.LENGTH_SHORT).show();
-                finish();
+                if (getContext() != null) {
+                    Toast.makeText(requireContext(), "Đã cập nhật bài viết!", Toast.LENGTH_SHORT).show();
+                }
+                Navigation.findNavController(requireView()).popBackStack();
             }).addOnFailureListener(e -> {
                 pd.dismiss();
-                Toast.makeText(this, "Lá»—i cáº­p nháº­t", Toast.LENGTH_SHORT).show();
+                if (getContext() != null) {
+                    Toast.makeText(requireContext(), "Lỗi cập nhật", Toast.LENGTH_SHORT).show();
+                }
             });
             return;
         }
@@ -284,13 +309,16 @@ public class CreatePostActivity extends AppCompatActivity {
             post.setId(doc.getId());
             db.collection("Posts").document(doc.getId()).set(post).addOnSuccessListener(a -> {
                 pd.dismiss();
-                Toast.makeText(this, "ÄÃ£ Ä‘Äƒng bÃ i thÃ nh cÃ´ng!", Toast.LENGTH_SHORT).show();
-                finish();
+                if (getContext() != null) {
+                    Toast.makeText(requireContext(), "Đã đăng bài thành công!", Toast.LENGTH_SHORT).show();
+                }
+                Navigation.findNavController(requireView()).popBackStack();
             });
         }).addOnFailureListener(e -> {
             pd.dismiss();
-            Toast.makeText(this, "Lá»—i Ä‘Äƒng bÃ i", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) {
+                Toast.makeText(requireContext(), "Lỗi đăng bài", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }
-

@@ -1,6 +1,5 @@
 package com.example.se114_callingsystem.features.server;
 
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.PostChannel;
-import com.example.se114_callingsystem.features.post.PostChannelActivity;
 import java.util.List;
 
 public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.ViewHolder> {
@@ -68,16 +66,7 @@ public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.
                 bundle.putString("CHANNEL_ID", currentChannel.getId());
                 bundle.putString("SERVER_ID", currentChannel.getServerId());
                 bundle.putString("SERVER_COLOR", serverColor);
-                try {
-                    androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_server_to_post_channel, bundle);
-                } catch (Exception e) {
-                    Intent intent = new Intent(holder.itemView.getContext(), PostChannelActivity.class);
-                    intent.putExtra("CHANNEL_NAME", currentChannel.getName());
-                    intent.putExtra("CHANNEL_ID", currentChannel.getId());
-                    intent.putExtra("SERVER_ID", currentChannel.getServerId());
-                    intent.putExtra("SERVER_COLOR", serverColor);
-                    holder.itemView.getContext().startActivity(intent);
-                }
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_post_channel, bundle);
             }
         });
     }

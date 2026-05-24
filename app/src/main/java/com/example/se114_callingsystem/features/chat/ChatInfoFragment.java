@@ -17,7 +17,7 @@ import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.databinding.FragmentChatInfoBinding;
 import com.example.se114_callingsystem.core.model.Firebase;
 import com.example.se114_callingsystem.core.model.Message;
-import com.example.se114_callingsystem.features.server.ManageMembersActivity;
+
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -203,12 +203,12 @@ public class ChatInfoFragment extends Fragment {
     private void setupSearchInChat() {
         if (binding == null) return;
         binding.btnSearchInChat.setOnClickListener(v -> {
-            Intent intent = new Intent(requireContext(), SearchInChatActivity.class);
-            intent.putExtra("CHAT_ID", chatId);
-            intent.putExtra("CHAT_NAME", chatName);
-            intent.putExtra("SERVER_ID", serverId);
-            intent.putExtra("SERVER_COLOR", serverColor);
-            startActivity(intent);
+            Bundle args = new Bundle();
+            args.putString("CHAT_ID", chatId);
+            args.putString("CHAT_NAME", chatName);
+            args.putString("SERVER_ID", serverId);
+            args.putString("SERVER_COLOR", serverColor);
+            Navigation.findNavController(v).navigate(R.id.action_chat_to_search, args);
         });
     }
 
@@ -240,9 +240,9 @@ public class ChatInfoFragment extends Fragment {
         binding.btnNicknames.setVisibility(View.VISIBLE);
         binding.dividerNicknames.setVisibility(View.VISIBLE);
         binding.btnNicknames.setOnClickListener(v -> {
-            Intent intent = new Intent(requireContext(), ManageMembersActivity.class);
-            intent.putExtra("SERVER_ID", sId);
-            startActivity(intent);
+            Bundle args = new Bundle();
+            args.putString("SERVER_ID", sId);
+            Navigation.findNavController(v).navigate(R.id.nav_server_manage_members, args);
         });
     }
 

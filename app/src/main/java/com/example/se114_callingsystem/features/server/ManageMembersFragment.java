@@ -1,20 +1,25 @@
 package com.example.se114_callingsystem.features.server;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.ServerMember;
-import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManageMembersActivity extends AppCompatActivity {
+public class ManageMembersFragment extends Fragment {
 
     private String serverId;
     private RecyclerView rvMembers;
@@ -22,89 +27,104 @@ public class ManageMembersActivity extends AppCompatActivity {
     private List<ServerMember> memberList = new ArrayList<>();
     private FirebaseFirestore db;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applyTheme(this);
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_server_manage_members);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_server_manage_members, container, false);
+    }
 
-        serverId = getIntent().getStringExtra("SERVER_ID");
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (getArguments() != null) {
+            serverId = getArguments().getString("SERVER_ID");
+        }
         db = FirebaseFirestore.getInstance();
 
-        ImageView btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
+        ImageView btnBack = view.findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
 
-        rvMembers = findViewById(R.id.rvMembers);
-        rvMembers.setLayoutManager(new LinearLayoutManager(this));
+        rvMembers = view.findViewById(R.id.rvMembers);
+        rvMembers.setLayoutManager(new LinearLayoutManager(getContext()));
         
-        ImageView btnAddMember = findViewById(R.id.btnAddMember);
+        ImageView btnAddMember = view.findViewById(R.id.btnAddMember);
         btnAddMember.setOnClickListener(v -> {
-            AddServerMemberDialog dialog = 
-                new AddServerMemberDialog(serverId);
-            dialog.show(getSupportFragmentManager(), "Add_server_member");
+            AddServerMemberDialog dialog = new AddServerMemberDialog(serverId);
+            dialog.show(getParentFragmentManager(), "Add_server_member");
         });
 
-        adapter = new ServerMemberAdapter(memberList, this, new ServerMemberAdapter.OnMemberActionListener() {
+        adapter = new ServerMemberAdapter(memberList, requireContext(), new ServerMemberAdapter.OnMemberActionListener() {
             @Override
             public void onPromote(ServerMember member) {
-                // Update role thÃ nh admin
+                // Update role thành admin
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                         .update("role", "admin")
                         .addOnSuccessListener(a -> {
-                            Toast.makeText(ManageMembersActivity.this, "Promoted to Admin", Toast.LENGTH_SHORT).show();
+                            if (getContext() != null) {
+                                Toast.makeText(requireContext(), "Promoted to Admin", Toast.LENGTH_SHORT).show();
+                            }
                             loadMembers();
                         });
             }
 
             @Override
             public void onDemote(ServerMember member) {
-                // Update role thÃ nh member
+                // Update role thành member
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                         .update("role", "member")
                         .addOnSuccessListener(a -> {
-                            Toast.makeText(ManageMembersActivity.this, "Demoted to Member", Toast.LENGTH_SHORT).show();
+                            if (getContext() != null) {
+                                Toast.makeText(requireContext(), "Demoted to Member", Toast.LENGTH_SHORT).show();
+                            }
                             loadMembers();
                         });
             }
 
             @Override
             public void onKick(ServerMember member) {
-                // XÃ³a khá»i báº£ng members
+                // Xóa khỏi bảng members
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                         .delete()
                         .addOnSuccessListener(a -> {
-                            // Cáº­p nháº­t láº¡i máº£ng members á»Ÿ server document Ä‘á»ƒ xÃ³a userId nÃ y
+                            // Cập nhật lại mảng members ở server document để xóa userId này
                             db.collection("servers").document(serverId)
                                 .update("members", com.google.firebase.firestore.FieldValue.arrayRemove(member.getUserId()));
                                 
-                            Toast.makeText(ManageMembersActivity.this, "Member kicked", Toast.LENGTH_SHORT).show();
+                            if (getContext() != null) {
+                                Toast.makeText(requireContext(), "Member kicked", Toast.LENGTH_SHORT).show();
+                            }
                             loadMembers();
                         });
             }
 
             @Override
             public void onSetNickname(ServerMember member) {
-                androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(ManageMembersActivity.this);
-                builder.setTitle("Äáº·t biá»‡t danh cho " + (member.getUserName() != null ? member.getUserName() : "thÃ nh viÃªn"));
+                androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+                builder.setTitle("Đặt biệt danh cho " + (member.getUserName() != null ? member.getUserName() : "thành viên"));
 
-                final android.widget.EditText input = new android.widget.EditText(ManageMembersActivity.this);
+                final android.widget.EditText input = new android.widget.EditText(requireContext());
                 input.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
                 input.setText(member.getNickname() != null ? member.getNickname() : "");
                 builder.setView(input);
 
-                builder.setPositiveButton("LÆ°u", (dialog, which) -> {
+                builder.setPositiveButton("Lưu", (dialog, which) -> {
                     String nickname = input.getText().toString().trim();
                     db.collection("servers").document(serverId).collection("members").document(member.getUserId())
                             .update("nickname", nickname)
                             .addOnSuccessListener(a -> {
-                                Toast.makeText(ManageMembersActivity.this, "ÄÃ£ cáº­p nháº­t biá»‡t danh", Toast.LENGTH_SHORT).show();
+                                if (getContext() != null) {
+                                    Toast.makeText(requireContext(), "Đã cập nhật biệt danh", Toast.LENGTH_SHORT).show();
+                                }
                                 loadMembers();
                             })
                             .addOnFailureListener(e -> {
-                                Toast.makeText(ManageMembersActivity.this, "Lá»—i: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                if (getContext() != null) {
+                                    Toast.makeText(requireContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
                             });
                 });
-                builder.setNegativeButton("Há»§y", (dialog, which) -> dialog.cancel());
+                builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
                 builder.show();
             }
         });
@@ -114,9 +134,10 @@ public class ManageMembersActivity extends AppCompatActivity {
     }
 
     private void loadMembers() {
-        // Giáº£ Ä‘á»‹nh báº¡n lÆ°u thÃ nh viÃªn á»Ÿ collection "members" bÃªn trong "servers"
+        if (serverId == null) return;
         db.collection("servers").document(serverId).collection("members").get()
                 .addOnSuccessListener(snapshots -> {
+                    if (getView() == null) return;
                     memberList.clear();
                     String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
                         com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
@@ -136,15 +157,16 @@ public class ManageMembersActivity extends AppCompatActivity {
                         }
                     }
                     
-                    ImageView btnAddMember = findViewById(R.id.btnAddMember);
-                    if (canAddMembers) {
-                        btnAddMember.setVisibility(android.view.View.VISIBLE);
-                    } else {
-                        btnAddMember.setVisibility(android.view.View.GONE);
+                    ImageView btnAddMember = getView().findViewById(R.id.btnAddMember);
+                    if (btnAddMember != null) {
+                        if (canAddMembers) {
+                            btnAddMember.setVisibility(android.view.View.VISIBLE);
+                        } else {
+                            btnAddMember.setVisibility(android.view.View.GONE);
+                        }
                     }
                     
                     adapter.notifyDataSetChanged();
                 });
     }
 }
-

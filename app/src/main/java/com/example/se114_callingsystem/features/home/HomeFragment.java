@@ -11,7 +11,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.se114_callingsystem.databinding.FragmentHomeBinding;
-import com.example.se114_callingsystem.features.friend.ManageFriendsActivity;
+import com.example.se114_callingsystem.R;
+
 import com.example.se114_callingsystem.core.model.Server;
 import com.example.se114_callingsystem.features.server.CreateServerDialog;
 import com.example.se114_callingsystem.features.server.ServerAdapter;
@@ -58,8 +59,7 @@ public class HomeFragment extends Fragment {
         });
 
         binding.btnManageFriends.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), ManageFriendsActivity.class);
-            startActivity(intent);
+            androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_friend_manage);
         });
 
         binding.btnAddFriend.setOnClickListener(v -> {
