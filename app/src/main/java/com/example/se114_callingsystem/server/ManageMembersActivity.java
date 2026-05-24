@@ -57,6 +57,17 @@ public class ManageMembersActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onDemote(ServerMember member) {
+                // Update role thành member
+                db.collection("servers").document(serverId).collection("members").document(member.getUserId())
+                        .update("role", "member")
+                        .addOnSuccessListener(a -> {
+                            Toast.makeText(ManageMembersActivity.this, "Demoted to Member", Toast.LENGTH_SHORT).show();
+                            loadMembers();
+                        });
+            }
+
+            @Override
             public void onKick(ServerMember member) {
                 // Xóa khỏi bảng members
                 db.collection("servers").document(serverId).collection("members").document(member.getUserId())

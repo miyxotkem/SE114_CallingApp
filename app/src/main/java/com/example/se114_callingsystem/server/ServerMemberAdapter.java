@@ -13,6 +13,7 @@ import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.model.Server;
 import com.example.se114_callingsystem.model.ServerMember;
 import com.example.se114_callingsystem.model.User;
+import com.example.se114_callingsystem.util.ThemeHelper;
 import java.util.List;
 
 public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapter.ViewHolder> {
@@ -23,6 +24,7 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
 
     public interface OnMemberActionListener {
         void onPromote(ServerMember member);
+        void onDemote(ServerMember member);
         void onKick(ServerMember member);
         void onSetNickname(ServerMember member);
     }
@@ -74,6 +76,8 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
             if (!"owner".equals(member.getRole())) {
                 if (!"admin".equals(member.getRole())) {
                     popup.getMenu().add("Promote to Admin");
+                } else {
+                    popup.getMenu().add("Demote to Member");
                 }
                 popup.getMenu().add("Kick from Server");
             }
@@ -83,6 +87,8 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
                     if (listener != null) listener.onSetNickname(member);
                 } else if (item.getTitle().equals("Promote to Admin")) {
                     if (listener != null) listener.onPromote(member);
+                } else if (item.getTitle().equals("Demote to Member")) {
+                    if (listener != null) listener.onDemote(member);
                 } else if (item.getTitle().equals("Kick from Server")) {
                     if (listener != null) listener.onKick(member);
                 }
