@@ -140,6 +140,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         checkAndSaveUserToFirestore(user);
+                        goToHome();
                     } else {
                         Log.w(TAG, "firebaseAuthWithGoogle:failure", task.getException());
                         Toast.makeText(LoginActivity.this, "Google Authentication Failed.", Toast.LENGTH_SHORT).show();
@@ -162,16 +163,11 @@ public class LoginActivity extends AppCompatActivity {
                     userData.put("avatar", user.getPhotoUrl() != null ? user.getPhotoUrl().toString() : "");
                     
                     db.collection("users").document(uid).set(userData)
-                            .addOnSuccessListener(aVoid -> goToHome())
-                            .addOnFailureListener(e -> {
-                                Log.e(TAG, "Error saving user to Firestore", e);
-                                goToHome(); // Still go to home even if saving profile fails
-                            });
-                } else {
-                    goToHome();
+                            .addOnSuccessListener(aVoid -> Log.d(TAG, "User successfully saved to Firestore"))
+                            .addOnFailureListener(e -> Log.e(TAG, "Error saving user to Firestore", e));
                 }
             } else {
-                goToHome();
+                Log.e(TAG, "Error checking user existence in Firestore", task.getException());
             }
         });
     }
