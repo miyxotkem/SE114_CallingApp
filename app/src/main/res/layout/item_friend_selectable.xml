@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:buttonTint="#F7374F" />
+            android:buttonTint="@color/discord_blurple" />
 
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

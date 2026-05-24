@@ -1,75 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- System -->
+    <!-- Discord Brand Colors -->
+    <color name="discord_blurple">#5865F2</color>
+    <color name="discord_blurple_pressed">#4752C4</color>
+    <color name="discord_green">#23A559</color>
+    <color name="discord_red">#DA373C</color>
+    <color name="discord_yellow">#FEE75C</color>
+    
+    <!-- Dark Background Hierarchy -->
+    <color name="discord_dark_base">#313338</color>       <!-- Main chat background -->
+    <color name="discord_dark_deep">#1E1F22</color>       <!-- Sidebar server background -->
+    <color name="discord_dark_alt">#2B2D31</color>        <!-- Channels/DMs background -->
+    <color name="discord_dark_elevated">#232428</color>   <!-- Input bar and cards -->
+    <color name="discord_dark_floating">#111214</color>   <!-- Bottom Sheets, Popup Dialogs -->
+    
+    <!-- Text Palette -->
+    <color name="discord_text_primary">#F2F3F5</color>
+    <color name="discord_text_secondary">#B5BAC1</color>
+    <color name="discord_text_muted">#949BA4</color>
+    <color name="discord_text_link">#00A8FC</color>
+    
+    <!-- System & Dividers -->
+    <color name="discord_divider">#3E4047</color>
+    <color name="discord_overlay_dark">#99000000</color>
+
+    <!-- Legacy compatibility layer to prevent compile errors during migration -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="text_black_white">#FF000000</color>
-
-    <!-- ========== LIGHT THEME ========== -->
-
-    <!-- Backgrounds -->
-    <color name="bg_primary">#FFFFFF</color>
-    <color name="bg_secondary">#F5F5F5</color>
-    <color name="bg_tertiary">#EFEFEF</color>
-    <color name="bg_input">#F0F0F0</color>
-
-    <!-- Text -->
-    <color name="text_primary">#2C2C2C</color> <!-- Requested Dark Gray -->
-    <color name="text_secondary">#522546</color> <!-- Requested Dark Plum -->
+    <color name="text_black_white">#F2F3F5</color>
+    <color name="bg_primary">@color/discord_dark_base</color>
+    <color name="bg_secondary">@color/discord_dark_alt</color>
+    <color name="bg_tertiary">@color/discord_dark_deep</color>
+    <color name="bg_input">@color/discord_dark_elevated</color>
+    <color name="text_primary">@color/discord_text_primary</color>
+    <color name="text_secondary">@color/discord_text_secondary</color>
     <color name="text_on_accent">#FFFFFF</color>
-    <color name="text_hint">#88304E</color> <!-- Requested Deep Red-Purple (muted context) -->
-
-    <!-- Accent (Requested vibrant pink-red) -->
-    <color name="accent">#F7374F</color> <!-- Requested Vibrant Red-Pink -->
-    <color name="accent_light">#FF6B7A</color>
-    <color name="accent_surface">#FFE5E8</color>
-
-    <!-- Chat Bubbles -->
-    <color name="bubble_sent">#F7374F</color> <!-- Vibrant Red-Pink -->
-    <color name="bubble_received">#F0F0F0</color>
-    <color name="bubble_text_sent">#FFFFFF</color>
-    <color name="bubble_text_received">#2C2C2C</color>
-
-    <!-- UI Elements -->
-    <color name="divider">#EAEAEA</color>
-    <color name="icon_tint">#88304E</color>
-    <color name="danger">#F7374F</color>
-    <color name="overlay">#1A000000</color>
-    <color name="card_stroke">#EAEAEA</color>
-
-    <!-- Nav & Status -->
-    <color name="nav_active">#F7374F</color>
-    <color name="nav_inactive">#88304E</color>
-
-    <!-- Quote / Reply -->
-    <color name="quote_bg">#F5F5F5</color>
-    <color name="quote_bar">#F7374F</color>
-    <color name="quote_text">#522546</color>
-
-    <!-- Call Screen (always dark) -->
-    <color name="call_bg">#2C2C2C</color>
-    <color name="call_surface">#522546</color>
-    <color name="call_control_bg">#88304E</color>
-    <color name="call_end">#F7374F</color>
-
-    <!-- Reaction Bubble -->
-    <color name="reaction_bg">#FFFFFF</color>
-    <color name="reaction_stroke">#EAEAEA</color>
-
-    <!-- File attachment -->
-    <color name="file_bg">#1AF7374F</color>
-    <color name="file_text">#88304E</color>
-
-    <!-- Bottom Sheet Handle -->
-    <color name="handle_bar">#DCDCDC</color>
-
-    <!-- Legacy compat aliases -->
-    <color name="bg_default">@color/bg_primary</color>
-    <color name="bg_alter">@color/bg_tertiary</color>
-    <color name="bg_search">@color/bg_input</color>
-    <color name="bg_icon">@color/accent_surface</color>
-    <color name="tint_default">@color/text_primary</color>
-    <color name="tint_alter">@color/accent</color>
-    <color name="accent_border">@color/card_stroke</color>
-    <color name="accent_nav">@color/accent</color>
+    <color name="text_hint">@color/discord_text_muted</color>
+    <color name="accent">@color/discord_blurple</color>
+    <color name="accent_light">#7A85F5</color>
+    <color name="accent_surface">@color/discord_dark_elevated</color>
+    <color name="bubble_sent">@color/discord_blurple</color>
+    <color name="bubble_received">@color/discord_dark_alt</color>
+    <color name="bubble_text_sent">@color/discord_text_primary</color>
+    <color name="bubble_text_received">@color/discord_text_primary</color>
+    <color name="divider">@color/discord_divider</color>
+    <color name="icon_tint">@color/discord_text_secondary</color>
+    <color name="danger">@color/discord_red</color>
+    <color name="overlay">@color/discord_overlay_dark</color>
+    <color name="card_stroke">@color/discord_divider</color>
+    <color name="nav_active">@color/discord_blurple</color>
+    <color name="nav_inactive">@color/discord_text_muted</color>
+    <color name="quote_bg">@color/discord_dark_deep</color>
+    <color name="quote_bar">@color/discord_blurple</color>
+    <color name="quote_text">@color/discord_text_secondary</color>
+    <color name="call_bg">@color/discord_dark_floating</color>
+    <color name="call_surface">@color/discord_dark_base</color>
+    <color name="call_control_bg">@color/discord_dark_elevated</color>
+    <color name="call_end">@color/discord_red</color>
+    <color name="reaction_bg">@color/discord_dark_elevated</color>
+    <color name="reaction_stroke">@color/discord_divider</color>
+    <color name="file_bg">#1A5865F2</color>
+    <color name="file_text">@color/discord_blurple</color>
+    <color name="handle_bar">@color/discord_divider</color>
 </resources>
