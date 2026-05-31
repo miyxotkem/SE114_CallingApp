@@ -7,22 +7,22 @@
     <color name="discord_red">#DA373C</color>
     <color name="discord_yellow">#FEE75C</color>
     
-    <!-- Dark Background Hierarchy -->
-    <color name="discord_dark_base">#313338</color>       <!-- Main chat background -->
-    <color name="discord_dark_deep">#1E1F22</color>       <!-- Sidebar server background -->
-    <color name="discord_dark_alt">#2B2D31</color>        <!-- Channels/DMs background -->
-    <color name="discord_dark_elevated">#232428</color>   <!-- Input bar and cards -->
-    <color name="discord_dark_floating">#111214</color>   <!-- Bottom Sheets, Popup Dialogs -->
+    <!-- Light Background Hierarchy (named dark for compatibility) -->
+    <color name="discord_dark_base">#FFFFFF</color>       <!-- Main chat background -->
+    <color name="discord_dark_deep">#E3E5E8</color>       <!-- Sidebar server background -->
+    <color name="discord_dark_alt">#F2F3F5</color>        <!-- Channels/DMs background -->
+    <color name="discord_dark_elevated">#EBEDEF</color>   <!-- Input bar and cards -->
+    <color name="discord_dark_floating">#FFFFFF</color>   <!-- Bottom Sheets, Popup Dialogs -->
     
-    <!-- Text Palette -->
-    <color name="discord_text_primary">#F2F3F5</color>
-    <color name="discord_text_secondary">#B5BAC1</color>
-    <color name="discord_text_muted">#949BA4</color>
-    <color name="discord_text_link">#00A8FC</color>
+    <!-- Light Text Palette -->
+    <color name="discord_text_primary">#060607</color>
+    <color name="discord_text_secondary">#4E5058</color>
+    <color name="discord_text_muted">#80848E</color>
+    <color name="discord_text_link">#0068E0</color>
     
-    <!-- System & Dividers -->
-    <color name="discord_divider">#3E4047</color>
-    <color name="discord_overlay_dark">#99000000</color>
+    <!-- Light System & Dividers -->
+    <color name="discord_divider">#E3E5E8</color>
+    <color name="discord_overlay_dark">#40000000</color>
 
     <!-- Legacy compatibility layer to prevent compile errors during migration -->
     <color name="black">#FF000000</color>

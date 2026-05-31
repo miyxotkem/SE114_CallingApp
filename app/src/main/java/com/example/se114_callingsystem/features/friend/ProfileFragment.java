@@ -63,7 +63,6 @@ public class ProfileFragment extends Fragment {
         if (binding == null) return;
 
         if (isOwnProfile) {
-            binding.btnEditProfileTop.setVisibility(View.VISIBLE);
             binding.tvUserSettingsHeader.setVisibility(View.VISIBLE);
             binding.cardEditProfile.setVisibility(View.VISIBLE);
             binding.tvAccountActionsHeader.setVisibility(View.VISIBLE);
@@ -72,8 +71,12 @@ public class ProfileFragment extends Fragment {
             View.OnClickListener toEditProfile = v -> {
                 Navigation.findNavController(v).navigate(R.id.action_profile_to_edit_profile);
             };
-            binding.btnEditProfileTop.setOnClickListener(toEditProfile);
             binding.btnEditProfile.setOnClickListener(toEditProfile);
+            
+            binding.switchDarkModeProfile.setChecked(com.example.se114_callingsystem.core.util.ThemeHelper.isDarkMode(requireContext()));
+            binding.switchDarkModeProfile.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                com.example.se114_callingsystem.core.util.ThemeHelper.setDarkMode(requireContext(), isChecked);
+            });
             
             binding.btnLogout.setOnClickListener(v -> {
                 if (getContext() != null) {
@@ -87,9 +90,9 @@ public class ProfileFragment extends Fragment {
                 
                 // Navigate back to Login Fragment and clear the backstack
                 Navigation.findNavController(v).navigate(R.id.action_profile_to_login);
+                com.example.se114_callingsystem.core.util.ThemeHelper.applyTheme(requireContext());
             });
         } else {
-            binding.btnEditProfileTop.setVisibility(View.GONE);
             binding.tvUserSettingsHeader.setVisibility(View.GONE);
             binding.cardEditProfile.setVisibility(View.GONE);
             binding.tvAccountActionsHeader.setVisibility(View.GONE);
@@ -116,13 +119,47 @@ public class ProfileFragment extends Fragment {
                         binding.tvUsername.setText(user.getUsername() != null && !user.getUsername().isEmpty() ? user.getUsername() : "User");
                         
                         // Set online/offline status text & indicator color
-                        if ("online".equalsIgnoreCase(user.getStatus())) {
-                            binding.tvUserStatus.setText("Online");
-                            binding.viewStatusIndicator.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.discord_green)));
-                        } else {
-                            binding.tvUserStatus.setText("Offline");
-                            binding.viewStatusIndicator.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.discord_text_muted)));
+                        String status = user.getStatus();
+                        if (status == null) status = "online";
+                        
+                        int colorRes = R.color.discord_green;
+                        String displayText = "Online";
+                        
+                        switch (status.toLowerCase()) {
+                            case "idle":
+                            case "idling":
+                                colorRes = R.color.discord_yellow;
+                                displayText = "Idle";
+                                break;
+                            case "dnd":
+                            case "do not disturb":
+                                colorRes = R.color.discord_red;
+                                displayText = "Do Not Disturb";
+                                break;
+                            case "offline":
+                            case "invisible":
+                                colorRes = R.color.discord_text_muted;
+                                displayText = "Invisible";
+                                break;
+                            case "sleeping":
+                                colorRes = R.color.discord_blurple;
+                                displayText = "Sleeping 💤";
+                                break;
+                            case "eating":
+                                colorRes = R.color.discord_blurple;
+                                displayText = "Eating 🍕";
+                                break;
+                            default:
+                                if (!status.equalsIgnoreCase("online")) {
+                                    colorRes = R.color.discord_blurple;
+                                    displayText = status;
+                                }
+                                break;
                         }
+
+                        binding.tvUserStatus.setText(displayText);
+                        binding.tvUserStatus.setTextColor(getResources().getColor(colorRes));
+                        binding.viewStatusIndicator.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(colorRes)));
 
                         if (user.getBio() != null && !user.getBio().isEmpty()) {
                             binding.tvBio.setText(user.getBio());

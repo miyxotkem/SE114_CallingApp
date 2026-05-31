@@ -141,10 +141,10 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- Add Friend Button -->
+            <!-- User Status Button (Replaced Add Friend) -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btnAddFriend"
-                android:layout_width="36dp"
+                android:id="@+id/btnStatus"
+                android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginStart="12dp"
                 app:cardBackgroundColor="@color/discord_dark_elevated"
@@ -155,12 +155,30 @@
                 android:clickable="true"
                 android:focusable="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_add"
-                    app:tint="@color/discord_green" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp">
+                    
+                    <View
+                        android:id="@+id/statusIndicatorColor"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="@color/discord_green" />
+
+                    <TextView
+                        android:id="@+id/tvStatusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Online"
+                        android:textColor="@color/discord_green"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter" android:textStyle="bold" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
@@ -217,17 +235,6 @@
                         android:textSize="15sp"
                         android:fontFamily="@font/inter" android:textStyle="bold" />
 
-                    <!-- Online Badge -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Online"
-                        android:textColor="@color/discord_green"
-                        android:textSize="11sp"
-                        android:fontFamily="@font/inter" android:textStyle="bold"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:background="@drawable/bg_chat_input" />
                 </LinearLayout>
 
                 <View

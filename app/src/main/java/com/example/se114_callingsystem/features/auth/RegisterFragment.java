@@ -125,6 +125,7 @@ public class RegisterFragment extends Fragment {
     private void goToHome() {
         if (binding == null || getView() == null) return;
         Navigation.findNavController(getView()).navigate(R.id.action_register_to_home);
+        com.example.se114_callingsystem.core.util.ThemeHelper.applyTheme(requireContext());
     }
 
     @Override

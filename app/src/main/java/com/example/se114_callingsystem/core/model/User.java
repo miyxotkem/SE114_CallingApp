@@ -11,6 +11,7 @@ public class User {
     private String dob;
     private String workplace;
     private String hobbies;
+    private java.util.List<String> serverOrder;
 
     // Constructor trống bắt buộc phải có để Firebase mapping dữ liệu
     public User() {
@@ -60,4 +61,7 @@ public class User {
 
     public String getHobbies() { return hobbies; }
     public void setHobbies(String hobbies) { this.hobbies = hobbies; }
+
+    public java.util.List<String> getServerOrder() { return serverOrder; }
+    public void setServerOrder(java.util.List<String> serverOrder) { this.serverOrder = serverOrder; }
 }
