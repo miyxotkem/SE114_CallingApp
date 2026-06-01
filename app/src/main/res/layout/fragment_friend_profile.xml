@@ -201,7 +201,8 @@
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:maxLines="1"
-                                android:ellipsize="end" />
+                                android:ellipsize="end"
+                                android:fontFamily="@font/inter"/>
                         </LinearLayout>
 
                         <ImageView
@@ -258,7 +259,8 @@
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:maxLines="1"
-                                android:ellipsize="end" />
+                                android:ellipsize="end"
+                                android:fontFamily="@font/inter"/>
                         </LinearLayout>
 
                         <ImageView
@@ -315,7 +317,8 @@
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:maxLines="1"
-                                android:ellipsize="end" />
+                                android:ellipsize="end"
+                                android:fontFamily="@font/inter"/>
                         </LinearLayout>
 
                         <ImageView
@@ -370,7 +373,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Chưa cập nhật"
                                 android:textColor="@color/discord_text_muted"
-                                android:textSize="13sp" />
+                                android:textSize="13sp"
+                                android:fontFamily="@font/inter"/>
                         </LinearLayout>
 
                         <ImageView
@@ -452,7 +456,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Customize your banner, avatar, bio..."
                                 android:textColor="@color/discord_text_muted"
-                                android:textSize="13sp" />
+                                android:textSize="13sp"
+                                android:fontFamily="@font/inter"/>
                         </LinearLayout>
 
                         <ImageView
@@ -534,7 +539,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Sign out of your active account"
                                 android:textColor="@color/discord_text_muted"
-                                android:textSize="13sp" />
+                                android:textSize="13sp"
+                                android:fontFamily="@font/inter"/>
                         </LinearLayout>
 
                         <ImageView

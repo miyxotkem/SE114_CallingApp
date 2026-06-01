@@ -25,7 +25,8 @@
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_centerInParent="true"/>
+            android:layout_centerInParent="true"
+            android:fontFamily="@font/inter"/>
             
         <ImageView
             android:id="@+id/btnAddFriendTop"
@@ -53,7 +54,8 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/inter"/>
                 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvFriendRequests"
@@ -69,7 +71,8 @@
                 android:textColor="@color/text_primary"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/inter"/>
                 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvFriends"

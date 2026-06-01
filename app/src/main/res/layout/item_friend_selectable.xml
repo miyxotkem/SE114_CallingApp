@@ -31,7 +31,8 @@
             android:text="User Name"
             android:textColor="@color/text_primary"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:fontFamily="@font/inter"/>
 
         <CheckBox
             android:id="@+id/cbSelect"
@@ -39,7 +40,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:buttonTint="@color/discord_blurple" />
+            android:buttonTint="@color/discord_blurple"
+            android:fontFamily="@font/inter"/>
 
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

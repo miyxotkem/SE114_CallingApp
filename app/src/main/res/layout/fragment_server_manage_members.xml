@@ -25,7 +25,8 @@
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_centerInParent="true"/>
+            android:layout_centerInParent="true"
+            android:fontFamily="@font/inter"/>
             
         <ImageView
             android:id="@+id/btnAddMember"

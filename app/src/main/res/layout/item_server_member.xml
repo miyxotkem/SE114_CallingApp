@@ -39,7 +39,8 @@
             android:text="User Name"
             android:textColor="@color/text_primary"
             android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:fontFamily="@font/inter"/>
 
         <TextView
             android:id="@+id/tvMemberRole"
@@ -49,7 +50,8 @@
             android:textColor="@color/accent"
             android:textSize="10sp"
             android:textStyle="bold"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:fontFamily="@font/inter"/>
     </LinearLayout>
 
     <ImageView

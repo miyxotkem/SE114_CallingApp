@@ -60,7 +60,8 @@
                 android:layout_height="wrap_content"
                 android:text="📌"
                 android:textSize="48sp"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:layout_width="wrap_content"

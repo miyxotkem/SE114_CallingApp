@@ -172,6 +172,9 @@
             android:name="SERVER_COLOR"
             app:argType="string"
             android:defaultValue="#5865F2" />
+        <action
+            android:id="@+id/action_chat_to_search"
+            app:destination="@id/nav_chat_search" />
     </fragment>
 
     <fragment

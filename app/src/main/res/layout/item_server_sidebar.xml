@@ -39,7 +39,8 @@
                 android:gravity="center"
                 android:textColor="@color/white"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:fontFamily="@font/inter"/>
 
             <!-- Server Icon Image (shown if iconUrl is present) -->
             <ImageView
@@ -56,6 +57,7 @@
         android:id="@+id/textServerName"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:fontFamily="@font/inter"/>
 
 </FrameLayout>

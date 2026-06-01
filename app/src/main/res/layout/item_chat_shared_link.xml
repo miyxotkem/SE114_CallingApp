@@ -44,7 +44,8 @@
             android:textColor="@color/accent"
             android:textSize="14sp"
             android:maxLines="1"
-            android:ellipsize="end" />
+            android:ellipsize="end"
+            android:fontFamily="@font/inter"/>
 
         <TextView
             android:id="@+id/tvLinkContext"
@@ -55,7 +56,8 @@
             android:textSize="12sp"
             android:maxLines="1"
             android:ellipsize="end"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="2dp"
+            android:fontFamily="@font/inter"/>
     </LinearLayout>
 
     <!-- Open icon -->

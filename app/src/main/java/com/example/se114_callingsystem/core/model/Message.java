@@ -14,6 +14,7 @@ public class Message {
     private String reactionEmoji;
     private String repliedToContent;
     private String repliedToType; // "image", "file", or null/"Message" for text
+    private String repliedToMessageId;
     private boolean pinned;
     private long reminderTime;
 
@@ -24,6 +25,7 @@ public class Message {
         this.reactionEmoji = "";
         this.repliedToContent = "";
         this.repliedToType = "";
+        this.repliedToMessageId = "";
         this.pinned = false;
         this.reminderTime = 0;
     }
@@ -39,6 +41,7 @@ public class Message {
         this.reactionEmoji = "";
         this.repliedToContent = "";
         this.repliedToType = "";
+        this.repliedToMessageId = "";
         this.pinned = false;
         this.reminderTime = 0;
     }
@@ -55,6 +58,7 @@ public class Message {
         this.reactionEmoji = "";
         this.repliedToContent = "";
         this.repliedToType = "";
+        this.repliedToMessageId = "";
         this.pinned = false;
         this.reminderTime = 0;
     }
@@ -84,6 +88,8 @@ public class Message {
     public void setRepliedToContent(String repliedToContent) { this.repliedToContent = repliedToContent; }
     public String getRepliedToType() { return repliedToType; }
     public void setRepliedToType(String repliedToType) { this.repliedToType = repliedToType; }
+    public String getRepliedToMessageId() { return repliedToMessageId; }
+    public void setRepliedToMessageId(String repliedToMessageId) { this.repliedToMessageId = repliedToMessageId; }
     public boolean isPinned() { return pinned; }
     public void setPinned(boolean pinned) { this.pinned = pinned; }
     

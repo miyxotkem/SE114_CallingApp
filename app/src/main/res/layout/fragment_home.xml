@@ -138,7 +138,8 @@
                     android:layout_marginStart="8dp"
                     android:text="Find or start a conversation"
                     android:textColor="@color/discord_text_muted"
-                    android:textSize="13sp" />
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter"/>
             </LinearLayout>
 
             <!-- Add Friend Button -->

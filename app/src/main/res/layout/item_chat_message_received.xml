@@ -26,6 +26,53 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
+            <TextView
+                android:id="@+id/tvReplyHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#949BA4"
+                android:textSize="11sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
+                android:layout_marginBottom="2dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/layoutRepliedContainer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_replied_bubble_received"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:visibility="gone"
+                app:layout_constraintWidth_default="wrap"
+                app:layout_constraintWidth_max="220dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvReplyHeader">
+
+                <ImageView
+                    android:id="@+id/ivRepliedImage"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="8dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/textRepliedTo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/inter"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/cardBubble"
                 android:layout_width="wrap_content"
@@ -35,10 +82,11 @@
                 android:orientation="vertical"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="12dp"
+                android:layout_marginTop="2dp"
+                app:layout_goneMarginTop="8dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/layoutRepliedContainer"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp">
 
                 <TextView
@@ -50,27 +98,6 @@
                     android:textColor="@color/accent"
                     android:textSize="13sp"
                     android:fontFamily="@font/inter" android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/textRepliedTo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp"
-                    android:background="@color/overlay"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:fontFamily="@font/inter"
-                    android:visibility="gone" />
-
-                <ImageView
-                    android:id="@+id/ivRepliedImage"
-                    android:layout_width="120dp"
-                    android:layout_height="80dp"
-                    android:layout_marginBottom="4dp"
-                    android:scaleType="centerCrop"
-                    android:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/ivMessageImage"
@@ -158,7 +185,8 @@
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="@id/cardBubble"
                 app:layout_constraintTop_toTopOf="@id/cardBubble"
-                app:layout_constraintBottom_toTopOf="@id/cardBubble" />
+                app:layout_constraintBottom_toTopOf="@id/cardBubble"
+                android:fontFamily="@font/inter"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>

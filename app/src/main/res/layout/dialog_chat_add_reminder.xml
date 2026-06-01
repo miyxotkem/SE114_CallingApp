@@ -8,14 +8,16 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nội dung lời nhắc">
+        android:hint="Nội dung lời nhắc"
+        android:fontFamily="@font/inter">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etReminderContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textMultiLine"
-            android:maxLines="3" />
+            android:maxLines="3"
+            android:fontFamily="@font/inter"/>
     </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
@@ -31,14 +33,16 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Thời gian: Chưa chọn"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:fontFamily="@font/inter"/>
 
         <Button
             android:id="@+id/btnPickDate"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chọn thời gian" />
+            android:text="Chọn thời gian"
+            android:fontFamily="@font/inter"/>
     </LinearLayout>
 
 </LinearLayout>

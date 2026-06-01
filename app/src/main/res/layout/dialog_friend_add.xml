@@ -71,7 +71,8 @@
                 app:boxBackgroundColor="@color/discord_dark_elevated"
                 app:startIconDrawable="@android:drawable/ic_dialog_email"
                 app:startIconTint="@color/discord_text_secondary"
-                android:hint="Email bạn bè">
+                android:hint="Email bạn bè"
+                android:fontFamily="@font/inter">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etFriendEmail"
@@ -79,7 +80,8 @@
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress"
                     android:textColor="@color/discord_text_primary"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:fontFamily="@font/inter"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton

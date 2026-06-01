@@ -42,7 +42,8 @@
                 android:layout_height="wrap_content"
                 android:text="↩ Đang trả lời "
                 android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
+                android:textSize="11sp"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:id="@+id/tvReplyAuthorName"
@@ -50,7 +51,8 @@
                 android:layout_height="wrap_content"
                 android:textColor="#5865F2"
                 android:textSize="11sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:fontFamily="@font/inter"/>
         </LinearLayout>
 
         <LinearLayout
@@ -65,7 +67,8 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:id="@+id/tvAuthorTag"
@@ -81,7 +84,8 @@
                 android:textColor="@color/white"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:fontFamily="@font/inter"/>
         </LinearLayout>
 
         <TextView
@@ -90,7 +94,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textColor="@color/text_primary"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:fontFamily="@font/inter"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -104,7 +109,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
+                android:textSize="11sp"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -113,7 +119,8 @@
                 android:layout_marginEnd="6dp"
                 android:text="•"
                 android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
+                android:textSize="11sp"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:id="@+id/btnCommentLike"
@@ -125,7 +132,8 @@
                 android:textStyle="bold"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?android:attr/selectableItemBackground" />
+                android:background="?android:attr/selectableItemBackground"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -134,7 +142,8 @@
                 android:layout_marginEnd="6dp"
                 android:text="•"
                 android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
+                android:textSize="11sp"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:id="@+id/btnCommentReply"
@@ -146,7 +155,8 @@
                 android:textStyle="bold"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="?android:attr/selectableItemBackground" />
+                android:background="?android:attr/selectableItemBackground"
+                android:fontFamily="@font/inter"/>
 
             <LinearLayout
                 android:id="@+id/layoutCommentReactions"
@@ -167,7 +177,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="11sp"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/text_primary"
+                    android:fontFamily="@font/inter"/>
 
                 <TextView
                     android:id="@+id/tvReactionCount"
@@ -176,7 +187,8 @@
                     android:layout_marginStart="3dp"
                     android:textSize="11sp"
                     android:textColor="@color/text_primary"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

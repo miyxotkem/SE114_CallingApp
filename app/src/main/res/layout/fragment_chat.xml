@@ -109,46 +109,75 @@
             android:padding="4dp" />
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Replying to UI Header Bar -->
-    <LinearLayout
+    <!-- Replying to UI Header Bar (Messenger Style) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/tvReplyingToLayout"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="4dp"
-        android:background="@color/discord_dark_alt"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="-4dp"
+        android:background="@drawable/bg_bottom_sheet_secondary"
+        android:backgroundTint="@color/discord_dark_alt"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="8dp"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/inputAreaPanel">
 
-        <View
-            android:layout_width="3dp"
-            android:layout_height="match_parent"
-            android:background="@color/discord_blurple" />
+        <ImageView
+            android:id="@+id/ivReplyIcon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="@color/discord_blurple"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <TextView
-            android:id="@+id/tvReplyingToText"
+        <LinearLayout
+            android:id="@+id/layoutReplyText"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="Replying to: ..."
-            android:textColor="@color/discord_text_secondary"
-            android:fontFamily="@font/inter"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:orientation="vertical"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            app:layout_constraintStart_toEndOf="@id/ivReplyIcon"
+            app:layout_constraintEnd_toStartOf="@id/cardReplyPreviewImage"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <TextView
+                android:id="@+id/tvReplyHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đang trả lời"
+                android:textColor="@color/discord_blurple"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter"/>
+
+            <TextView
+                android:id="@+id/tvReplyingToText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/discord_text_primary"
+                android:fontFamily="@font/inter"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardReplyPreviewImage"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_marginEnd="8dp"
-            app:cardCornerRadius="4dp"
+            app:cardCornerRadius="6dp"
             app:cardElevation="0dp"
-            android:visibility="gone">
+            app:strokeWidth="0dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@id/btnCancelReply"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
             <ImageView
                 android:id="@+id/ivReplyPreview"
                 android:layout_width="match_parent"
@@ -157,11 +186,19 @@
         </com.google.android.material.card.MaterialCardView>
 
         <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:id="@+id/btnCancelReply"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:tint="@color/discord_text_muted" />
-    </LinearLayout>
+            app:tint="@color/discord_text_muted"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Input Control Area -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -208,7 +245,8 @@
                 android:maxLines="4"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="10dp"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:fontFamily="@font/inter"/>
         </com.google.android.material.card.MaterialCardView>
 
         <ImageButton

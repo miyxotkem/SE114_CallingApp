@@ -32,7 +32,8 @@
                 android:text="Bình luận"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:fontFamily="@font/inter"/>
         </RelativeLayout>
     </androidx.appcompat.widget.Toolbar>
 
@@ -95,7 +96,8 @@
                 android:layout_weight="1"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
-                android:text="Đang trả lời..." />
+                android:text="Đang trả lời..."
+                android:fontFamily="@font/inter"/>
 
             <ImageView
                 android:id="@+id/btnCancelReply"
@@ -125,7 +127,8 @@
                 android:hint="Nhập bình luận..."
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:fontFamily="@font/inter"/>
 
             <ImageView
                 android:id="@+id/btnSendComment"

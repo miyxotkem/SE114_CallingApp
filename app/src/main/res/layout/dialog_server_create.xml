@@ -115,7 +115,8 @@
                         app:boxBackgroundColor="@color/discord_dark_elevated"
                         app:startIconDrawable="@drawable/ic_logo_home"
                         app:startIconTint="@color/discord_text_secondary"
-                        android:hint="Tên Server">
+                        android:hint="Tên Server"
+                        android:fontFamily="@font/inter">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etServerName"
@@ -123,7 +124,8 @@
                             android:layout_height="wrap_content"
                             android:inputType="textCapWords"
                             android:textColor="@color/discord_text_primary"
-                            android:textSize="16sp"/>
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -194,7 +196,8 @@
                         app:boxStrokeColor="@color/discord_blurple"
                         app:hintTextColor="@color/discord_blurple"
                         app:boxBackgroundColor="@color/discord_dark_elevated"
-                        android:hint="Giới thiệu đôi chút về server">
+                        android:hint="Giới thiệu đôi chút về server"
+                        android:fontFamily="@font/inter">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etPurpose"
@@ -203,7 +206,8 @@
                             android:gravity="top|start"
                             android:inputType="textMultiLine"
                             android:textColor="@color/discord_text_primary"
-                            android:textSize="16sp"/>
+                            android:textSize="16sp"
+                            android:fontFamily="@font/inter"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <LinearLayout

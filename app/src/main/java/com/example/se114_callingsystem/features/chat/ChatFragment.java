@@ -40,6 +40,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import android.widget.TextView;
+import android.widget.Button;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class ChatFragment extends Fragment {
 
@@ -163,7 +168,28 @@ public class ChatFragment extends Fragment {
                 }
             }
             @Override
-            public void onEditReminder(Message message) {}
+            public void onEditReminder(Message message) {
+                if ("reminder".equals(message.getType())) {
+                    showReminderDialog(message, null);
+                } else {
+                    showReminderDialog(null, message.getContent());
+                }
+            }
+            @Override
+            public void onRepliedMessageClick(Message message) {
+                String targetId = message.getRepliedToMessageId();
+                if (targetId == null || targetId.trim().isEmpty()) {
+                    for (Message m : messageList) {
+                        if (m.getContent() != null && m.getContent().equals(message.getRepliedToContent())) {
+                            targetId = m.getMessageId();
+                            break;
+                        }
+                    }
+                }
+                if (targetId != null) {
+                    scrollToMessage(targetId);
+                }
+            }
         });
 
         binding.chatRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -198,12 +224,13 @@ public class ChatFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            String[] options = {"📷 Send Image", "📎 Send File"};
+            String[] options = {"📷 Send Image", "📎 Send File", "⏰ Đặt lời nhắc"};
             new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Upload Media")
+                    .setTitle("Upload Media & Options")
                     .setItems(options, (dialog, which) -> {
                         if (which == 0) imagePickerLauncher.launch("image/*");
-                        else filePickerLauncher.launch("*/*");
+                        else if (which == 1) filePickerLauncher.launch("*/*");
+                        else showReminderDialog(null, null);
                     })
                     .show();
         });
@@ -218,6 +245,14 @@ public class ChatFragment extends Fragment {
             messageToReply = null;
             binding.tvReplyingToLayout.setVisibility(View.GONE);
         });
+        
+        View btnCancelReply = binding.tvReplyingToLayout.findViewById(R.id.btnCancelReply);
+        if (btnCancelReply != null) {
+            btnCancelReply.setOnClickListener(v -> {
+                messageToReply = null;
+                binding.tvReplyingToLayout.setVisibility(View.GONE);
+            });
+        }
 
         androidx.navigation.NavController navController = Navigation.findNavController(requireView());
         if (navController.getCurrentBackStackEntry() != null) {
@@ -252,6 +287,7 @@ public class ChatFragment extends Fragment {
             if (messageToReply != null) {
                 messageModel.setRepliedToContent(messageToReply.getContent());
                 messageModel.setRepliedToType(messageToReply.getType());
+                messageModel.setRepliedToMessageId(messageToReply.getMessageId());
                 messageToReply = null;
                 binding.tvReplyingToLayout.setVisibility(View.GONE);
             }
@@ -290,6 +326,7 @@ public class ChatFragment extends Fragment {
         if (messageToReply != null) {
             model.setRepliedToContent(messageToReply.getContent());
             model.setRepliedToType(messageToReply.getType());
+            model.setRepliedToMessageId(messageToReply.getMessageId());
             messageToReply = null;
             if (binding != null) binding.tvReplyingToLayout.setVisibility(View.GONE);
         }
@@ -334,17 +371,17 @@ public class ChatFragment extends Fragment {
         binding.tvReplyingToLayout.setVisibility(View.VISIBLE);
         String type = message.getType();
         if ("image".equals(type)) {
-            binding.tvReplyingToText.setText("Replying to: 📷 Image");
+            binding.tvReplyingToText.setText("📷 Hình ảnh");
             binding.cardReplyPreviewImage.setVisibility(View.VISIBLE);
             Glide.with(this).load(message.getContent()).centerCrop().into(binding.ivReplyPreview);
         } else if ("file".equals(type)) {
-            String fileName = "Attachment";
+            String fileName = "Tài liệu đính kèm";
             try { fileName = message.getContent().substring(message.getContent().lastIndexOf('/') + 1); } catch (Exception e) {}
-            binding.tvReplyingToText.setText("Replying to: 📎 " + fileName);
+            binding.tvReplyingToText.setText("📎 " + fileName);
             binding.cardReplyPreviewImage.setVisibility(View.GONE);
         } else {
             String content = message.getContent();
-            binding.tvReplyingToText.setText("Replying to: " + (content.length() > 40 ? content.substring(0, 40) + "..." : content));
+            binding.tvReplyingToText.setText(content.length() > 40 ? content.substring(0, 40) + "..." : content);
             binding.cardReplyPreviewImage.setVisibility(View.GONE);
         }
         binding.edtMessage.requestFocus();
@@ -489,6 +526,16 @@ public class ChatFragment extends Fragment {
                 final int pos = i;
                 binding.chatRecyclerView.post(() -> {
                     binding.chatRecyclerView.scrollToPosition(pos);
+                    if (adapter != null) {
+                        adapter.setHighlightMessageId(messageId);
+                        adapter.notifyDataSetChanged();
+                        binding.chatRecyclerView.postDelayed(() -> {
+                            if (adapter != null && messageId.equals(adapter.getHighlightMessageId())) {
+                                adapter.setHighlightMessageId(null);
+                                adapter.notifyDataSetChanged();
+                            }
+                        }, 1500);
+                    }
                 });
                 break;
             }
@@ -555,6 +602,95 @@ public class ChatFragment extends Fragment {
                 tvUsername = itemView.findViewById(R.id.tvUsername);
             }
         }
+    }
+
+    private void showReminderDialog(@Nullable Message messageToEdit, @Nullable String defaultContent) {
+        if (getContext() == null) return;
+        
+        View view = getLayoutInflater().inflate(R.layout.dialog_chat_add_reminder, null);
+        com.google.android.material.textfield.TextInputEditText etReminderContent = view.findViewById(R.id.etReminderContent);
+        TextView tvReminderDateTime = view.findViewById(R.id.tvReminderDateTime);
+        Button btnPickDate = view.findViewById(R.id.btnPickDate);
+        
+        final java.util.Calendar calendar = java.util.Calendar.getInstance();
+        
+        if (messageToEdit != null) {
+            etReminderContent.setText(messageToEdit.getContent());
+            calendar.setTimeInMillis(messageToEdit.getReminderTime());
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            tvReminderDateTime.setText("Thời gian: " + sdf.format(new Date(messageToEdit.getReminderTime())));
+        } else if (defaultContent != null) {
+            etReminderContent.setText(defaultContent);
+        }
+        
+        final boolean[] isTimeSelected = {messageToEdit != null};
+        
+        btnPickDate.setOnClickListener(v -> {
+            int year = calendar.get(java.util.Calendar.YEAR);
+            int month = calendar.get(java.util.Calendar.MONTH);
+            int day = calendar.get(java.util.Calendar.DAY_OF_MONTH);
+            
+            new android.app.DatePickerDialog(requireContext(), (view1, selectedYear, selectedMonth, selectedDay) -> {
+                calendar.set(java.util.Calendar.YEAR, selectedYear);
+                calendar.set(java.util.Calendar.MONTH, selectedMonth);
+                calendar.set(java.util.Calendar.DAY_OF_MONTH, selectedDay);
+                
+                int hour = calendar.get(java.util.Calendar.HOUR_OF_DAY);
+                int minute = calendar.get(java.util.Calendar.MINUTE);
+                
+                new android.app.TimePickerDialog(requireContext(), (view2, selectedHour, selectedMinute) -> {
+                    calendar.set(java.util.Calendar.HOUR_OF_DAY, selectedHour);
+                    calendar.set(java.util.Calendar.MINUTE, selectedMinute);
+                    calendar.set(java.util.Calendar.SECOND, 0);
+                    calendar.set(java.util.Calendar.MILLISECOND, 0);
+                    
+                    if (calendar.getTimeInMillis() <= System.currentTimeMillis()) {
+                        Toast.makeText(getContext(), "Thời gian nhắc nhở phải ở tương lai!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        isTimeSelected[0] = true;
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+                        tvReminderDateTime.setText("Thời gian: " + sdf.format(calendar.getTime()));
+                    }
+                }, hour, minute, true).show();
+                
+            }, year, month, day).show();
+        });
+        
+        String title = (messageToEdit == null) ? "Tạo lời nhắc" : "Sửa lời nhắc";
+        String positiveText = (messageToEdit == null) ? "Tạo" : "Lưu";
+        
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(title)
+                .setView(view)
+                .setPositiveButton(positiveText, (dialog, which) -> {
+                    String content = etReminderContent.getText().toString().trim();
+                    if (content.isEmpty()) {
+                        Toast.makeText(getContext(), "Nội dung lời nhắc không được để trống!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (!isTimeSelected[0]) {
+                        Toast.makeText(getContext(), "Vui lòng chọn thời gian nhắc nhở!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    
+                    if (messageToEdit == null) {
+                        if (groupChatRef != null) {
+                            Message reminder = new Message(senderId, groupId, content, System.currentTimeMillis());
+                            reminder.setType("reminder");
+                            reminder.setReminderTime(calendar.getTimeInMillis());
+                            groupChatRef.push().setValue(reminder);
+                        }
+                    } else {
+                        if (groupChatRef != null && messageToEdit.getMessageId() != null) {
+                            Map<String, Object> updates = new HashMap<>();
+                            updates.put("content", content);
+                            updates.put("reminderTime", calendar.getTimeInMillis());
+                            groupChatRef.child(messageToEdit.getMessageId()).updateChildren(updates);
+                        }
+                    }
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     @Override

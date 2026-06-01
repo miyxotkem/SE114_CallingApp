@@ -31,7 +31,8 @@
             android:text="User Name"
             android:textColor="@color/text_primary"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:fontFamily="@font/inter"/>
 
         <!-- For Friend Requests -->
         <LinearLayout

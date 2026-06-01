@@ -52,7 +52,8 @@
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox">
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
@@ -81,7 +82,8 @@
             app:boxCornerRadiusBottomEnd="8dp"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/discord_text_secondary"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox">
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"

@@ -31,7 +31,8 @@
                 android:layout_height="wrap_content"
                 android:text="Nhã"
                 android:textColor="@color/white"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:fontFamily="@font/inter"/>
         </LinearLayout>
 
         <ImageView

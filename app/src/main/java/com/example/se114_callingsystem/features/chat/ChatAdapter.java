@@ -58,6 +58,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         void onReact(Message message, String emoji);
         void onPinToggle(Message message);
         void onEditReminder(Message message);
+        void onRepliedMessageClick(Message message);
     }
 
     public ChatAdapter(List<Message> messages, String serverColor, OnChatInteractListener listener) {
@@ -150,9 +151,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder instanceof ReminderViewHolder) {
             ((ReminderViewHolder) holder).bind(message, serverColor, listener);
         } else if (holder instanceof SentMessageViewHolder) {
-            ((SentMessageViewHolder) holder).bind(message, listener, currentUserId, isLastInGroup, serverColor, serverMembers, highlightMessageId);
+            ((SentMessageViewHolder) holder).bind(message, mMessages, listener, currentUserId, isLastInGroup, serverColor, serverMembers, highlightMessageId);
         } else if (holder instanceof ReceivedMessageViewHolder) {
-            ((ReceivedMessageViewHolder) holder).bind(message, isFirstInGroup, isLastInGroup, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
+            ((ReceivedMessageViewHolder) holder).bind(message, mMessages, isFirstInGroup, isLastInGroup, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
         }
     }
 
@@ -175,15 +176,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         void bind(Message message, String serverColor, OnChatInteractListener listener) {
+            android.graphics.Typeface inter = androidx.core.content.res.ResourcesCompat.getFont(tvReminderContent.getContext(), R.font.inter);
             if (message.isDeleted()) {
                 tvReminderContent.setText("Lời nhắc đã bị xóa");
-                tvReminderContent.setTypeface(null, android.graphics.Typeface.ITALIC);
+                tvReminderContent.setTypeface(inter, android.graphics.Typeface.ITALIC);
                 tvReminderTime.setVisibility(View.GONE);
                 cardReminder.setOnClickListener(null);
                 cardReminder.setOnLongClickListener(null);
             } else {
                 tvReminderContent.setText(message.getContent());
-                tvReminderContent.setTypeface(null, android.graphics.Typeface.NORMAL);
+                tvReminderContent.setTypeface(inter, android.graphics.Typeface.NORMAL);
                 tvReminderTime.setVisibility(View.VISIBLE);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
                 tvReminderTime.setText(sdf.format(new Date(message.getReminderTime())));
@@ -216,10 +218,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText, textReaction, textRepliedTo, textTime, tvFileName;
+        TextView messageText, textReaction, textRepliedTo, textTime, tvFileName, tvReplyHeader;
         ImageView ivMessageImage, ivRepliedImage;
         LinearLayout layoutFile, layoutPinnedIndicator;
-        View cardBubble;
+        View cardBubble, layoutRepliedContainer;
 
         public SentMessageViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -233,10 +235,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layoutFile = itemView.findViewById(R.id.layoutFile);
             tvFileName = itemView.findViewById(R.id.tvFileName);
             layoutPinnedIndicator = itemView.findViewById(R.id.layoutPinnedIndicator);
+            layoutRepliedContainer = itemView.findViewById(R.id.layoutRepliedContainer);
+            tvReplyHeader = itemView.findViewById(R.id.tvReplyHeader);
         }
 
-        void bind(Message message, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
+        void bind(Message message, List<Message> messages, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -249,10 +253,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText, senderName, textTime, textReaction, textRepliedTo, tvFileName;
+        TextView messageText, senderName, textTime, textReaction, textRepliedTo, tvFileName, tvReplyHeader;
         ImageView avatarImg, ivMessageImage, ivRepliedImage;
         LinearLayout layoutFile, layoutPinnedIndicator;
-        View cardBubble;
+        View cardBubble, layoutRepliedContainer;
 
         public ReceivedMessageViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -268,11 +272,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layoutFile = itemView.findViewById(R.id.layoutFile);
             tvFileName = itemView.findViewById(R.id.tvFileName);
             layoutPinnedIndicator = itemView.findViewById(R.id.layoutPinnedIndicator);
+            layoutRepliedContainer = itemView.findViewById(R.id.layoutRepliedContainer);
+            tvReplyHeader = itemView.findViewById(R.id.tvReplyHeader);
         }
 
-        void bind(Message message, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
-            // Xử lý Tên (Hiện ở tin đầu nhóm)
+        void bind(Message message, List<Message> messages, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
+            
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
                 String uid = message.getSenderId();
@@ -335,10 +341,43 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
+    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, View layoutRepliedContainer, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, TextView tvReplyHeader, List<Message> messages, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
         Context ctx = textMessage.getContext();
+        Typeface interTypeface = androidx.core.content.res.ResourcesCompat.getFont(ctx, R.font.inter);
         boolean isSentByMe = msg.getSenderId() != null && msg.getSenderId().equals(currentUserId);
         boolean isHighlighted = msg.getMessageId() != null && msg.getMessageId().equals(highlightMessageId);
+        boolean hasReply = msg.getRepliedToContent() != null && !msg.getRepliedToContent().isEmpty() && !msg.isDeleted();
+
+        // Dynamic background shape based on reply status to connect bubbles visually
+        if (isSentByMe && cardBubble instanceof androidx.cardview.widget.CardView) {
+            View innerLayout = ((androidx.cardview.widget.CardView) cardBubble).getChildAt(0);
+            if (innerLayout != null) {
+                if (hasReply) {
+                    innerLayout.setBackgroundResource(R.drawable.border_chat_reply_sent);
+                } else {
+                    innerLayout.setBackgroundResource(R.drawable.border_chat);
+                }
+            }
+        } else if (!isSentByMe) {
+            if (hasReply) {
+                cardBubble.setBackgroundResource(R.drawable.bg_chat_left_reply_received);
+            } else {
+                cardBubble.setBackgroundResource(R.drawable.bg_chat_left);
+            }
+        }
+
+        // Apply overlapping negative margin when reply bubble is present to superimpose bubbles
+        if (cardBubble.getLayoutParams() instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
+            float density = ctx.getResources().getDisplayMetrics().density;
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams lp = 
+                (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) cardBubble.getLayoutParams();
+            if (hasReply) {
+                lp.topMargin = (int) (-12 * density); // Overlap bottom of replied bubble by 12dp
+            } else {
+                lp.topMargin = (int) (4 * density);  // Standard margin
+            }
+            cardBubble.setLayoutParams(lp);
+        }
 
         if (isHighlighted) {
             cardBubble.animate().scaleX(1.08f).scaleY(1.08f).setDuration(250).start();
@@ -383,7 +422,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (msg.isDeleted()) {
             textMessage.setVisibility(View.VISIBLE);
             textMessage.setText("Tin nhắn đã bị thu hồi");
-            textMessage.setTypeface(null, Typeface.ITALIC);
+            textMessage.setTypeface(interTypeface, Typeface.ITALIC);
             // Sent bubble has accent bg → use semi-transparent white
             // Received bubble has theme bg → use text_secondary
             if (isSentByMe) {
@@ -396,8 +435,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (textReaction != null) textReaction.setVisibility(View.GONE);
             if (textRepliedTo != null) textRepliedTo.setVisibility(View.GONE);
             if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
+            if (layoutRepliedContainer != null) layoutRepliedContainer.setVisibility(View.GONE);
+            if (tvReplyHeader != null) tvReplyHeader.setVisibility(View.GONE);
         } else {
-            textMessage.setTypeface(null, Typeface.NORMAL);
+            textMessage.setTypeface(interTypeface, Typeface.NORMAL);
             // Text color is set by layout XML (bubble_text_sent / bubble_text_received)
 
             // XỬ LÝ PHÂN LOẠI TIN NHẮN (TEXT vs IMAGE vs FILE)
@@ -505,7 +546,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 textMessage.setVisibility(View.VISIBLE);
                 textMessage.setText("📰 Đã chia sẻ một bài viết\n(Chạm để xem chi tiết)");
                 textMessage.setTextColor(Color.parseColor("#5865F2"));
-                textMessage.setTypeface(null, Typeface.BOLD_ITALIC);
+                textMessage.setTypeface(interTypeface, Typeface.BOLD_ITALIC);
                 if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
                 if (layoutFile != null) layoutFile.setVisibility(View.GONE);
                 
@@ -566,17 +607,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
 
-            // Xử lý Reply Indicator - hỗ trợ hiển ảnh khi reply tin nhắn ảnh
-            if (textRepliedTo != null) {
+            // Xử lý Reply Indicator - hỗ trợ hiển ảnh khi reply tin nhắn ảnh và các kết nối
+            if (layoutRepliedContainer != null) {
                 if (msg.getRepliedToContent() != null && !msg.getRepliedToContent().isEmpty()) {
+                    layoutRepliedContainer.setVisibility(View.VISIBLE);
+                    
                     String repliedType = msg.getRepliedToType();
                     String replyContent = msg.getRepliedToContent();
 
                     if ("image".equals(repliedType)) {
-                        if(msg.getSenderId().equals(currentUserId))
-                        textRepliedTo.setBackgroundColor(Color.parseColor(serverColor));
-                        textRepliedTo.setText("Đang trả lời: 📷 Hình ảnh");
-                        textRepliedTo.setVisibility(View.VISIBLE);
+                        if (textRepliedTo != null) {
+                            textRepliedTo.setText("📷 Hình ảnh");
+                            textRepliedTo.setVisibility(View.VISIBLE);
+                        }
                         if (ivRepliedImage != null) {
                             ivRepliedImage.setVisibility(View.VISIBLE);
                             Glide.with(ivRepliedImage.getContext())
@@ -590,20 +633,45 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         try {
                             fileName = replyContent.substring(replyContent.lastIndexOf('/') + 1);
                         } catch (Exception e) {}
-                        textRepliedTo.setText("Đang trả lời: 📎 " + fileName);
-                        textRepliedTo.setVisibility(View.VISIBLE);
+                        if (textRepliedTo != null) {
+                            textRepliedTo.setText("📎 " + fileName);
+                            textRepliedTo.setVisibility(View.VISIBLE);
+                        }
                         if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
                     } else {
                         // Reply to text
-                        if (replyContent.length() > 30) replyContent = replyContent.substring(0, 30) + "...";
-                        textRepliedTo.setText("Đang trả lời: " + replyContent);
-                        textRepliedTo.setVisibility(View.VISIBLE);
+                        String previewContent = replyContent;
+                        if (previewContent.length() > 30) previewContent = previewContent.substring(0, 30) + "...";
+                        if (textRepliedTo != null) {
+                            textRepliedTo.setText(previewContent);
+                            textRepliedTo.setVisibility(View.VISIBLE);
+                        }
                         if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
                     }
+
+                    // Tìm người gửi tin nhắn được trả lời để hiển thị header
+                    String repliedToSenderId = null;
+                    if (messages != null && msg.getRepliedToMessageId() != null && !msg.getRepliedToMessageId().isEmpty()) {
+                        for (Message m : messages) {
+                            if (msg.getRepliedToMessageId().equals(m.getMessageId())) {
+                                repliedToSenderId = m.getSenderId();
+                                break;
+                            }
+                        }
+                    }
+                    updateReplyHeader(msg.getSenderId(), repliedToSenderId, tvReplyHeader, currentUserId, serverMembers);
+
+                    layoutRepliedContainer.setOnClickListener(v -> {
+                        listener.onRepliedMessageClick(msg);
+                    });
                 } else {
-                    textRepliedTo.setVisibility(View.GONE);
-                    if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
+                    layoutRepliedContainer.setVisibility(View.GONE);
+                    if (tvReplyHeader != null) tvReplyHeader.setVisibility(View.GONE);
                 }
+            } else {
+                if (textRepliedTo != null) textRepliedTo.setVisibility(View.GONE);
+                if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
+                if (tvReplyHeader != null) tvReplyHeader.setVisibility(View.GONE);
             }
         }
 
@@ -653,6 +721,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         listener.onPinToggle(msg);
                         bottomSheetDialog.dismiss();
                     });
+
+                    TextView btnSetReminder = sheetView.findViewById(R.id.btnSetReminder);
+                    if (btnSetReminder != null) {
+                        if ("reminder".equals(msg.getType())) {
+                            btnSetReminder.setVisibility(View.GONE);
+                        } else {
+                            btnSetReminder.setVisibility(View.VISIBLE);
+                            btnSetReminder.setOnClickListener(view -> {
+                                listener.onEditReminder(msg);
+                                bottomSheetDialog.dismiss();
+                            });
+                        }
+                    }
 
                     sheetView.findViewById(R.id.btnReactLike).setOnClickListener(view -> { listener.onReact(msg, "👍"); bottomSheetDialog.dismiss(); });
                     sheetView.findViewById(R.id.btnReactLove).setOnClickListener(view -> { listener.onReact(msg, "❤️"); bottomSheetDialog.dismiss(); });
@@ -782,6 +863,103 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         textView.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
         textView.setHighlightColor(android.graphics.Color.TRANSPARENT);
         textView.setText(spannable);
+    }
+
+    private static void updateReplyHeader(String senderId, String repliedSenderId, TextView tvReplyHeader, String currentUserId, List<ServerMember> serverMembers) {
+        if (tvReplyHeader == null) return;
+        
+        if (repliedSenderId == null || repliedSenderId.isEmpty()) {
+            String u1 = getUserDisplayName(senderId, currentUserId, serverMembers);
+            if (u1 == null) u1 = "Người dùng";
+            if ("Bạn".equals(u1)) {
+                tvReplyHeader.setText("Bạn đã trả lời tin nhắn của một người dùng");
+            } else {
+                tvReplyHeader.setText(u1 + " đã trả lời tin nhắn của một người dùng");
+            }
+            tvReplyHeader.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        String u1 = getUserDisplayName(senderId, currentUserId, serverMembers);
+        String u2 = getUserDisplayName(repliedSenderId, currentUserId, serverMembers);
+        
+        if (u1 != null && u2 != null) {
+            String headerText = formatReplyHeader(u1, u2);
+            tvReplyHeader.setText(headerText);
+            tvReplyHeader.setVisibility(View.VISIBLE);
+        } else {
+            resolveNamesAsync(senderId, repliedSenderId, tvReplyHeader, currentUserId, serverMembers);
+        }
+    }
+
+    private static String getUserDisplayName(String userId, String currentUserId, List<ServerMember> serverMembers) {
+        if (userId == null || userId.isEmpty()) return "Người dùng";
+        if (userId.equals(currentUserId)) {
+            return "Bạn";
+        }
+        if (serverMembers != null) {
+            for (ServerMember m : serverMembers) {
+                if (userId.equals(m.getUserId())) {
+                    String name = m.getNickname();
+                    if (name != null && !name.trim().isEmpty()) {
+                        return name;
+                    }
+                    name = m.getUserName();
+                    if (name != null && !name.trim().isEmpty()) {
+                        return name;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String formatReplyHeader(String u1, String u2) {
+        if ("Bạn".equals(u1) && "Bạn".equals(u2)) {
+            return "Bạn đã trả lời tin nhắn của chính mình";
+        }
+        if ("Bạn".equals(u1)) {
+            return "Bạn đã trả lời tin nhắn của " + u2;
+        }
+        if ("Bạn".equals(u2)) {
+            return u1 + " đã trả lời tin nhắn của bạn";
+        }
+        return u1 + " đã trả lời tin nhắn của " + u2;
+    }
+
+    private static void resolveNamesAsync(String senderId, String repliedSenderId, TextView tvReplyHeader, String currentUserId, List<ServerMember> serverMembers) {
+        final String[] name1 = { getUserDisplayName(senderId, currentUserId, serverMembers) };
+        final String[] name2 = { getUserDisplayName(repliedSenderId, currentUserId, serverMembers) };
+
+        if (name1[0] == null) name1[0] = "Người dùng";
+        if (name2[0] == null) name2[0] = "Người dùng";
+
+        tvReplyHeader.setText(formatReplyHeader(name1[0], name2[0]));
+        tvReplyHeader.setVisibility(View.VISIBLE);
+
+        if (senderId != null && !senderId.equals(currentUserId) && getUserDisplayName(senderId, currentUserId, serverMembers) == null) {
+            FirebaseFirestore.getInstance().collection("users").document(senderId).get().addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    String fetchedName = doc.getString("username");
+                    if (fetchedName != null && !fetchedName.trim().isEmpty()) {
+                        name1[0] = fetchedName;
+                        tvReplyHeader.setText(formatReplyHeader(name1[0], name2[0]));
+                    }
+                }
+            });
+        }
+
+        if (repliedSenderId != null && !repliedSenderId.equals(currentUserId) && getUserDisplayName(repliedSenderId, currentUserId, serverMembers) == null) {
+            FirebaseFirestore.getInstance().collection("users").document(repliedSenderId).get().addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    String fetchedName = doc.getString("username");
+                    if (fetchedName != null && !fetchedName.trim().isEmpty()) {
+                        name2[0] = fetchedName;
+                        tvReplyHeader.setText(formatReplyHeader(name1[0], name2[0]));
+                    }
+                }
+            });
+        }
     }
 }
 

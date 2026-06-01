@@ -45,7 +45,8 @@
             android:textSize="14sp"
             android:textStyle="bold"
             android:maxLines="1"
-            android:ellipsize="middle" />
+            android:ellipsize="middle"
+            android:fontFamily="@font/inter"/>
 
         <TextView
             android:id="@+id/tvSharedFileDate"
@@ -54,7 +55,8 @@
             android:text="May 11, 2026"
             android:textColor="@color/text_secondary"
             android:textSize="12sp"
-            android:layout_marginTop="2dp" />
+            android:layout_marginTop="2dp"
+            android:fontFamily="@font/inter"/>
     </LinearLayout>
 
     <!-- Download icon -->

@@ -88,7 +88,8 @@
                     android:layout_height="wrap_content"
                     android:text="Media"
                     android:textColor="@color/discord_text_muted"
-                    android:textSize="11sp" />
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"/>
             </LinearLayout>
 
             <View
@@ -115,7 +116,8 @@
                     android:layout_height="wrap_content"
                     android:text="Files"
                     android:textColor="@color/discord_text_muted"
-                    android:textSize="11sp" />
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"/>
             </LinearLayout>
 
             <View
@@ -142,7 +144,8 @@
                     android:layout_height="wrap_content"
                     android:text="Links"
                     android:textColor="@color/discord_text_muted"
-                    android:textSize="11sp" />
+                    android:textSize="11sp"
+                    android:fontFamily="@font/inter"/>
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -200,7 +203,8 @@
                     android:clickable="false"
                     android:focusable="false"
                     app:useMaterialThemeColors="false"
-                    app:thumbTint="@color/discord_blurple" />
+                    app:thumbTint="@color/discord_blurple"
+                    android:fontFamily="@font/inter"/>
             </LinearLayout>
 
             <View

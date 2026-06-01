@@ -59,7 +59,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
             Participant participant = participantList.get(position);
 
             if (payload.equals("border_update")) {
-                updateSpeakingBorder(holder, participant.isSpeaking);
+                updateSpeakingBorder(holder, participant);
                 return; // Chỉ cập nhật viền, không vẽ lại video
             }
             else if (payload.equals("state_update")) {
@@ -67,6 +67,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                 holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
                 holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
                 holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
+                updateSpeakingBorder(holder, participant); // Cập nhật viền xanh ngay khi thay đổi mic
                 return;
             }
         }
@@ -118,17 +119,25 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
         holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
 
-        updateSpeakingBorder(holder, participant.isSpeaking);
+        updateSpeakingBorder(holder, participant);
     }
 
-    private void updateSpeakingBorder(CallViewHolder holder, boolean isSpeaking) {
-        if (isSpeaking) {
-            holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // Màu xanh lá sáng
-            holder.cardView.setStrokeWidth(12);
-        } else {
-            holder.cardView.setStrokeColor(Color.parseColor("#3A3A3A")); // Màu xám tối
-            holder.cardView.setStrokeWidth(2);
+    private void updateSpeakingBorder(CallViewHolder holder, Participant participant) {
+        if (holder.cardAvatar != null) {
+            holder.cardAvatar.setStrokeWidth(0); // Luôn bỏ viền xung quanh avatar
         }
+        
+        if (participant.isSpeaking && !participant.isMuted) {
+            holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // Màu xanh lá sáng
+            holder.cardView.setStrokeWidth(dpToPx(4)); // Viền dầy hơn để nổi bật xung quanh ô vuông
+        } else {
+            holder.cardView.setStrokeColor(Color.parseColor("#2D2D4A")); // Màu xám mặc định
+            holder.cardView.setStrokeWidth(dpToPx(1));
+        }
+    }
+
+    private int dpToPx(int dp) {
+        return (int) (dp * context.getResources().getDisplayMetrics().density);
     }
 
     @Override
@@ -149,6 +158,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         ImageView ivUserProfile;
         TextView tvUserName;
         ImageView ivMuteStatus;
+        MaterialCardView cardAvatar;
 
         public CallViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -157,6 +167,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
             ivUserProfile = itemView.findViewById(R.id.ivUserProfile);
             tvUserName = itemView.findViewById(R.id.tvUserName);
             ivMuteStatus = itemView.findViewById(R.id.ivMuteStatus);
+            cardAvatar = itemView.findViewById(R.id.cardAvatar);
         }
     }
 }

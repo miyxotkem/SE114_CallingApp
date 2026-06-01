@@ -73,7 +73,8 @@
             android:text="Nickname"
             android:textColor="@color/discord_text_muted"
             android:textSize="12sp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            android:fontFamily="@font/inter"/>
     </LinearLayout>
 
 </LinearLayout>

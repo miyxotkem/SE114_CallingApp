@@ -33,7 +33,8 @@
                 android:text="⏰ Lời nhắc mới"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:id="@+id/tvReminderContent"
@@ -42,7 +43,8 @@
                 android:layout_marginTop="8dp"
                 android:gravity="center"
                 android:textColor="#E0E0E0"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:fontFamily="@font/inter"/>
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -67,7 +69,8 @@
                     android:layout_marginStart="6dp"
                     android:textColor="#6C63FF"
                     android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter"/>
             </LinearLayout>
 
         </LinearLayout>

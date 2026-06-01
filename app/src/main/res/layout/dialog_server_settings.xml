@@ -26,7 +26,8 @@
         android:textColor="@color/text_primary"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="24dp"
+        android:fontFamily="@font/inter"/>
 
     <!-- KHU VỰC ĐỔI TÊN SERVER -->
     <TextView
@@ -36,7 +37,8 @@
         android:textColor="@color/text_secondary"
         android:textSize="12sp"
         android:textStyle="bold"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="8dp"
+        android:fontFamily="@font/inter"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -55,7 +57,8 @@
             android:paddingHorizontal="16dp"
             android:inputType="text"
             android:textColor="@color/text_black_white"
-            android:textColorHint="@color/text_hint"/>
+            android:textColorHint="@color/text_hint"
+            android:fontFamily="@font/inter"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRenameServer"
@@ -65,7 +68,8 @@
             android:text="Save"
             app:cornerRadius="12dp"
             android:backgroundTint="@color/accent"
-            android:textColor="@color/text_on_accent"/>
+            android:textColor="@color/text_on_accent"
+            android:fontFamily="@font/inter"/>
     </LinearLayout>
 
     <View
@@ -86,7 +90,8 @@
         android:gravity="start|center_vertical"
         app:icon="@drawable/ic_user"
         app:iconTint="@color/icon_tint"
-        app:iconPadding="16dp"/>
+        app:iconPadding="16dp"
+        android:fontFamily="@font/inter"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnChangeColor"
@@ -99,7 +104,8 @@
         android:gravity="start|center_vertical"
         app:icon="@drawable/ic_palette"
         app:iconTint="@color/icon_tint"
-        app:iconPadding="16dp"/>
+        app:iconPadding="16dp"
+        android:fontFamily="@font/inter"/>
 
     <!-- Dark Mode Toggle -->
     <LinearLayout
@@ -123,14 +129,16 @@
             android:layout_marginStart="16dp"
             android:text="Dark Mode"
             android:textColor="@color/text_primary"
-            android:textSize="15sp" />
+            android:textSize="15sp"
+            android:fontFamily="@font/inter"/>
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchDarkMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:thumbTint="@color/accent"
-            app:trackTintMode="src_in" />
+            app:trackTintMode="src_in"
+            android:fontFamily="@font/inter"/>
     </LinearLayout>
 
     <View
@@ -150,6 +158,7 @@
         app:strokeColor="@color/danger"
         app:strokeWidth="1.5dp"
         app:cornerRadius="12dp"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="8dp"
+        android:fontFamily="@font/inter"/>
 
 </LinearLayout>

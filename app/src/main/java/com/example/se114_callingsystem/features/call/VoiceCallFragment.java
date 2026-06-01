@@ -32,6 +32,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import io.agora.rtc2.ChannelMediaOptions;
 import io.agora.rtc2.Constants;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcConnection;
@@ -157,7 +158,8 @@ public class VoiceCallFragment extends Fragment {
 
             mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_COMMUNICATION);
             mRtcEngine.enableAudio();
-            mRtcEngine.setDefaultAudioRoutetoSpeakerphone(false);
+            mRtcEngine.enableLocalAudio(true); // Đảm bảo mic được bật để thu âm
+            mRtcEngine.setDefaultAudioRoutetoSpeakerphone(true); // Chuyển sang loa ngoài làm mặc định
             mRtcEngine.setParameters("{\"che.audio.enable.aec\":true}");
             mRtcEngine.setParameters("{\"che.audio.enable.ans\":true}");
             mRtcEngine.setParameters("{\"che.audio.enable.agc\":true}");
@@ -169,7 +171,15 @@ public class VoiceCallFragment extends Fragment {
 
             setupRecyclerView();
 
-            int res = mRtcEngine.joinChannel(null, channelName, "", uid);
+            // Sử dụng ChannelMediaOptions hiện đại của Agora v4.x để đảm bảo publish mic và camera
+            ChannelMediaOptions options = new ChannelMediaOptions();
+            options.publishMicrophoneTrack = true;
+            options.publishCameraTrack = true;
+            options.autoSubscribeAudio = true;
+            options.autoSubscribeVideo = true;
+            options.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER;
+
+            int res = mRtcEngine.joinChannel(null, channelName, uid, options);
             setupControls();
             if (res != 0) {
                 Log.e(TAG, "Join failed: " + res);
@@ -277,12 +287,30 @@ public class VoiceCallFragment extends Fragment {
 
                 for (int i = 0; i < participantList.size(); i++) {
                     Participant p = participantList.get(i);
-                    int checkUid = (i == 0) ? 0 : p.uid;
+                    boolean isNowSpeaking;
+                    if (p.uid == uid) {
+                        isNowSpeaking = activeSpeakers.contains(0) || activeSpeakers.contains(uid);
+                    } else {
+                        isNowSpeaking = activeSpeakers.contains(p.uid);
+                    }
 
-                    boolean isNowSpeaking = activeSpeakers.contains(checkUid);
                     if (p.isSpeaking != isNowSpeaking) {
                         p.isSpeaking = isNowSpeaking;
                         if (adapter != null) adapter.notifyItemChanged(i, "border_update");
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onUserMuteAudio(int userUid, boolean muted) {
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                for (int i = 0; i < participantList.size(); i++) {
+                    if (participantList.get(i).uid == userUid) {
+                        participantList.get(i).isMuted = muted;
+                        if (adapter != null) adapter.notifyItemChanged(i, "state_update");
+                        break;
                     }
                 }
             });
@@ -396,16 +424,22 @@ public class VoiceCallFragment extends Fragment {
         updateShareButtonUI();
     }
 
+    private int getControlBgColor() {
+        if (getContext() != null) {
+            return ContextCompat.getColor(requireContext(), R.color.call_control_bg);
+        }
+        return Color.parseColor("#232428");
+    }
+
     private void updateShareButtonUI() {
         if (binding == null) return;
         if (isSharingScreen) {
             binding.btnShareScreen.setImageResource(R.drawable.ic_screen_share_on);
-            binding.btnShareScreen.setBackgroundColor(Color.parseColor(serverColor));
+            binding.btnShareScreen.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor(serverColor)));
             binding.btnShareScreen.setColorFilter(Color.WHITE);
         } else {
             binding.btnShareScreen.setImageResource(R.drawable.ic_screen_share_off);
-            binding.btnShareScreen.setBackgroundResource(R.drawable.bg_chat_input);
-            binding.btnShareScreen.setBackgroundTintList(null);
+            binding.btnShareScreen.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getControlBgColor()));
             binding.btnShareScreen.setColorFilter(Color.parseColor("#B5BAC1"));
         }
     }
@@ -414,12 +448,11 @@ public class VoiceCallFragment extends Fragment {
         if (binding == null) return;
         if (isMuted) {
             binding.btnMute.setImageResource(R.drawable.ic_mic_off);
-            binding.btnMute.setBackgroundResource(R.drawable.bg_chat_input);
-            binding.btnMute.setBackgroundTintList(null);
+            binding.btnMute.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getControlBgColor()));
             binding.btnMute.setColorFilter(Color.parseColor("#B5BAC1"));
         } else {
             binding.btnMute.setImageResource(R.drawable.ic_mic_on);
-            binding.btnMute.setBackgroundColor(Color.parseColor(serverColor));
+            binding.btnMute.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor(serverColor)));
             binding.btnMute.setColorFilter(Color.WHITE);
         }
     }
@@ -428,12 +461,11 @@ public class VoiceCallFragment extends Fragment {
         if (binding == null) return;
         if (isVideoOff) {
             binding.btnToggleVideo.setImageResource(R.drawable.ic_videocam_off);
-            binding.btnToggleVideo.setBackgroundResource(R.drawable.bg_chat_input);
-            binding.btnToggleVideo.setBackgroundTintList(null);
+            binding.btnToggleVideo.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getControlBgColor()));
             binding.btnToggleVideo.setColorFilter(Color.parseColor("#B5BAC1"));
         } else {
             binding.btnToggleVideo.setImageResource(R.drawable.ic_videocam_on);
-            binding.btnToggleVideo.setBackgroundColor(Color.parseColor(serverColor));
+            binding.btnToggleVideo.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor(serverColor)));
             binding.btnToggleVideo.setColorFilter(Color.WHITE);
         }
     }
@@ -441,6 +473,8 @@ public class VoiceCallFragment extends Fragment {
     private void setupControls() {
         updateVideoButtonUI(true);
         updateMuteButtonUI(false);
+        binding.btnMute.setSelected(false);
+        binding.btnToggleVideo.setSelected(true); // Video ban đầu tắt nên set selected = true để click lần đầu bật lên
 
         binding.btnMute.setOnClickListener(v -> {
             boolean isMuted = !v.isSelected();

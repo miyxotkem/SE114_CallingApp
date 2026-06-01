@@ -56,7 +56,8 @@
                 android:imeOptions="actionSearch"
                 android:inputType="text"
                 android:maxLines="1"
-                android:singleLine="true" />
+                android:singleLine="true"
+                android:fontFamily="@font/inter"/>
 
             <ImageView
                 android:id="@+id/btnClear"
@@ -102,7 +103,8 @@
                 android:layout_height="wrap_content"
                 android:text="🔍"
                 android:textSize="48sp"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp"
+                android:fontFamily="@font/inter"/>
 
             <TextView
                 android:id="@+id/tvEmptyState"
