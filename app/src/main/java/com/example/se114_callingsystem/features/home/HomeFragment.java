@@ -9,7 +9,9 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.databinding.FragmentHomeBinding;
 import com.example.se114_callingsystem.R;
 
@@ -29,6 +31,7 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     private ServerAdapter adapter;
     private List<Server> serverList;
+    private List<String> currentServerOrder;
     private FirebaseFirestore db;
 
     @Nullable
@@ -49,6 +52,8 @@ public class HomeFragment extends Fragment {
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);
 
+        setupDragAndDrop();
+
         fetchServers();
         checkNotificationPermission();
         startMessageNotificationService();
@@ -62,10 +67,127 @@ public class HomeFragment extends Fragment {
             androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_friend_manage);
         });
 
-        binding.btnAddFriend.setOnClickListener(v -> {
-            com.example.se114_callingsystem.features.friend.AddFriendDialog dialog = new com.example.se114_callingsystem.features.friend.AddFriendDialog();
-            dialog.show(getParentFragmentManager(), "Add_friend_dialog");
+        binding.btnStatus.setOnClickListener(v -> showStatusDialog());
+
+        loadUserStatus();
+    }
+
+    private void loadUserStatus() {
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid != null) {
+            db.collection("users").document(uid).addSnapshotListener((doc, error) -> {
+                if (doc != null && doc.exists() && binding != null) {
+                    String status = doc.getString("status");
+                    if (status == null) status = "online";
+                    
+                    int colorRes = R.color.discord_green;
+                    String displayText = "Online";
+                    
+                    switch (status.toLowerCase()) {
+                        case "idle":
+                        case "idling":
+                            colorRes = R.color.discord_yellow;
+                            displayText = "Idle";
+                            break;
+                        case "dnd":
+                        case "do not disturb":
+                            colorRes = R.color.discord_red;
+                            displayText = "Do Not Disturb";
+                            break;
+                        case "offline":
+                        case "invisible":
+                            colorRes = R.color.discord_text_muted;
+                            displayText = "Invisible";
+                            break;
+                        case "sleeping":
+                            colorRes = R.color.discord_blurple;
+                            displayText = "Sleeping 💤";
+                            break;
+                        case "eating":
+                            colorRes = R.color.discord_blurple;
+                            displayText = "Eating 🍕";
+                            break;
+                        default:
+                            if (!status.equalsIgnoreCase("online")) {
+                                colorRes = R.color.discord_blurple;
+                                displayText = status;
+                            }
+                            break;
+                    }
+                    
+                    binding.tvStatusText.setText(displayText);
+                    binding.tvStatusText.setTextColor(getResources().getColor(colorRes));
+                    binding.statusIndicatorColor.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(colorRes)));
+                }
+            });
+        }
+    }
+
+    private void showStatusDialog() {
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_status, null);
+        bottomSheetDialog.setContentView(view);
+        
+        View parent = (View) view.getParent();
+        if (parent != null) {
+            parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        }
+
+        view.findViewById(R.id.btnStatusOnline).setOnClickListener(v -> {
+            updateUserStatus("online");
+            bottomSheetDialog.dismiss();
         });
+        view.findViewById(R.id.btnStatusIdle).setOnClickListener(v -> {
+            updateUserStatus("idle");
+            bottomSheetDialog.dismiss();
+        });
+        view.findViewById(R.id.btnStatusDnd).setOnClickListener(v -> {
+            updateUserStatus("dnd");
+            bottomSheetDialog.dismiss();
+        });
+        view.findViewById(R.id.btnStatusInvisible).setOnClickListener(v -> {
+            updateUserStatus("offline");
+            bottomSheetDialog.dismiss();
+        });
+        view.findViewById(R.id.btnStatusSleeping).setOnClickListener(v -> {
+            updateUserStatus("sleeping");
+            bottomSheetDialog.dismiss();
+        });
+        view.findViewById(R.id.btnStatusEating).setOnClickListener(v -> {
+            updateUserStatus("eating");
+            bottomSheetDialog.dismiss();
+        });
+        view.findViewById(R.id.btnStatusCustom).setOnClickListener(v -> {
+            bottomSheetDialog.dismiss();
+            showCustomStatusDialog();
+        });
+
+        bottomSheetDialog.show();
+    }
+
+    private void showCustomStatusDialog() {
+        android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setHint("Enter custom status (e.g. Coding 💻)");
+        
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Custom Status")
+            .setView(input)
+            .setPositiveButton("Save", (dialog, which) -> {
+                String text = input.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    updateUserStatus(text);
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void updateUserStatus(String status) {
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid != null) {
+            db.collection("users").document(uid).update("status", status)
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to update status", e));
+        }
     }
 
     private void checkNotificationPermission() {
@@ -88,10 +210,22 @@ public class HomeFragment extends Fragment {
         String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
         if (currentUserUid.isEmpty()) return;
 
-        db.collection("servers")
-          .whereArrayContains("members", currentUserUid)
-          .addSnapshotListener((value, error) -> {
-            if (error != null) {
+        db.collection("users").document(currentUserUid).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                com.example.se114_callingsystem.core.model.User user = documentSnapshot.toObject(com.example.se114_callingsystem.core.model.User.class);
+                if (user != null && user.getServerOrder() != null) {
+                    currentServerOrder = user.getServerOrder();
+                } else {
+                    currentServerOrder = new ArrayList<>();
+                }
+            } else {
+                currentServerOrder = new ArrayList<>();
+            }
+
+            db.collection("servers")
+              .whereArrayContains("members", currentUserUid)
+              .addSnapshotListener((value, error) -> {
+                if (error != null) {
                 Log.e(TAG, "Error fetching servers: " + error.getMessage());
                 return;
             }
@@ -103,9 +237,61 @@ public class HomeFragment extends Fragment {
                         serverList.add(server);
                     }
                 }
+                
+                // Sort by currentServerOrder
+                serverList.sort((s1, s2) -> {
+                    int idx1 = currentServerOrder.indexOf(s1.getServerId());
+                    int idx2 = currentServerOrder.indexOf(s2.getServerId());
+                    if (idx1 == -1) idx1 = Integer.MAX_VALUE;
+                    if (idx2 == -1) idx2 = Integer.MAX_VALUE;
+                    return Integer.compare(idx1, idx2);
+                });
+                
                 adapter.notifyDataSetChanged();
             }
         });
+        });
+    }
+
+    private void setupDragAndDrop() {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                int fromPosition = viewHolder.getAdapterPosition();
+                int toPosition = target.getAdapterPosition();
+
+                java.util.Collections.swap(serverList, fromPosition, toPosition);
+                adapter.notifyItemMoved(fromPosition, toPosition);
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                // Not supported
+            }
+
+            @Override
+            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                saveServerOrder();
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView);
+    }
+
+    private void saveServerOrder() {
+        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUserUid.isEmpty()) return;
+
+        List<String> order = new ArrayList<>();
+        for (Server s : serverList) {
+            order.add(s.getServerId());
+        }
+        currentServerOrder = order;
+
+        db.collection("users").document(currentUserUid)
+            .update("serverOrder", order)
+            .addOnFailureListener(e -> Log.e(TAG, "Failed to save server order", e));
     }
 
     @Override

@@ -35,6 +35,12 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.WriteBatch;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import android.net.Uri;
+import com.bumptech.glide.Glide;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +53,7 @@ public class ServerFragment extends Fragment {
     private FirebaseFirestore db;
     private String serverId;
     private String serverName;
+    private String serverPurpose = "";
     private String currentAccentColor = "#5865F2"; // Default Discord Blurple
 
     // Chat Channel Variables
@@ -63,6 +70,29 @@ public class ServerFragment extends Fragment {
     private PostChannelAdapter PostListAdapter;
     private List<PostChannel> postList = new ArrayList<>();
     private boolean isPostExpanded = true;
+
+    // Avatar Variables
+    private ActivityResultLauncher<String> imagePickerLauncher;
+    private ImageView dialogAvatarView;
+    private TextView dialogAvatarLetter;
+    private TextView dialogRemoveAvatar;
+    private String serverIconUrl;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) {
+                if (dialogAvatarView != null) {
+                    dialogAvatarView.setImageURI(uri);
+                    dialogAvatarView.setVisibility(View.VISIBLE);
+                    if (dialogAvatarLetter != null) dialogAvatarLetter.setVisibility(View.GONE);
+                    if (dialogRemoveAvatar != null) dialogRemoveAvatar.setVisibility(View.VISIBLE);
+                }
+                uploadImageToFirebase(uri);
+            }
+        });
+    }
 
     @Nullable
     @Override
@@ -120,10 +150,24 @@ public class ServerFragment extends Fragment {
                         serverName = server.getServerName();
                         binding.tvServerName.setText(serverName);
                     }
+                    if (server.getPurpose() != null && !server.getPurpose().isEmpty()) {
+                        serverPurpose = server.getPurpose();
+                        binding.tvServerDescription.setText(serverPurpose);
+                        binding.tvServerDescription.setVisibility(View.VISIBLE);
+                    } else {
+                        serverPurpose = "";
+                        binding.tvServerDescription.setVisibility(View.GONE);
+                    }
                     if (server.getAccentColor() != null && !server.getAccentColor().isEmpty()) {
                         currentAccentColor = server.getAccentColor();
                         applyAccentColor();
                     }
+                    if (server.getIconUrl() != null && !server.getIconUrl().trim().isEmpty() && !server.getIconUrl().equals("default_icon_url")) {
+                        serverIconUrl = server.getIconUrl();
+                    } else {
+                        serverIconUrl = null;
+                    }
+                    updateMainAvatarUI();
                 }
             }
         });
@@ -204,14 +248,50 @@ public class ServerFragment extends Fragment {
         dialog.setContentView(view);
 
         EditText etServerNameSettings = view.findViewById(R.id.etServerNameSettings);
-        MaterialButton btnRename = view.findViewById(R.id.btnRenameServer);
+        EditText etServerDescriptionSettings = view.findViewById(R.id.etServerDescriptionSettings);
+        MaterialButton btnSave = view.findViewById(R.id.btnSaveServerDetails);
         MaterialButton btnDelete = view.findViewById(R.id.btnDeleteServer);
         MaterialButton btnManageMembers = view.findViewById(R.id.btnManageMembers);
         MaterialButton btnChangeColor = view.findViewById(R.id.btnChangeColor);
 
+        dialogAvatarView = view.findViewById(R.id.ivServerAvatarSettings);
+        dialogAvatarLetter = view.findViewById(R.id.tvAvatarLetterSettings);
+        dialogRemoveAvatar = view.findViewById(R.id.btnRemoveAvatar);
+        View btnEditAvatar = view.findViewById(R.id.btnEditAvatar);
+
+        if (serverName != null && !serverName.isEmpty() && dialogAvatarLetter != null) {
+            dialogAvatarLetter.setText(String.valueOf(serverName.charAt(0)).toUpperCase());
+        }
+        if (etServerNameSettings != null && serverName != null) {
+            etServerNameSettings.setText(serverName);
+        }
+        if (etServerDescriptionSettings != null) {
+            etServerDescriptionSettings.setText(serverPurpose);
+        }
+
+        if (serverIconUrl != null && !serverIconUrl.isEmpty() && dialogAvatarView != null) {
+            if (dialogAvatarLetter != null) dialogAvatarLetter.setVisibility(View.GONE);
+            dialogAvatarView.setVisibility(View.VISIBLE);
+            Glide.with(requireContext()).load(serverIconUrl).into(dialogAvatarView);
+            if (dialogRemoveAvatar != null) dialogRemoveAvatar.setVisibility(View.VISIBLE);
+        } else {
+            if (dialogAvatarLetter != null) dialogAvatarLetter.setVisibility(View.VISIBLE);
+            if (dialogAvatarView != null) dialogAvatarView.setVisibility(View.GONE);
+            if (dialogRemoveAvatar != null) dialogRemoveAvatar.setVisibility(View.GONE);
+        }
+
+        if (btnEditAvatar != null) {
+            btnEditAvatar.setOnClickListener(v -> {
+                if (imagePickerLauncher != null) imagePickerLauncher.launch("image/*");
+            });
+        }
+        if (dialogRemoveAvatar != null) {
+            dialogRemoveAvatar.setOnClickListener(v -> removeServerAvatar());
+        }
+
         try {
             int color = Color.parseColor(currentAccentColor);
-            if (btnRename != null) btnRename.setBackgroundTintList(ColorStateList.valueOf(color));
+            if (btnSave != null) btnSave.setBackgroundTintList(ColorStateList.valueOf(color));
             if (btnManageMembers != null) {
                 btnManageMembers.setTextColor(color);
                 btnManageMembers.setIconTint(ColorStateList.valueOf(color));
@@ -220,39 +300,51 @@ public class ServerFragment extends Fragment {
                 btnChangeColor.setTextColor(color);
                 btnChangeColor.setIconTint(ColorStateList.valueOf(color));
             }
+            if (dialogAvatarLetter != null) dialogAvatarLetter.setTextColor(color);
+            com.google.android.material.card.MaterialCardView cardAvatar = view.findViewById(R.id.cardServerAvatarSettings);
+            if (cardAvatar != null) cardAvatar.setStrokeColor(color);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (etServerNameSettings != null && serverName != null) {
-            etServerNameSettings.setText(serverName);
-        }
-
-        if (btnRename != null) {
-            btnRename.setOnClickListener(v -> {
+        if (btnSave != null) {
+            btnSave.setOnClickListener(v -> {
                 String newName = etServerNameSettings.getText().toString().trim();
+                String newPurpose = etServerDescriptionSettings.getText().toString().trim();
+                
                 if (newName.isEmpty()) {
                     etServerNameSettings.setError("Server name cannot be empty");
                     return;
                 }
 
-                if (newName.equals(serverName)) {
+                if (newName.equals(serverName) && newPurpose.equals(serverPurpose)) {
                     dialog.dismiss();
                     return;
                 }
 
                 db.collection("servers").document(serverId)
-                        .update("serverName", newName)
+                        .update(
+                            "serverName", newName,
+                            "purpose", newPurpose
+                        )
                         .addOnSuccessListener(aVoid -> {
                             serverName = newName;
+                            serverPurpose = newPurpose;
                             if (binding != null) {
                                 binding.tvServerName.setText(newName);
                                 binding.tvAvatarLetter.setText(String.valueOf(newName.charAt(0)).toUpperCase());
+                                
+                                if (!serverPurpose.isEmpty()) {
+                                    binding.tvServerDescription.setText(serverPurpose);
+                                    binding.tvServerDescription.setVisibility(View.VISIBLE);
+                                } else {
+                                    binding.tvServerDescription.setVisibility(View.GONE);
+                                }
                             }
-                            Toast.makeText(getContext(), "Server renamed successfully", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Server updated successfully", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
                         })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Rename failed", Toast.LENGTH_LONG).show());
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Update failed", Toast.LENGTH_LONG).show());
             });
         }
 
@@ -282,13 +374,7 @@ public class ServerFragment extends Fragment {
             });
         }
 
-        com.google.android.material.switchmaterial.SwitchMaterial switchDarkMode = view.findViewById(R.id.switchDarkMode);
-        if (switchDarkMode != null) {
-            switchDarkMode.setChecked(ThemeHelper.isDarkMode(requireContext()));
-            switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                ThemeHelper.setDarkMode(requireContext(), isChecked);
-            });
-        }
+
 
         dialog.show();
         View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
@@ -506,6 +592,53 @@ public class ServerFragment extends Fragment {
             });
         }
         dialog.show();
+    }
+
+    private void uploadImageToFirebase(Uri uri) {
+        if (serverId == null || getContext() == null) return;
+        Toast.makeText(getContext(), "Uploading...", Toast.LENGTH_SHORT).show();
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference().child("server_icons/" + serverId + "_" + System.currentTimeMillis() + ".jpg");
+        storageRef.putFile(uri).addOnSuccessListener(taskSnapshot -> {
+            storageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                String url = downloadUri.toString();
+                db.collection("servers").document(serverId).update("iconUrl", url).addOnSuccessListener(a -> {
+                    serverIconUrl = url;
+                    updateMainAvatarUI();
+                    Toast.makeText(getContext(), "Avatar updated", Toast.LENGTH_SHORT).show();
+                });
+            });
+        }).addOnFailureListener(e -> {
+            Toast.makeText(getContext(), "Failed to upload image", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void removeServerAvatar() {
+        if (serverId == null || getContext() == null) return;
+        db.collection("servers").document(serverId).update("iconUrl", null).addOnSuccessListener(a -> {
+            serverIconUrl = null;
+            if (dialogAvatarView != null) dialogAvatarView.setVisibility(View.GONE);
+            if (dialogAvatarLetter != null) dialogAvatarLetter.setVisibility(View.VISIBLE);
+            if (dialogRemoveAvatar != null) dialogRemoveAvatar.setVisibility(View.GONE);
+            updateMainAvatarUI();
+            Toast.makeText(getContext(), "Avatar removed", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void updateMainAvatarUI() {
+        if (binding == null || getContext() == null) return;
+        ImageView ivServerAvatar = binding.getRoot().findViewById(R.id.ivServerAvatar);
+        if (ivServerAvatar == null) return;
+        if (serverIconUrl != null && !serverIconUrl.isEmpty()) {
+            binding.tvAvatarLetter.setVisibility(View.GONE);
+            ivServerAvatar.setVisibility(View.VISIBLE);
+            Glide.with(this).load(serverIconUrl).into(ivServerAvatar);
+        } else {
+            binding.tvAvatarLetter.setVisibility(View.VISIBLE);
+            ivServerAvatar.setVisibility(View.GONE);
+            if (serverName != null && !serverName.isEmpty()) {
+                binding.tvAvatarLetter.setText(String.valueOf(serverName.charAt(0)).toUpperCase());
+            }
+        }
     }
 
     @Override

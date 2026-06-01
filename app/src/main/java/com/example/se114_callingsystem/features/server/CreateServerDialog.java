@@ -68,7 +68,7 @@ public class CreateServerDialog extends DialogFragment {
                 Server newServer = new Server(
                         etName.getText().toString().trim(),
                         ownerId, // ownerId
-                        "default_icon_url",
+                        "",
                         etPurpose.getText().toString().trim(),
                         randomAccentColor // Thay màu cứng thành màu ngẫu nhiên vừa bốc được
                 );

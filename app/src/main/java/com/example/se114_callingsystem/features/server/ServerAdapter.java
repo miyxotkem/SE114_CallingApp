@@ -52,12 +52,11 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
 
         // Load iconUrl if available
         String iconUrl = server.getIconUrl();
-        if (iconUrl != null && !iconUrl.trim().isEmpty()) {
+        if (iconUrl != null && !iconUrl.trim().isEmpty() && !iconUrl.equals("default_icon_url")) {
             holder.ivServerIcon.setVisibility(View.VISIBLE);
             holder.tvServerInitials.setVisibility(View.GONE);
             Glide.with(holder.itemView.getContext())
                  .load(iconUrl)
-                 .placeholder(R.drawable.ic_user)
                  .into(holder.ivServerIcon);
         } else {
             holder.ivServerIcon.setVisibility(View.GONE);
@@ -74,14 +73,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
 
     private String getInitials(String serverName) {
         if (serverName == null || serverName.trim().isEmpty()) return "?";
-        String[] words = serverName.trim().split("\\s+");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < Math.min(words.length, 2); i++) {
-            if (!words[i].isEmpty()) {
-                sb.append(words[i].toUpperCase().charAt(0));
-            }
-        }
-        return sb.toString();
+        return String.valueOf(serverName.trim().charAt(0)).toUpperCase();
     }
 
     @Override
