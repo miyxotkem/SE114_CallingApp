@@ -14,10 +14,18 @@
             android:id="@+id/action_login_to_home"
             app:destination="@id/nav_home"
             app:popUpTo="@id/nav_login"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="true" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_login_to_register"
-            app:destination="@id/nav_register" />
+            app:destination="@id/nav_register" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment
@@ -29,7 +37,11 @@
             android:id="@+id/action_register_to_home"
             app:destination="@id/nav_home"
             app:popUpTo="@id/nav_login"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="true" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment
@@ -39,10 +51,18 @@
         tools:layout="@layout/fragment_home">
         <action
             android:id="@+id/action_home_to_chat_detail"
-            app:destination="@id/nav_chat_detail" />
+            app:destination="@id/nav_chat_detail" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_home_to_server"
-            app:destination="@id/nav_server" />
+            app:destination="@id/nav_server" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment
@@ -60,13 +80,25 @@
             android:id="@+id/action_profile_to_login"
             app:destination="@id/nav_login"
             app:popUpTo="@id/nav_graph"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="true" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_profile_to_edit_profile"
-            app:destination="@id/nav_edit_profile" />
+            app:destination="@id/nav_edit_profile" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_profile_to_manage_friends"
-            app:destination="@id/nav_friend_manage" />
+            app:destination="@id/nav_friend_manage" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment
@@ -96,13 +128,25 @@
             android:defaultValue="#5865F2" />
         <action
             android:id="@+id/action_chat_to_voice_call"
-            app:destination="@id/nav_voice_call" />
+            app:destination="@id/nav_voice_call" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_chat_to_chat_info"
-            app:destination="@id/nav_chat_info" />
+            app:destination="@id/nav_chat_info" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_chat_to_search"
-            app:destination="@id/nav_chat_search" />
+            app:destination="@id/nav_chat_search" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment
@@ -137,19 +181,39 @@
             app:argType="string" />
         <action
             android:id="@+id/action_server_to_server_chat"
-            app:destination="@id/nav_chat_detail" />
+            app:destination="@id/nav_chat_detail" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_server_to_post_channel"
-            app:destination="@id/nav_post_channel" />
+            app:destination="@id/nav_post_channel" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_server_to_voice_call"
-            app:destination="@id/nav_voice_call" />
+            app:destination="@id/nav_voice_call" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_server_to_change_color"
-            app:destination="@id/nav_server_change_color" />
+            app:destination="@id/nav_server_change_color" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_server_to_manage_members"
-            app:destination="@id/nav_server_manage_members" />
+            app:destination="@id/nav_server_manage_members" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
 
@@ -194,10 +258,18 @@
             android:defaultValue="#5865F2" />
         <action
             android:id="@+id/action_post_channel_to_post_create"
-            app:destination="@id/nav_post_create" />
+            app:destination="@id/nav_post_create" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
         <action
             android:id="@+id/action_post_channel_to_post_comment"
-            app:destination="@id/nav_post_comment" />
+            app:destination="@id/nav_post_comment" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <!-- 1. Đổi màu theme máy chủ -->

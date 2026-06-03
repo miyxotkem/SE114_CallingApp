@@ -66,6 +66,12 @@ public class ChatFragment extends Fragment {
     private com.google.firebase.firestore.ListenerRegistration membersListener;
     private MentionAdapter mentionAdapter;
 
+    private android.os.Handler typingHandler = new android.os.Handler();
+    private Runnable typingStopRunnable = () -> setTypingStatus(false);
+    private boolean isTyping = false;
+    private ValueEventListener typingListener;
+    private List<android.animation.ObjectAnimator> dotAnimators = new ArrayList<>();
+
 
 
     @Override
@@ -128,6 +134,7 @@ public class ChatFragment extends Fragment {
         setupClickListeners();
         setupMentionSuggestions();
         setupServerMembersListener();
+        setupTypingIndicator();
     }
 
     private void initCloudinary() {
@@ -257,6 +264,7 @@ public class ChatFragment extends Fragment {
             }
             groupChatRef.push().setValue(messageModel).addOnSuccessListener(aVoid -> {
                 if (binding != null) binding.edtMessage.setText("");
+                setTypingStatus(false);
             });
         }
     }
@@ -362,6 +370,17 @@ public class ChatFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (binding == null) return;
+                
+                // Typing Indicator logic
+                if (s.length() > 0) {
+                    if (!isTyping) setTypingStatus(true);
+                    typingHandler.removeCallbacks(typingStopRunnable);
+                    typingHandler.postDelayed(typingStopRunnable, 2000); // Stop after 2s of no typing
+                } else {
+                    setTypingStatus(false);
+                    typingHandler.removeCallbacks(typingStopRunnable);
+                }
+
                 int cursor = binding.edtMessage.getSelectionStart();
                 if (cursor < 0) {
                     hideMentionSuggestions();
@@ -445,6 +464,114 @@ public class ChatFragment extends Fragment {
         if (binding != null) {
             binding.cardMentionSuggestions.setVisibility(View.GONE);
         }
+    }
+
+    private void setTypingStatus(boolean typing) {
+        if (groupId == null || senderId == null) return;
+        isTyping = typing;
+        DatabaseReference ref = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chat_typing").child(groupId).child(senderId);
+        if (typing) {
+            ref.setValue(true);
+            ref.onDisconnect().removeValue();
+        } else {
+            ref.removeValue();
+        }
+    }
+
+    private void setupTypingIndicator() {
+        if (groupId == null) return;
+        DatabaseReference typingRef = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chat_typing").child(groupId);
+        typingListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (binding == null) return;
+                List<String> typingUsers = new ArrayList<>();
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    if (child.getValue(Boolean.class) != null && child.getValue(Boolean.class)) {
+                        String uid = child.getKey();
+                        if (uid != null && !uid.equals(senderId)) {
+                            typingUsers.add(uid);
+                        }
+                    }
+                }
+                
+                if (typingUsers.isEmpty()) {
+                    hideTypingIndicator();
+                } else {
+                    showTypingIndicator(typingUsers);
+                }
+            }
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
+        };
+        typingRef.addValueEventListener(typingListener);
+    }
+
+    private void showTypingIndicator(List<String> typingUsers) {
+        android.widget.LinearLayout typingLayout = binding.getRoot().findViewById(R.id.typingIndicatorLayout);
+        android.widget.TextView tvTypingStatus = binding.getRoot().findViewById(R.id.tvTypingStatus);
+        if (typingLayout.getVisibility() == View.GONE) {
+            typingLayout.setVisibility(View.VISIBLE);
+            typingLayout.setTranslationY(50f);
+            typingLayout.setAlpha(0f);
+            typingLayout.animate().translationY(0f).alpha(1f).setDuration(300).start();
+            startDotsAnimation();
+        }
+        
+        if (typingUsers.size() == 1) {
+            String uid = typingUsers.get(0);
+            String name = "Someone";
+            for (ServerMember m : serverMembers) {
+                if (uid.equals(m.getUserId())) {
+                    name = m.getNickname() != null && !m.getNickname().isEmpty() ? m.getNickname() : m.getUserName();
+                    break;
+                }
+            }
+            tvTypingStatus.setText(name + " is typing...");
+        } else {
+            tvTypingStatus.setText("Several people are typing...");
+        }
+        
+        // Auto scroll to bottom if we are already at bottom
+        if (lastMessageId != null) {
+            binding.chatRecyclerView.post(() -> binding.chatRecyclerView.scrollToPosition(messageList.size() - 1));
+        }
+    }
+
+    private void hideTypingIndicator() {
+        android.widget.LinearLayout typingLayout = binding.getRoot().findViewById(R.id.typingIndicatorLayout);
+        if (typingLayout.getVisibility() == View.VISIBLE) {
+            typingLayout.animate().translationY(50f).alpha(0f).setDuration(200).withEndAction(() -> {
+                typingLayout.setVisibility(View.GONE);
+                stopDotsAnimation();
+            }).start();
+        }
+    }
+
+    private void startDotsAnimation() {
+        if (!dotAnimators.isEmpty()) return;
+        View dot1 = binding.getRoot().findViewById(R.id.dot1);
+        View dot2 = binding.getRoot().findViewById(R.id.dot2);
+        View dot3 = binding.getRoot().findViewById(R.id.dot3);
+        
+        dotAnimators.add(animateDot(dot1, 0));
+        dotAnimators.add(animateDot(dot2, 150));
+        dotAnimators.add(animateDot(dot3, 300));
+    }
+
+    private android.animation.ObjectAnimator animateDot(View dot, int delay) {
+        android.animation.ObjectAnimator animator = android.animation.ObjectAnimator.ofFloat(dot, "translationY", 0f, -8f, 0f);
+        animator.setDuration(600);
+        animator.setStartDelay(delay);
+        animator.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+        animator.start();
+        return animator;
+    }
+
+    private void stopDotsAnimation() {
+        for (android.animation.ObjectAnimator anim : dotAnimators) {
+            anim.cancel();
+        }
+        dotAnimators.clear();
     }
 
     private void insertMention(ServerMember member) {
@@ -560,6 +687,11 @@ public class ChatFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        setTypingStatus(false);
+        if (typingListener != null && groupId != null) {
+            com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chat_typing").child(groupId).removeEventListener(typingListener);
+        }
+        stopDotsAnimation();
         activeChatId = null;
         binding = null;
         if (membersListener != null) {

@@ -15,6 +15,9 @@ import com.example.se114_callingsystem.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    private android.os.Handler idleHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable idleRunnable = () -> setAppStatus("idle");
+    private String lastSetStatus = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        setupRealtimePresence();
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -76,6 +81,75 @@ public class MainActivity extends AppCompatActivity {
 
                 navController.navigate(R.id.nav_chat_detail, args);
             }
+        }
+    }
+
+    private void setupRealtimePresence() {
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid == null) return;
+
+        com.google.firebase.database.FirebaseDatabase database = com.google.firebase.database.FirebaseDatabase.getInstance();
+        com.google.firebase.database.DatabaseReference statusRef = database.getReference("users/" + uid + "/status");
+        com.google.firebase.database.DatabaseReference connectedRef = database.getReference(".info/connected");
+
+        connectedRef.addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(com.google.firebase.database.DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class) == Boolean.TRUE;
+                if (connected) {
+                    statusRef.onDisconnect().setValue("offline");
+                    setAppStatus("online");
+                }
+            }
+
+            @Override
+            public void onCancelled(com.google.firebase.database.DatabaseError error) {}
+        });
+    }
+
+    private void resetIdleTimer() {
+        idleHandler.removeCallbacks(idleRunnable);
+        setAppStatus("online");
+        idleHandler.postDelayed(idleRunnable, 2 * 60 * 1000); // 2 minutes
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+        resetIdleTimer();
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        resetIdleTimer();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        idleHandler.removeCallbacks(idleRunnable);
+        setAppStatus("offline");
+    }
+
+    private void setAppStatus(String appState) {
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid == null) return;
+        
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String manual = prefs.getString("manual_status", "auto");
+        
+        String targetStatus = appState; 
+        if (!appState.equals("offline") && !manual.equals("auto")) {
+            targetStatus = manual;
+        }
+        
+        if (!targetStatus.equals(lastSetStatus)) {
+            lastSetStatus = targetStatus;
+            com.google.firebase.database.FirebaseDatabase.getInstance().getReference("users/" + uid + "/status").setValue(targetStatus);
+            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).update("status", targetStatus);
         }
     }
 

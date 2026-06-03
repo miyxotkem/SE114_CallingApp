@@ -176,7 +176,8 @@ public class ServerFragment extends Fragment {
         binding.btnAddChannel.setVisibility(visibility);
         binding.btnAddCallChannel.setVisibility(visibility);
         binding.btnAddPostChannel.setVisibility(visibility);
-        binding.btnServerSettings.setVisibility(visibility);
+        
+        binding.btnServerSettings.setVisibility(View.VISIBLE);
         
         if (chatAdapter != null) chatAdapter.setAdmin(isAdminOrOwner);
         if (CallChannelAdapter != null) CallChannelAdapter.setAdmin(isAdminOrOwner);
@@ -362,8 +363,54 @@ public class ServerFragment extends Fragment {
             if (dialogAvatarLetter != null) dialogAvatarLetter.setTextColor(color);
             com.google.android.material.card.MaterialCardView cardAvatar = view.findViewById(R.id.cardServerAvatarSettings);
             if (cardAvatar != null) cardAvatar.setStrokeColor(color);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {}
+
+        MaterialButton btnLeave = view.findViewById(R.id.btnLeaveServer);
+        if (btnLeave != null) {
+            btnLeave.setOnClickListener(v -> {
+                String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+                if (uid == null) return;
+                
+                db.collection("servers").document(serverId).collection("members").get().addOnSuccessListener(snaps -> {
+                    boolean canLeave = true;
+                    if (isAdminOrOwner) {
+                        int adminOwnerCount = 0;
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : snaps) {
+                            com.example.se114_callingsystem.core.model.ServerMember m = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
+                            if (m != null && ("owner".equals(m.getRole()) || "admin".equals(m.getRole()))) {
+                                adminOwnerCount++;
+                            }
+                        }
+                        if (adminOwnerCount <= 1) {
+                            canLeave = false;
+                        }
+                    }
+                    
+                    if (!canLeave) {
+                        Toast.makeText(getContext(), "Không thể rời! Bạn là Admin/Owner duy nhất còn lại.", Toast.LENGTH_LONG).show();
+                    } else {
+                        new android.app.AlertDialog.Builder(getContext())
+                            .setTitle("Rời Server")
+                            .setMessage("Bạn có chắc chắn muốn rời khỏi Server này?")
+                            .setPositiveButton("Rời đi", (dialogInterface, i) -> {
+                                dialog.dismiss();
+                                leaveServer(uid);
+                            })
+                            .setNegativeButton("Huỷ", null)
+                            .show();
+                    }
+                });
+            });
+        }
+
+        if (!isAdminOrOwner) {
+            if (btnSave != null) btnSave.setVisibility(View.GONE);
+            if (btnDelete != null) btnDelete.setVisibility(View.GONE);
+            if (btnChangeColor != null) btnChangeColor.setVisibility(View.GONE);
+            if (btnEditAvatar != null) btnEditAvatar.setVisibility(View.GONE);
+            if (dialogRemoveAvatar != null) dialogRemoveAvatar.setVisibility(View.GONE);
+            if (etServerNameSettings != null) etServerNameSettings.setEnabled(false);
+            if (etServerDescriptionSettings != null) etServerDescriptionSettings.setEnabled(false);
         }
 
         if (btnSave != null) {
@@ -667,6 +714,32 @@ public class ServerFragment extends Fragment {
             });
         }
         dialog.show();
+    }
+    
+    private void leaveServer(String uid) {
+        if (serverId == null || getContext() == null) return;
+        
+        // Remove from users serverOrder
+        db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                java.util.List<String> order = (java.util.List<String>) doc.get("serverOrder");
+                if (order != null && order.contains(serverId)) {
+                    order.remove(serverId);
+                    db.collection("users").document(uid).update("serverOrder", order);
+                }
+            }
+        });
+        
+        // Remove from servers members array
+        db.collection("servers").document(serverId).update("members", com.google.firebase.firestore.FieldValue.arrayRemove(uid));
+        
+        // Remove from members subcollection
+        db.collection("servers").document(serverId).collection("members").document(uid).delete();
+        
+        Toast.makeText(getContext(), "Đã rời Server", Toast.LENGTH_SHORT).show();
+        
+        // Go back to home
+        androidx.navigation.Navigation.findNavController(requireView()).popBackStack();
     }
 
     private void uploadImageToFirebase(Uri uri) {

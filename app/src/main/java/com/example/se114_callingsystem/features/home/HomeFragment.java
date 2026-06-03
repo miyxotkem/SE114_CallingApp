@@ -77,21 +77,29 @@ public class HomeFragment extends Fragment {
     }
     
     private void showJoinServerDialog() {
-        android.widget.EditText input = new android.widget.EditText(requireContext());
-        input.setHint("Nhập mã mời (Server ID)");
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_join_server, null);
+        dialog.setContentView(view);
         
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Tham gia Server")
-            .setMessage("Nhập mã mời bạn nhận được từ bạn bè:")
-            .setView(input)
-            .setPositiveButton("Tham gia", (dialog, which) -> {
-                String inviteCode = input.getText().toString().trim();
-                if (!inviteCode.isEmpty()) {
-                    joinServer(inviteCode);
-                }
-            })
-            .setNegativeButton("Hủy", null)
-            .show();
+        View parent = (View) view.getParent();
+        if (parent != null) {
+            parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        }
+
+        com.google.android.material.textfield.TextInputEditText edtInviteCode = view.findViewById(R.id.edtInviteCode);
+        com.google.android.material.button.MaterialButton btnJoin = view.findViewById(R.id.btnJoinServer);
+
+        btnJoin.setOnClickListener(v -> {
+            String inviteCode = edtInviteCode.getText() != null ? edtInviteCode.getText().toString().trim() : "";
+            if (!inviteCode.isEmpty()) {
+                joinServer(inviteCode);
+                dialog.dismiss();
+            } else {
+                edtInviteCode.setError("Vui lòng nhập mã mời");
+            }
+        });
+
+        dialog.show();
     }
     
     private void joinServer(String serverId) {
@@ -134,10 +142,13 @@ public class HomeFragment extends Fragment {
     private void loadUserStatus() {
         String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
         if (uid != null) {
-            db.collection("users").document(uid).addSnapshotListener((doc, error) -> {
-                if (doc != null && doc.exists() && binding != null) {
-                    String status = doc.getString("status");
-                    if (status == null) status = "online";
+            com.google.firebase.database.FirebaseDatabase.getInstance().getReference("users/" + uid + "/status")
+                .addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+                    @Override
+                    public void onDataChange(@androidx.annotation.NonNull com.google.firebase.database.DataSnapshot doc) {
+                        if (binding == null) return;
+                        String status = doc.getValue(String.class);
+                        if (status == null) status = "offline";
                     
                     int colorRes = R.color.discord_green;
                     String displayText = "Online";
@@ -177,7 +188,9 @@ public class HomeFragment extends Fragment {
                     binding.tvStatusText.setText(displayText);
                     binding.tvStatusText.setTextColor(getResources().getColor(colorRes));
                     binding.statusIndicatorColor.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(colorRes)));
-                }
+                    }
+                    @Override
+                    public void onCancelled(@androidx.annotation.NonNull com.google.firebase.database.DatabaseError error) {}
             });
         }
     }
@@ -192,27 +205,23 @@ public class HomeFragment extends Fragment {
             parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         }
 
-        view.findViewById(R.id.btnStatusOnline).setOnClickListener(v -> {
+        view.findViewById(R.id.btnStatusAuto).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "auto").apply();
             updateUserStatus("online");
             bottomSheetDialog.dismiss();
         });
-        view.findViewById(R.id.btnStatusIdle).setOnClickListener(v -> {
-            updateUserStatus("idle");
-            bottomSheetDialog.dismiss();
-        });
         view.findViewById(R.id.btnStatusDnd).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "dnd").apply();
             updateUserStatus("dnd");
             bottomSheetDialog.dismiss();
         });
-        view.findViewById(R.id.btnStatusInvisible).setOnClickListener(v -> {
-            updateUserStatus("offline");
-            bottomSheetDialog.dismiss();
-        });
         view.findViewById(R.id.btnStatusSleeping).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "sleeping").apply();
             updateUserStatus("sleeping");
             bottomSheetDialog.dismiss();
         });
         view.findViewById(R.id.btnStatusEating).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "eating").apply();
             updateUserStatus("eating");
             bottomSheetDialog.dismiss();
         });
@@ -228,13 +237,14 @@ public class HomeFragment extends Fragment {
         android.widget.EditText input = new android.widget.EditText(requireContext());
         input.setHint("Enter custom status (e.g. Coding 💻)");
         
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Custom Status")
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+        builder.setTitle("Custom Status")
             .setView(input)
-            .setPositiveButton("Save", (dialog, which) -> {
-                String text = input.getText().toString().trim();
-                if (!text.isEmpty()) {
-                    updateUserStatus(text);
+            .setPositiveButton("Set", (d, w) -> {
+                String s = input.getText().toString().trim();
+                if (!s.isEmpty()) {
+                    requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", s).apply();
+                    updateUserStatus(s);
                 }
             })
             .setNegativeButton("Cancel", null)
