@@ -63,6 +63,10 @@ public class HomeFragment extends Fragment {
             dialog.show(getParentFragmentManager(), "Server_on_create");
         });
 
+        binding.mcvServerJoin.setOnClickListener(v -> {
+            showJoinServerDialog();
+        });
+
         binding.btnManageFriends.setOnClickListener(v -> {
             androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_friend_manage);
         });
@@ -70,6 +74,61 @@ public class HomeFragment extends Fragment {
         binding.btnStatus.setOnClickListener(v -> showStatusDialog());
 
         loadUserStatus();
+    }
+    
+    private void showJoinServerDialog() {
+        android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setHint("Nhập mã mời (Server ID)");
+        
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Tham gia Server")
+            .setMessage("Nhập mã mời bạn nhận được từ bạn bè:")
+            .setView(input)
+            .setPositiveButton("Tham gia", (dialog, which) -> {
+                String inviteCode = input.getText().toString().trim();
+                if (!inviteCode.isEmpty()) {
+                    joinServer(inviteCode);
+                }
+            })
+            .setNegativeButton("Hủy", null)
+            .show();
+    }
+    
+    private void joinServer(String serverId) {
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        String userName = FirebaseAuth.getInstance().getCurrentUser() != null && FirebaseAuth.getInstance().getCurrentUser().getDisplayName() != null ? FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : "New Member";
+        if (uid == null) return;
+        
+        db.collection("servers").document(serverId).get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                java.util.List<String> members = (java.util.List<String>) doc.get("members");
+                if (members != null && members.contains(uid)) {
+                    android.widget.Toast.makeText(getContext(), "Bạn đã ở trong server này rồi!", android.widget.Toast.LENGTH_SHORT).show();
+                    if (!currentServerOrder.contains(serverId)) {
+                        currentServerOrder.add(serverId);
+                        db.collection("users").document(uid).update("serverOrder", currentServerOrder);
+                    }
+                    return;
+                }
+
+                // Add user to server members array
+                db.collection("servers").document(serverId).update("members", com.google.firebase.firestore.FieldValue.arrayUnion(uid));
+                
+                // Add user to server members subcollection
+                com.example.se114_callingsystem.core.model.ServerMember newMember = new com.example.se114_callingsystem.core.model.ServerMember(uid, userName, "member");
+                db.collection("servers").document(serverId).collection("members").document(uid).set(newMember);
+                
+                // Add server to user's server order
+                if (!currentServerOrder.contains(serverId)) {
+                    currentServerOrder.add(serverId);
+                    db.collection("users").document(uid).update("serverOrder", currentServerOrder);
+                }
+                
+                android.widget.Toast.makeText(getContext(), "Tham gia server thành công!", android.widget.Toast.LENGTH_SHORT).show();
+            } else {
+                android.widget.Toast.makeText(getContext(), "Mã mời không hợp lệ hoặc Server không tồn tại.", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadUserStatus() {

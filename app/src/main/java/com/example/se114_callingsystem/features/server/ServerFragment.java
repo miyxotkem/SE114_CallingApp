@@ -56,6 +56,17 @@ public class ServerFragment extends Fragment {
     private String serverPurpose = "";
     private String currentAccentColor = "#5865F2"; // Default Discord Blurple
 
+    private com.google.firebase.firestore.ListenerRegistration chatListener;
+    private com.google.firebase.firestore.ListenerRegistration callListener;
+    private com.google.firebase.firestore.ListenerRegistration postListener;
+    private com.google.firebase.firestore.ListenerRegistration memberRoleListener;
+    
+    private boolean isAdminOrOwner = false;
+    
+    private boolean isChatLoaded = false;
+    private boolean isCallLoaded = false;
+    private boolean isPostLoaded = false;
+
     // Chat Channel Variables
     private ChatZoneAdapter chatAdapter;
     private List<ChatChannel> chatList = new ArrayList<>();
@@ -129,9 +140,47 @@ public class ServerFragment extends Fragment {
         setupCallRecyclerView();
         setupPostRecyclerView();
 
+        loadUserRole();
+        loadServerInfo();
         loadChatData();
         loadCallData();
         loadPostData();
+    }
+
+    private void loadUserRole() {
+        if (serverId == null) return;
+        String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUid.isEmpty()) return;
+
+        memberRoleListener = db.collection("servers").document(serverId).collection("members").document(currentUid)
+            .addSnapshotListener((doc, e) -> {
+                if (e != null || binding == null || doc == null || !doc.exists()) {
+                    isAdminOrOwner = false;
+                    updatePermissionUI();
+                    return;
+                }
+                com.example.se114_callingsystem.core.model.ServerMember m = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
+                if (m != null) {
+                    isAdminOrOwner = "owner".equals(m.getRole()) || "admin".equals(m.getRole());
+                } else {
+                    isAdminOrOwner = false;
+                }
+                updatePermissionUI();
+            });
+    }
+
+    private void updatePermissionUI() {
+        if (binding == null) return;
+        int visibility = isAdminOrOwner ? View.VISIBLE : View.GONE;
+        binding.btnAddChannel.setVisibility(visibility);
+        binding.btnAddCallChannel.setVisibility(visibility);
+        binding.btnAddPostChannel.setVisibility(visibility);
+        binding.btnServerSettings.setVisibility(visibility);
+        
+        if (chatAdapter != null) chatAdapter.setAdmin(isAdminOrOwner);
+        if (CallChannelAdapter != null) CallChannelAdapter.setAdmin(isAdminOrOwner);
+        if (PostListAdapter != null) PostListAdapter.setAdmin(isAdminOrOwner);
     }
 
     @Override
@@ -232,6 +281,16 @@ public class ServerFragment extends Fragment {
         binding.expandChatZone.setRotation(90f);
         binding.expandCallZone.setRotation(90f);
         binding.expandPostZone.setRotation(90f);
+    }
+    
+    private void checkDataLoaded() {
+        if (isChatLoaded && isCallLoaded && isPostLoaded) {
+            if (binding != null && binding.shimmerViewContainer != null) {
+                binding.shimmerViewContainer.stopShimmer();
+                binding.shimmerViewContainer.setVisibility(View.GONE);
+                binding.channelsContainer.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     private void toggleVisibility(View view, View icon, boolean expanded) {
@@ -406,6 +465,7 @@ public class ServerFragment extends Fragment {
             @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", "chat"); }
             @Override public void onRemove(ChatChannel channel) { db.collection("Channels").document(channel.getChatId()).delete().addOnSuccessListener(a -> loadChatData()); }
         });
+        chatAdapter.setAdmin(isAdminOrOwner);
         binding.rvChatChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvChatChannels.setAdapter(chatAdapter);
         setupDragAndDrop(binding.rvChatChannels, chatList, chatAdapter, "chat");
@@ -421,7 +481,9 @@ public class ServerFragment extends Fragment {
                         ChatChannel c = doc.toObject(ChatChannel.class);
                         if (c != null) { c.setChatId(doc.getId()); chatList.add(c); }
                     }
-                    chatAdapter.notifyDataSetChanged();
+                    if (chatAdapter != null) chatAdapter.notifyDataSetChanged();
+                    isChatLoaded = true;
+                    checkDataLoaded();
                 });
     }
 
@@ -439,6 +501,7 @@ public class ServerFragment extends Fragment {
                 Navigation.findNavController(requireView()).navigate(R.id.action_server_to_voice_call, args);
             }
         });
+        CallChannelAdapter.setAdmin(isAdminOrOwner);
         binding.rvCallChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvCallChannels.setAdapter(CallChannelAdapter);
         setupDragAndDrop(binding.rvCallChannels, callList, CallChannelAdapter, "call");
@@ -454,7 +517,9 @@ public class ServerFragment extends Fragment {
                         CallChannel c = doc.toObject(CallChannel.class);
                         if (c != null) { c.setCallId(doc.getId()); callList.add(c); }
                     }
-                    CallChannelAdapter.notifyDataSetChanged();
+                    if (CallChannelAdapter != null) CallChannelAdapter.notifyDataSetChanged();
+                    isCallLoaded = true;
+                    checkDataLoaded();
                 });
     }
 
@@ -464,6 +529,7 @@ public class ServerFragment extends Fragment {
             @Override public void onRename(PostChannel channel) { showBaseRenameDialog(channel.getId(), channel.getName(), "PostChannels", "post"); }
             @Override public void onRemove(PostChannel channel) { db.collection("PostChannels").document(channel.getId()).delete().addOnSuccessListener(a -> loadPostData()); }
         });
+        PostListAdapter.setAdmin(isAdminOrOwner);
         binding.rvPostChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvPostChannels.setAdapter(PostListAdapter);
         setupDragAndDrop(binding.rvPostChannels, postList, PostListAdapter, "post");
@@ -480,18 +546,27 @@ public class ServerFragment extends Fragment {
                         if (c != null) { c.setId(doc.getId()); postList.add(c); }
                     }
                     Collections.sort(postList, (a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()));
-                    PostListAdapter.notifyDataSetChanged();
+                    if (PostListAdapter != null) PostListAdapter.notifyDataSetChanged();
+                    isPostLoaded = true;
+                    checkDataLoaded();
                 });
     }
 
     private void setupDragAndDrop(RecyclerView rv, List<?> list, RecyclerView.Adapter<?> adapter, String type) {
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
+                if (!isAdminOrOwner) return makeMovementFlags(0, 0);
+                return super.getMovementFlags(rv, vh);
+            }
             @Override public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh, @NonNull RecyclerView.ViewHolder target) {
+                if (!isAdminOrOwner) return false;
                 Collections.swap(list, vh.getAdapterPosition(), target.getAdapterPosition());
                 adapter.notifyItemMoved(vh.getAdapterPosition(), target.getAdapterPosition()); return true;
             }
             @Override public void clearView(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
                 super.clearView(rv, vh);
+                if (!isAdminOrOwner) return;
                 WriteBatch batch = db.batch();
                 if ("chat".equals(type)) {
                     for (int i = 0; i < chatList.size(); i++) batch.update(db.collection("Channels").document(chatList.get(i).getChatId()), "orderIndex", i);
