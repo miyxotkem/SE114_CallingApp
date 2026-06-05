@@ -61,6 +61,16 @@ public class AddServerMemberDialog extends DialogFragment {
         rvFriendsToSelect.setAdapter(adapter);
 
         Button btnAddConfirm = view.findViewById(R.id.btnAddConfirm);
+        Button btnCopyInvite = view.findViewById(R.id.btnCopyInviteCode);
+        
+        if (btnCopyInvite != null) {
+            btnCopyInvite.setOnClickListener(v -> {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                android.content.ClipData clip = android.content.ClipData.newPlainText("Mã mời Server", serverId);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(getContext(), "Đã copy mã mời: " + serverId, Toast.LENGTH_SHORT).show();
+            });
+        }
 
         loadServerMembersAndFriends();
 

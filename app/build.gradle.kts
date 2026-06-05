@@ -57,6 +57,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation(libs.firebase.storage)
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

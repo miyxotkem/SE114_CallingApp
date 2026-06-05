@@ -64,7 +64,25 @@
                 android:textSize="14sp"
                 android:fontFamily="@font/inter"
                 android:textColor="@color/discord_text_secondary"
-                android:layout_marginBottom="24dp"/>
+                android:layout_marginBottom="16dp"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCopyInviteCode"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Copy Mã Mời Server"
+                android:textSize="14sp"
+                android:textAllCaps="false"
+                android:fontFamily="@font/inter" android:textStyle="bold"
+                app:cornerRadius="8dp"
+                app:strokeColor="@color/discord_blurple"
+                app:strokeWidth="1dp"
+                android:textColor="@color/discord_blurple"
+                app:icon="@android:drawable/ic_menu_share"
+                app:iconTint="@color/discord_blurple"
+                app:iconGravity="textStart"
+                android:layout_marginBottom="16dp"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvFriendsToSelect"

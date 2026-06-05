@@ -56,6 +56,17 @@ public class ServerFragment extends Fragment {
     private String serverPurpose = "";
     private String currentAccentColor = "#5865F2"; // Default Discord Blurple
 
+    private com.google.firebase.firestore.ListenerRegistration chatListener;
+    private com.google.firebase.firestore.ListenerRegistration callListener;
+    private com.google.firebase.firestore.ListenerRegistration postListener;
+    private com.google.firebase.firestore.ListenerRegistration memberRoleListener;
+    
+    private boolean isAdminOrOwner = false;
+    
+    private boolean isChatLoaded = false;
+    private boolean isCallLoaded = false;
+    private boolean isPostLoaded = false;
+
     // Chat Channel Variables
     private ChatZoneAdapter chatAdapter;
     private List<ChatChannel> chatList = new ArrayList<>();
@@ -129,9 +140,48 @@ public class ServerFragment extends Fragment {
         setupCallRecyclerView();
         setupPostRecyclerView();
 
+        loadUserRole();
+        loadServerInfo();
         loadChatData();
         loadCallData();
         loadPostData();
+    }
+
+    private void loadUserRole() {
+        if (serverId == null) return;
+        String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUid.isEmpty()) return;
+
+        memberRoleListener = db.collection("servers").document(serverId).collection("members").document(currentUid)
+            .addSnapshotListener((doc, e) -> {
+                if (e != null || binding == null || doc == null || !doc.exists()) {
+                    isAdminOrOwner = false;
+                    updatePermissionUI();
+                    return;
+                }
+                com.example.se114_callingsystem.core.model.ServerMember m = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
+                if (m != null) {
+                    isAdminOrOwner = "owner".equals(m.getRole()) || "admin".equals(m.getRole());
+                } else {
+                    isAdminOrOwner = false;
+                }
+                updatePermissionUI();
+            });
+    }
+
+    private void updatePermissionUI() {
+        if (binding == null) return;
+        int visibility = isAdminOrOwner ? View.VISIBLE : View.GONE;
+        binding.btnAddChannel.setVisibility(visibility);
+        binding.btnAddCallChannel.setVisibility(visibility);
+        binding.btnAddPostChannel.setVisibility(visibility);
+        
+        binding.btnServerSettings.setVisibility(View.VISIBLE);
+        
+        if (chatAdapter != null) chatAdapter.setAdmin(isAdminOrOwner);
+        if (CallChannelAdapter != null) CallChannelAdapter.setAdmin(isAdminOrOwner);
+        if (PostListAdapter != null) PostListAdapter.setAdmin(isAdminOrOwner);
     }
 
     @Override
@@ -233,6 +283,16 @@ public class ServerFragment extends Fragment {
         binding.expandCallZone.setRotation(90f);
         binding.expandPostZone.setRotation(90f);
     }
+    
+    private void checkDataLoaded() {
+        if (isChatLoaded && isCallLoaded && isPostLoaded) {
+            if (binding != null && binding.shimmerViewContainer != null) {
+                binding.shimmerViewContainer.stopShimmer();
+                binding.shimmerViewContainer.setVisibility(View.GONE);
+                binding.channelsContainer.setVisibility(View.VISIBLE);
+            }
+        }
+    }
 
     private void toggleVisibility(View view, View icon, boolean expanded) {
         if (getContext() == null) return;
@@ -303,8 +363,54 @@ public class ServerFragment extends Fragment {
             if (dialogAvatarLetter != null) dialogAvatarLetter.setTextColor(color);
             com.google.android.material.card.MaterialCardView cardAvatar = view.findViewById(R.id.cardServerAvatarSettings);
             if (cardAvatar != null) cardAvatar.setStrokeColor(color);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {}
+
+        MaterialButton btnLeave = view.findViewById(R.id.btnLeaveServer);
+        if (btnLeave != null) {
+            btnLeave.setOnClickListener(v -> {
+                String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+                if (uid == null) return;
+                
+                db.collection("servers").document(serverId).collection("members").get().addOnSuccessListener(snaps -> {
+                    boolean canLeave = true;
+                    if (isAdminOrOwner) {
+                        int adminOwnerCount = 0;
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : snaps) {
+                            com.example.se114_callingsystem.core.model.ServerMember m = doc.toObject(com.example.se114_callingsystem.core.model.ServerMember.class);
+                            if (m != null && ("owner".equals(m.getRole()) || "admin".equals(m.getRole()))) {
+                                adminOwnerCount++;
+                            }
+                        }
+                        if (adminOwnerCount <= 1) {
+                            canLeave = false;
+                        }
+                    }
+                    
+                    if (!canLeave) {
+                        Toast.makeText(getContext(), "Không thể rời! Bạn là Admin/Owner duy nhất còn lại.", Toast.LENGTH_LONG).show();
+                    } else {
+                        new android.app.AlertDialog.Builder(getContext())
+                            .setTitle("Rời Server")
+                            .setMessage("Bạn có chắc chắn muốn rời khỏi Server này?")
+                            .setPositiveButton("Rời đi", (dialogInterface, i) -> {
+                                dialog.dismiss();
+                                leaveServer(uid);
+                            })
+                            .setNegativeButton("Huỷ", null)
+                            .show();
+                    }
+                });
+            });
+        }
+
+        if (!isAdminOrOwner) {
+            if (btnSave != null) btnSave.setVisibility(View.GONE);
+            if (btnDelete != null) btnDelete.setVisibility(View.GONE);
+            if (btnChangeColor != null) btnChangeColor.setVisibility(View.GONE);
+            if (btnEditAvatar != null) btnEditAvatar.setVisibility(View.GONE);
+            if (dialogRemoveAvatar != null) dialogRemoveAvatar.setVisibility(View.GONE);
+            if (etServerNameSettings != null) etServerNameSettings.setEnabled(false);
+            if (etServerDescriptionSettings != null) etServerDescriptionSettings.setEnabled(false);
         }
 
         if (btnSave != null) {
@@ -406,6 +512,7 @@ public class ServerFragment extends Fragment {
             @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", "chat"); }
             @Override public void onRemove(ChatChannel channel) { db.collection("Channels").document(channel.getChatId()).delete().addOnSuccessListener(a -> loadChatData()); }
         });
+        chatAdapter.setAdmin(isAdminOrOwner);
         binding.rvChatChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvChatChannels.setAdapter(chatAdapter);
         setupDragAndDrop(binding.rvChatChannels, chatList, chatAdapter, "chat");
@@ -421,7 +528,9 @@ public class ServerFragment extends Fragment {
                         ChatChannel c = doc.toObject(ChatChannel.class);
                         if (c != null) { c.setChatId(doc.getId()); chatList.add(c); }
                     }
-                    chatAdapter.notifyDataSetChanged();
+                    if (chatAdapter != null) chatAdapter.notifyDataSetChanged();
+                    isChatLoaded = true;
+                    checkDataLoaded();
                 });
     }
 
@@ -439,6 +548,7 @@ public class ServerFragment extends Fragment {
                 Navigation.findNavController(requireView()).navigate(R.id.action_server_to_voice_call, args);
             }
         });
+        CallChannelAdapter.setAdmin(isAdminOrOwner);
         binding.rvCallChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvCallChannels.setAdapter(CallChannelAdapter);
         setupDragAndDrop(binding.rvCallChannels, callList, CallChannelAdapter, "call");
@@ -454,7 +564,9 @@ public class ServerFragment extends Fragment {
                         CallChannel c = doc.toObject(CallChannel.class);
                         if (c != null) { c.setCallId(doc.getId()); callList.add(c); }
                     }
-                    CallChannelAdapter.notifyDataSetChanged();
+                    if (CallChannelAdapter != null) CallChannelAdapter.notifyDataSetChanged();
+                    isCallLoaded = true;
+                    checkDataLoaded();
                 });
     }
 
@@ -464,6 +576,7 @@ public class ServerFragment extends Fragment {
             @Override public void onRename(PostChannel channel) { showBaseRenameDialog(channel.getId(), channel.getName(), "PostChannels", "post"); }
             @Override public void onRemove(PostChannel channel) { db.collection("PostChannels").document(channel.getId()).delete().addOnSuccessListener(a -> loadPostData()); }
         });
+        PostListAdapter.setAdmin(isAdminOrOwner);
         binding.rvPostChannels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvPostChannels.setAdapter(PostListAdapter);
         setupDragAndDrop(binding.rvPostChannels, postList, PostListAdapter, "post");
@@ -480,18 +593,27 @@ public class ServerFragment extends Fragment {
                         if (c != null) { c.setId(doc.getId()); postList.add(c); }
                     }
                     Collections.sort(postList, (a, b) -> Integer.compare(a.getOrderIndex(), b.getOrderIndex()));
-                    PostListAdapter.notifyDataSetChanged();
+                    if (PostListAdapter != null) PostListAdapter.notifyDataSetChanged();
+                    isPostLoaded = true;
+                    checkDataLoaded();
                 });
     }
 
     private void setupDragAndDrop(RecyclerView rv, List<?> list, RecyclerView.Adapter<?> adapter, String type) {
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
+                if (!isAdminOrOwner) return makeMovementFlags(0, 0);
+                return super.getMovementFlags(rv, vh);
+            }
             @Override public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh, @NonNull RecyclerView.ViewHolder target) {
+                if (!isAdminOrOwner) return false;
                 Collections.swap(list, vh.getAdapterPosition(), target.getAdapterPosition());
                 adapter.notifyItemMoved(vh.getAdapterPosition(), target.getAdapterPosition()); return true;
             }
             @Override public void clearView(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh) {
                 super.clearView(rv, vh);
+                if (!isAdminOrOwner) return;
                 WriteBatch batch = db.batch();
                 if ("chat".equals(type)) {
                     for (int i = 0; i < chatList.size(); i++) batch.update(db.collection("Channels").document(chatList.get(i).getChatId()), "orderIndex", i);
@@ -592,6 +714,32 @@ public class ServerFragment extends Fragment {
             });
         }
         dialog.show();
+    }
+    
+    private void leaveServer(String uid) {
+        if (serverId == null || getContext() == null) return;
+        
+        // Remove from users serverOrder
+        db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                java.util.List<String> order = (java.util.List<String>) doc.get("serverOrder");
+                if (order != null && order.contains(serverId)) {
+                    order.remove(serverId);
+                    db.collection("users").document(uid).update("serverOrder", order);
+                }
+            }
+        });
+        
+        // Remove from servers members array
+        db.collection("servers").document(serverId).update("members", com.google.firebase.firestore.FieldValue.arrayRemove(uid));
+        
+        // Remove from members subcollection
+        db.collection("servers").document(serverId).collection("members").document(uid).delete();
+        
+        Toast.makeText(getContext(), "Đã rời Server", Toast.LENGTH_SHORT).show();
+        
+        // Go back to home
+        androidx.navigation.Navigation.findNavController(requireView()).popBackStack();
     }
 
     private void uploadImageToFirebase(Uri uri) {

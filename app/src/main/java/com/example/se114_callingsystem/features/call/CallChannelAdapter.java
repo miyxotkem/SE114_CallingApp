@@ -16,6 +16,7 @@ public class CallChannelAdapter extends RecyclerView.Adapter<CallChannelAdapter.
     private List<CallChannel> channels;
     private OnCallActionListener listener;
     private String serverColor = "#6C63FF";
+    private boolean isAdmin = false;
 
     public interface OnCallActionListener {
         void onRename(CallChannel channel);
@@ -25,6 +26,11 @@ public class CallChannelAdapter extends RecyclerView.Adapter<CallChannelAdapter.
 
     public void setServerColor(String color) {
         this.serverColor = color;
+        notifyDataSetChanged();
+    }
+
+    public void setAdmin(boolean admin) {
+        this.isAdmin = admin;
         notifyDataSetChanged();
     }
 
@@ -44,6 +50,14 @@ public class CallChannelAdapter extends RecyclerView.Adapter<CallChannelAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CallChannel channel = channels.get(position);
         holder.name.setText("🔊 " + channel.getCallName());
+
+        if (isAdmin) {
+            holder.btnRename.setVisibility(View.VISIBLE);
+            holder.btnRemove.setVisibility(View.VISIBLE);
+        } else {
+            holder.btnRename.setVisibility(View.GONE);
+            holder.btnRemove.setVisibility(View.GONE);
+        }
 
         holder.btnRename.setOnClickListener(v -> {
             if (holder.getAdapterPosition() != RecyclerView.NO_POSITION)

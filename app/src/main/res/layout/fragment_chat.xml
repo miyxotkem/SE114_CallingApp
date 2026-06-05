@@ -84,7 +84,7 @@
         android:padding="8dp"
         android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintBottom_toTopOf="@id/tvReplyingToLayout" />
+        app:layout_constraintBottom_toTopOf="@id/cardMentionSuggestions" />
 
     <!-- Mention Suggestions Container -->
     <com.google.android.material.card.MaterialCardView
@@ -100,7 +100,7 @@
         app:strokeWidth="1dp"
         android:visibility="gone"
         app:layout_constraintHeight_max="160dp"
-        app:layout_constraintBottom_toTopOf="@id/tvReplyingToLayout">
+        app:layout_constraintBottom_toTopOf="@id/typingIndicatorLayout">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvMentionSuggestions"
@@ -108,6 +108,73 @@
             android:layout_height="wrap_content"
             android:padding="4dp" />
     </com.google.android.material.card.MaterialCardView>
+
+    <!-- Typing Indicator -->
+    <LinearLayout
+        android:id="@+id/typingIndicatorLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvReplyingToLayout">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="52dp"
+            android:layout_height="28dp"
+            app:cardCornerRadius="14dp"
+            app:cardBackgroundColor="@color/discord_dark_alt"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="8dp">
+
+                <View
+                    android:id="@+id/dot1"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:layout_marginHorizontal="2dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/discord_text_muted" />
+
+                <View
+                    android:id="@+id/dot2"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:layout_marginHorizontal="2dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/discord_text_muted" />
+
+                <View
+                    android:id="@+id/dot3"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:layout_marginHorizontal="2dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/discord_text_muted" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvTypingStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Someone is typing..."
+            android:textColor="@color/discord_text_muted"
+            android:textSize="12sp"
+            android:fontFamily="@font/inter" />
+
+    </LinearLayout>
 
     <!-- Replying to UI Header Bar (Messenger Style) -->
     <androidx.constraintlayout.widget.ConstraintLayout

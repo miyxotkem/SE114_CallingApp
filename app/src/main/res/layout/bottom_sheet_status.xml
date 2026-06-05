@@ -26,9 +26,9 @@
         android:textSize="20sp"
         android:textStyle="bold" />
 
-    <!-- Status Option: Online -->
+    <!-- Status Option: Automatic -->
     <LinearLayout
-        android:id="@+id/btnStatusOnline"
+        android:id="@+id/btnStatusAuto"
         android:layout_width="match_parent"
         android:layout_height="52dp"
         android:background="?android:attr/selectableItemBackground"
@@ -48,34 +48,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter"
-            android:text="Online"
-            android:textColor="@color/discord_text_primary"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Status Option: Idle -->
-    <LinearLayout
-        android:id="@+id/btnStatusIdle"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <View
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/bg_circle"
-            android:backgroundTint="@color/discord_yellow" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/inter"
-            android:text="Idle"
+            android:text="Automatic (Online/Idle/Offline)"
             android:textColor="@color/discord_text_primary"
             android:textSize="16sp" />
     </LinearLayout>
@@ -107,32 +80,7 @@
             android:textSize="16sp" />
     </LinearLayout>
 
-    <!-- Status Option: Invisible -->
-    <LinearLayout
-        android:id="@+id/btnStatusInvisible"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
 
-        <View
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/bg_circle"
-            android:backgroundTint="@color/discord_text_muted" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/inter"
-            android:text="Invisible"
-            android:textColor="@color/discord_text_primary"
-            android:textSize="16sp" />
-    </LinearLayout>
     
     <View
         android:layout_width="match_parent"

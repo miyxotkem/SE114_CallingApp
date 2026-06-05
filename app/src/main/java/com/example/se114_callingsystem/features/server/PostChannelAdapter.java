@@ -15,6 +15,7 @@ public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.
     private List<PostChannel> channels;
     private OnChannelActionListener listener;
     private String serverColor = "#6C63FF";
+    private boolean isAdmin = false;
 
     public interface OnChannelActionListener {
         void onRename(PostChannel channel);
@@ -23,6 +24,11 @@ public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.
 
     public void setServerColor(String color) {
         this.serverColor = color;
+        notifyDataSetChanged();
+    }
+
+    public void setAdmin(boolean admin) {
+        this.isAdmin = admin;
         notifyDataSetChanged();
     }
 
@@ -42,6 +48,14 @@ public class PostChannelAdapter extends RecyclerView.Adapter<PostChannelAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         PostChannel channel = channels.get(position);
         holder.name.setText("📰 " + channel.getName()); // Use 📰 icon for posts
+
+        if (isAdmin) {
+            holder.btnRename.setVisibility(View.VISIBLE);
+            holder.btnRemove.setVisibility(View.VISIBLE);
+        } else {
+            holder.btnRename.setVisibility(View.GONE);
+            holder.btnRemove.setVisibility(View.GONE);
+        }
 
         holder.btnRename.setOnClickListener(v -> {
             int currentPos = holder.getAdapterPosition();

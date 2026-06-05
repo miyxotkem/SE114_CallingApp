@@ -16,6 +16,7 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
     private List<ChatChannel> channels;
     private OnChannelActionListener listener;
     private String serverColor = "#6C63FF";
+    private boolean isAdmin = false;
 
     public interface OnChannelActionListener {
         void onRename(ChatChannel channel);
@@ -24,6 +25,11 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
 
     public void setServerColor(String color) {
         this.serverColor = color;
+        notifyDataSetChanged();
+    }
+
+    public void setAdmin(boolean admin) {
+        this.isAdmin = admin;
         notifyDataSetChanged();
     }
 
@@ -43,6 +49,14 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ChatChannel channel = channels.get(position);
         holder.name.setText("# " + channel.getChatName());
+
+        if (isAdmin) {
+            holder.btnRename.setVisibility(View.VISIBLE);
+            holder.btnRemove.setVisibility(View.VISIBLE);
+        } else {
+            holder.btnRename.setVisibility(View.GONE);
+            holder.btnRemove.setVisibility(View.GONE);
+        }
 
         holder.btnRename.setOnClickListener(v -> {
             int currentPos = holder.getAdapterPosition();

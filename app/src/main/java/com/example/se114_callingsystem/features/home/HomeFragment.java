@@ -63,6 +63,10 @@ public class HomeFragment extends Fragment {
             dialog.show(getParentFragmentManager(), "Server_on_create");
         });
 
+        binding.mcvServerJoin.setOnClickListener(v -> {
+            showJoinServerDialog();
+        });
+
         binding.btnManageFriends.setOnClickListener(v -> {
             androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_friend_manage);
         });
@@ -71,14 +75,80 @@ public class HomeFragment extends Fragment {
 
         loadUserStatus();
     }
+    
+    private void showJoinServerDialog() {
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_join_server, null);
+        dialog.setContentView(view);
+        
+        View parent = (View) view.getParent();
+        if (parent != null) {
+            parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        }
+
+        com.google.android.material.textfield.TextInputEditText edtInviteCode = view.findViewById(R.id.edtInviteCode);
+        com.google.android.material.button.MaterialButton btnJoin = view.findViewById(R.id.btnJoinServer);
+
+        btnJoin.setOnClickListener(v -> {
+            String inviteCode = edtInviteCode.getText() != null ? edtInviteCode.getText().toString().trim() : "";
+            if (!inviteCode.isEmpty()) {
+                joinServer(inviteCode);
+                dialog.dismiss();
+            } else {
+                edtInviteCode.setError("Vui lòng nhập mã mời");
+            }
+        });
+
+        dialog.show();
+    }
+    
+    private void joinServer(String serverId) {
+        String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        String userName = FirebaseAuth.getInstance().getCurrentUser() != null && FirebaseAuth.getInstance().getCurrentUser().getDisplayName() != null ? FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : "New Member";
+        if (uid == null) return;
+        
+        db.collection("servers").document(serverId).get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                java.util.List<String> members = (java.util.List<String>) doc.get("members");
+                if (members != null && members.contains(uid)) {
+                    android.widget.Toast.makeText(getContext(), "Bạn đã ở trong server này rồi!", android.widget.Toast.LENGTH_SHORT).show();
+                    if (!currentServerOrder.contains(serverId)) {
+                        currentServerOrder.add(serverId);
+                        db.collection("users").document(uid).update("serverOrder", currentServerOrder);
+                    }
+                    return;
+                }
+
+                // Add user to server members array
+                db.collection("servers").document(serverId).update("members", com.google.firebase.firestore.FieldValue.arrayUnion(uid));
+                
+                // Add user to server members subcollection
+                com.example.se114_callingsystem.core.model.ServerMember newMember = new com.example.se114_callingsystem.core.model.ServerMember(uid, userName, "member");
+                db.collection("servers").document(serverId).collection("members").document(uid).set(newMember);
+                
+                // Add server to user's server order
+                if (!currentServerOrder.contains(serverId)) {
+                    currentServerOrder.add(serverId);
+                    db.collection("users").document(uid).update("serverOrder", currentServerOrder);
+                }
+                
+                android.widget.Toast.makeText(getContext(), "Tham gia server thành công!", android.widget.Toast.LENGTH_SHORT).show();
+            } else {
+                android.widget.Toast.makeText(getContext(), "Mã mời không hợp lệ hoặc Server không tồn tại.", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     private void loadUserStatus() {
         String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
         if (uid != null) {
-            db.collection("users").document(uid).addSnapshotListener((doc, error) -> {
-                if (doc != null && doc.exists() && binding != null) {
-                    String status = doc.getString("status");
-                    if (status == null) status = "online";
+            com.google.firebase.database.FirebaseDatabase.getInstance().getReference("users/" + uid + "/status")
+                .addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+                    @Override
+                    public void onDataChange(@androidx.annotation.NonNull com.google.firebase.database.DataSnapshot doc) {
+                        if (binding == null) return;
+                        String status = doc.getValue(String.class);
+                        if (status == null) status = "offline";
                     
                     int colorRes = R.color.discord_green;
                     String displayText = "Online";
@@ -118,7 +188,9 @@ public class HomeFragment extends Fragment {
                     binding.tvStatusText.setText(displayText);
                     binding.tvStatusText.setTextColor(getResources().getColor(colorRes));
                     binding.statusIndicatorColor.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(colorRes)));
-                }
+                    }
+                    @Override
+                    public void onCancelled(@androidx.annotation.NonNull com.google.firebase.database.DatabaseError error) {}
             });
         }
     }
@@ -133,27 +205,23 @@ public class HomeFragment extends Fragment {
             parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         }
 
-        view.findViewById(R.id.btnStatusOnline).setOnClickListener(v -> {
+        view.findViewById(R.id.btnStatusAuto).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "auto").apply();
             updateUserStatus("online");
             bottomSheetDialog.dismiss();
         });
-        view.findViewById(R.id.btnStatusIdle).setOnClickListener(v -> {
-            updateUserStatus("idle");
-            bottomSheetDialog.dismiss();
-        });
         view.findViewById(R.id.btnStatusDnd).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "dnd").apply();
             updateUserStatus("dnd");
             bottomSheetDialog.dismiss();
         });
-        view.findViewById(R.id.btnStatusInvisible).setOnClickListener(v -> {
-            updateUserStatus("offline");
-            bottomSheetDialog.dismiss();
-        });
         view.findViewById(R.id.btnStatusSleeping).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "sleeping").apply();
             updateUserStatus("sleeping");
             bottomSheetDialog.dismiss();
         });
         view.findViewById(R.id.btnStatusEating).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "eating").apply();
             updateUserStatus("eating");
             bottomSheetDialog.dismiss();
         });
@@ -169,13 +237,14 @@ public class HomeFragment extends Fragment {
         android.widget.EditText input = new android.widget.EditText(requireContext());
         input.setHint("Enter custom status (e.g. Coding 💻)");
         
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Custom Status")
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
+        builder.setTitle("Custom Status")
             .setView(input)
-            .setPositiveButton("Save", (dialog, which) -> {
-                String text = input.getText().toString().trim();
-                if (!text.isEmpty()) {
-                    updateUserStatus(text);
+            .setPositiveButton("Set", (d, w) -> {
+                String s = input.getText().toString().trim();
+                if (!s.isEmpty()) {
+                    requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", s).apply();
+                    updateUserStatus(s);
                 }
             })
             .setNegativeButton("Cancel", null)

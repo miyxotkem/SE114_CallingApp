@@ -23,6 +23,7 @@ import java.util.Random;
 public class CreateServerDialog extends DialogFragment {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private String generatedServerId;
 
     // BẢNG 10 MÀU XỊN XÒ ĐỂ RANDOM (Giống hệt ở bảng chọn màu)
     private final String[] palette = {
@@ -48,8 +49,23 @@ public class CreateServerDialog extends DialogFragment {
         EditText etPurpose = view.findViewById(R.id.etPurpose);
         Button btnFinish = view.findViewById(R.id.btnFinish);
 
+        // Generate ID early for invite code
+        generatedServerId = db.collection("servers").document().getId();
+
         // Navigation logic stays the same
         setupNavigation(view, viewFlipper, etName);
+        
+        android.widget.TextView tvInviteCode = view.findViewById(R.id.tvInviteCode);
+        Button btnCopyInvite = view.findViewById(R.id.btnCopyInvite);
+        if (tvInviteCode != null) tvInviteCode.setText(generatedServerId);
+        if (btnCopyInvite != null) {
+            btnCopyInvite.setOnClickListener(v -> {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                android.content.ClipData clip = android.content.ClipData.newPlainText("Mã mời Server", generatedServerId);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(getContext(), "Đã copy mã mời!", Toast.LENGTH_SHORT).show();
+            });
+        }
 
         btnFinish.setOnClickListener(v -> {
             btnFinish.setEnabled(false);
@@ -75,18 +91,18 @@ public class CreateServerDialog extends DialogFragment {
                 newServer.setOrderIndex(currentOrder);
 
                 // 4. Save to Firestore
-                db.collection("servers")
-                        .add(newServer)
-                        .addOnSuccessListener(documentReference -> {
-                            Log.d("Firestore", "Server Created with ID: " + documentReference.getId());
+                db.collection("servers").document(generatedServerId)
+                        .set(newServer)
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d("Firestore", "Server Created with ID: " + generatedServerId);
                             
                             // Add owner to members subcollection
                             String ownerName = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null && com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() != null ? 
                                 com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : "Owner";
                             com.example.se114_callingsystem.core.model.ServerMember ownerMember = new com.example.se114_callingsystem.core.model.ServerMember(ownerId, ownerName, "owner");
-                            db.collection("servers").document(documentReference.getId()).collection("members").document(ownerId)
+                            db.collection("servers").document(generatedServerId).collection("members").document(ownerId)
                                 .set(ownerMember)
-                                .addOnSuccessListener(aVoid -> {
+                                .addOnSuccessListener(ignored -> {
                                     if (getActivity() != null) {
                                         Toast.makeText(getContext(), "Server Created!", Toast.LENGTH_SHORT).show();
                                     }

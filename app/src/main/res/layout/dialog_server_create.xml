@@ -288,12 +288,25 @@
                         android:textColor="@color/discord_text_secondary"
                         android:layout_marginBottom="24dp"/>
 
+                    <TextView
+                        android:id="@+id/tvInviteCode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="LOADING..."
+                        android:textAlignment="center"
+                        android:textSize="24sp"
+                        android:letterSpacing="0.2"
+                        android:textIsSelectable="true"
+                        android:fontFamily="@font/inter" android:textStyle="bold"
+                        android:textColor="@color/discord_blurple"
+                        android:layout_marginBottom="16dp"/>
+
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnInvite"
+                        android:id="@+id/btnCopyInvite"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
-                        android:text="Chia sẻ Link Mời"
+                        android:text="Copy Mã Mời"
                         android:textSize="16sp"
                         android:textAllCaps="false"
                         android:fontFamily="@font/inter" android:textStyle="bold"
