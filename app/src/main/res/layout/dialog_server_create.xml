@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="24dp">
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:cardBackgroundColor="@color/discord_dark_floating"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/discord_divider">
+
+         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="32dp">
+
+            <!-- Stepper Progress Indicator -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="24dp"
+                android:weightSum="3">
+                <View
+                    android:id="@+id/step1Indicator"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@color/discord_blurple" />
+                <View
+                    android:id="@+id/step2Indicator"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="4dp"
+                    android:layout_marginHorizontal="2dp"
+                    android:background="@color/discord_divider" />
+                <View
+                    android:id="@+id/step3Indicator"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="4dp"
+                    android:layout_marginStart="4dp"
+                    android:background="@color/discord_divider" />
+            </LinearLayout>
+
+            <ViewFlipper
+                android:id="@+id/viewFlipper"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inAnimation="@android:anim/slide_in_left"
+                android:outAnimation="@android:anim/slide_out_right">
+
+                <!-- Step 1: Server Name -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Discord Brand Logo Circular Header -->
+                    <FrameLayout
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="#1A5865F2">
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_discord_brand_logo"
+                            app:tint="@color/discord_blurple" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Tạo Server Mới"
+                        android:textAlignment="center"
+                        android:textSize="22sp"
+                        android:fontFamily="@font/inter" android:textStyle="bold"
+                        android:textColor="@color/discord_text_primary"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Đặt một cái tên thật kêu cho cộng đồng của bạn nhé."
+                        android:textAlignment="center"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textColor="@color/discord_text_secondary"
+                        android:layout_marginBottom="24dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="24dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="@color/discord_blurple"
+                        app:hintTextColor="@color/discord_blurple"
+                        app:boxBackgroundColor="@color/discord_dark_elevated"
+                        app:startIconDrawable="@drawable/ic_logo_home"
+                        app:startIconTint="@color/discord_text_secondary"
+                        android:hint="Tên Server">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etServerName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapWords"
+                            android:textColor="@color/discord_text_primary"
+                            android:textSize="16sp"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnNext1"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="Tiếp tục"
+                        android:textSize="16sp"
+                        android:textAllCaps="false"
+                        android:fontFamily="@font/inter" android:textStyle="bold"
+                        app:cornerRadius="12dp"
+                        android:backgroundTint="@color/discord_blurple"
+                        android:textColor="@color/white"
+                        app:elevation="4dp"/>
+                </LinearLayout>
+
+                <!-- Step 2: Server Purpose -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Custom Palette Icon Header -->
+                    <FrameLayout
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="#1A5865F2">
+                        <ImageView
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_palette"
+                            app:tint="@color/discord_blurple" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Mục đích Server"
+                        android:textAlignment="center"
+                        android:textSize="22sp"
+                        android:fontFamily="@font/inter" android:textStyle="bold"
+                        android:textColor="@color/discord_text_primary"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Chia sẻ đôi chút về chủ đề của Server để mọi người dễ dàng tham gia nhé."
+                        android:textAlignment="center"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textColor="@color/discord_text_secondary"
+                        android:layout_marginBottom="24dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="24dp"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="@color/discord_blurple"
+                        app:hintTextColor="@color/discord_blurple"
+                        app:boxBackgroundColor="@color/discord_dark_elevated"
+                        android:hint="Giới thiệu đôi chút về server">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPurpose"
+                            android:layout_width="match_parent"
+                            android:layout_height="100dp"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine"
+                            android:textColor="@color/discord_text_primary"
+                            android:textSize="16sp"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBack2"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="0.8"
+                            android:layout_height="56dp"
+                            android:text="Quay lại"
+                            android:textSize="16sp"
+                            android:textAllCaps="false"
+                            android:fontFamily="@font/inter"
+                            android:textColor="@color/discord_text_secondary"
+                            android:layout_marginEnd="8dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnNext2"
+                            android:layout_width="0dp"
+                            android:layout_weight="1.2"
+                            android:layout_height="56dp"
+                            android:text="Tiếp tục"
+                            android:textSize="16sp"
+                            android:textAllCaps="false"
+                            android:fontFamily="@font/inter" android:textStyle="bold"
+                            app:cornerRadius="12dp"
+                            android:backgroundTint="@color/discord_blurple"
+                            android:textColor="@color/white"
+                            android:layout_marginStart="8dp"
+                            app:elevation="4dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Step 3: Invite Friends -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Done Circular Icon Header -->
+                    <FrameLayout
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/bg_circle"
+                        android:backgroundTint="#1A23A559">
+                        <ImageView
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_add"
+                            app:tint="@color/discord_green" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Mời bạn bè"
+                        android:textAlignment="center"
+                        android:textSize="22sp"
+                        android:fontFamily="@font/inter" android:textStyle="bold"
+                        android:textColor="@color/discord_text_primary"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Đã xong! Giờ hãy mời vài người bạn vào chung vui nhé."
+                        android:textAlignment="center"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/inter"
+                        android:textColor="@color/discord_text_secondary"
+                        android:layout_marginBottom="24dp"/>
+
+                    <TextView
+                        android:id="@+id/tvInviteCode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="LOADING..."
+                        android:textAlignment="center"
+                        android:textSize="24sp"
+                        android:letterSpacing="0.2"
+                        android:textIsSelectable="true"
+                        android:fontFamily="@font/inter" android:textStyle="bold"
+                        android:textColor="@color/discord_blurple"
+                        android:layout_marginBottom="16dp"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCopyInvite"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="Copy Mã Mời"
+                        android:textSize="16sp"
+                        android:textAllCaps="false"
+                        android:fontFamily="@font/inter" android:textStyle="bold"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="@color/discord_blurple"
+                        app:strokeWidth="1.5dp"
+                        android:textColor="@color/discord_blurple"
+                        app:icon="@android:drawable/ic_menu_share"
+                        app:iconTint="@color/discord_blurple"
+                        app:iconGravity="textStart"
+                        android:layout_marginBottom="24dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBack3"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="0.8"
+                            android:layout_height="56dp"
+                            android:text="Quay lại"
+                            android:textSize="16sp"
+                            android:textAllCaps="false"
+                            android:fontFamily="@font/inter"
+                            android:textColor="@color/discord_text_secondary"
+                            android:layout_marginEnd="8dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnFinish"
+                            android:layout_width="0dp"
+                            android:layout_weight="1.2"
+                            android:layout_height="56dp"
+                            android:text="Tạo Server"
+                            android:textSize="16sp"
+                            android:textAllCaps="false"
+                            android:fontFamily="@font/inter" android:textStyle="bold"
+                            app:cornerRadius="12dp"
+                            android:backgroundTint="@color/discord_blurple"
+                            android:textColor="@color/white"
+                            android:layout_marginStart="8dp"
+                            app:elevation="4dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+
+            </ViewFlipper>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</FrameLayout>

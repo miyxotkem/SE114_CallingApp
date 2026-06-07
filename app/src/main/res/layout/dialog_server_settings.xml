@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/discord_dark_base">
+
+    <!-- Drag handle -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="40dp"
+        android:layout_height="5dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp"
+        app:cardBackgroundColor="@color/discord_text_secondary"
+        app:cardCornerRadius="2.5dp"
+        app:cardElevation="0dp"/>
+
+    <!-- Avatar Section -->
+    <FrameLayout
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardServerAvatarSettings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardBackgroundColor="@color/discord_dark_deep"
+            app:cardCornerRadius="48dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/discord_blurple"
+            app:strokeWidth="2dp">
+
+            <TextView
+                android:id="@+id/tvAvatarLetterSettings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="S"
+                android:textColor="@color/discord_blurple"
+                android:textSize="32sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/ivServerAvatarSettings"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Edit Icon Overlay -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="bottom|end"
+            app:cardBackgroundColor="@color/discord_blurple"
+            app:cardCornerRadius="14dp"
+            app:strokeColor="@color/discord_dark_base"
+            app:strokeWidth="2dp">
+
+            <ImageView
+                android:id="@+id/btnEditAvatar"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_edit"
+                app:tint="@color/white" />
+        </com.google.android.material.card.MaterialCardView>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/btnRemoveAvatar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Remove Picture"
+        android:textColor="@color/danger"
+        android:textSize="14sp"
+        android:fontFamily="@font/inter"
+        android:layout_marginBottom="24dp"
+        android:visibility="gone"
+        android:background="?attr/selectableItemBackground"
+        android:padding="4dp"/>
+
+    <!-- SERVER DETAILS -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SERVER NAME"
+        android:textColor="@color/discord_text_secondary"
+        android:textSize="12sp"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etServerNameSettings"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_edittext"
+        android:backgroundTint="@color/discord_dark_deep"
+        android:hint="Enter new name"
+        android:paddingHorizontal="16dp"
+        android:inputType="text"
+        android:textColor="@color/white"
+        android:textColorHint="@color/discord_text_secondary"
+        android:fontFamily="@font/inter"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SERVER DESCRIPTION"
+        android:textColor="@color/discord_text_secondary"
+        android:textSize="12sp"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etServerDescriptionSettings"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_edittext"
+        android:backgroundTint="@color/discord_dark_deep"
+        android:hint="Enter description"
+        android:paddingHorizontal="16dp"
+        android:inputType="text"
+        android:textColor="@color/white"
+        android:textColorHint="@color/discord_text_secondary"
+        android:fontFamily="@font/inter"
+        android:layout_marginBottom="16dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSaveServerDetails"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="Save Changes"
+        app:cornerRadius="12dp"
+        android:backgroundTint="@color/discord_blurple"
+        android:textColor="@color/white"
+        android:fontFamily="@font/inter"
+        android:layout_marginBottom="24dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/discord_dark_deep"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- OPTIONS -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnManageMembers"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Manage Members"
+        android:textColor="@color/discord_text_primary"
+        android:textSize="15sp"
+        android:fontFamily="@font/inter"
+        android:gravity="start|center_vertical"
+        app:icon="@drawable/ic_user"
+        app:iconTint="@color/discord_text_secondary"
+        app:iconPadding="16dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnChangeColor"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Change Accent Color"
+        android:textColor="@color/discord_text_primary"
+        android:textSize="15sp"
+        android:fontFamily="@font/inter"
+        android:gravity="start|center_vertical"
+        app:icon="@drawable/ic_palette"
+        app:iconTint="@color/discord_text_secondary"
+        app:iconPadding="16dp"/>
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/discord_dark_deep"
+        android:layout_marginBottom="24dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLeaveServer"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Leave Server"
+        android:textColor="@color/danger"
+        android:fontFamily="@font/inter"
+        app:strokeColor="@color/danger"
+        app:strokeWidth="1.5dp"
+        app:cornerRadius="12dp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- NÚT XÓA -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDeleteServer"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Delete Server"
+        android:textColor="@color/danger"
+        android:fontFamily="@font/inter"
+        app:strokeColor="@color/danger"
+        app:strokeWidth="1.5dp"
+        app:cornerRadius="12dp"
+        android:layout_marginBottom="8dp"/>
+
+</LinearLayout>

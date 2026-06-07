@@ -1,0 +1,161 @@
+package com.example.se114_callingsystem;
+
+import android.os.Bundle;
+import android.view.View;
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
+import com.example.se114_callingsystem.databinding.ActivityMainBinding;
+
+public class MainActivity extends AppCompatActivity {
+
+    private ActivityMainBinding binding;
+    private android.os.Handler idleHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable idleRunnable = () -> setAppStatus("idle");
+    private String lastSetStatus = "";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        com.example.se114_callingsystem.core.util.ThemeHelper.applyTheme(this);
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        setupRealtimePresence();
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0); // Bottom is handled by bottom nav
+            return insets;
+        });
+
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        if (navHostFragment != null) {
+            NavController navController = navHostFragment.getNavController();
+            NavigationUI.setupWithNavController(binding.bottomNav, navController);
+            
+            navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+                int id = destination.getId();
+                if (id == R.id.nav_home || id == R.id.nav_notifications || id == R.id.nav_profile) {
+                    binding.bottomNav.setVisibility(View.VISIBLE);
+                } else {
+                    binding.bottomNav.setVisibility(View.GONE);
+                }
+            });
+        }
+
+        handleNotificationIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleNotificationIntent(intent);
+    }
+
+    private void handleNotificationIntent(android.content.Intent intent) {
+        if (intent != null && intent.hasExtra("CHAT_ID")) {
+            String chatId = intent.getStringExtra("CHAT_ID");
+            String chatName = intent.getStringExtra("CHAT_NAME");
+            String serverColor = intent.getStringExtra("SERVER_COLOR");
+            String serverId = intent.getStringExtra("SERVER_ID");
+
+            NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.nav_host_fragment);
+            if (navHostFragment != null) {
+                NavController navController = navHostFragment.getNavController();
+                Bundle args = new Bundle();
+                args.putString("CHAT_ID", chatId);
+                args.putString("CHAT_NAME", chatName);
+                args.putString("SERVER_COLOR", serverColor != null ? serverColor : "#5865F2");
+                args.putString("SERVER_ID", serverId);
+
+                navController.navigate(R.id.nav_chat_detail, args);
+            }
+        }
+    }
+
+    private void setupRealtimePresence() {
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid == null) return;
+
+        com.google.firebase.database.FirebaseDatabase database = com.google.firebase.database.FirebaseDatabase.getInstance();
+        com.google.firebase.database.DatabaseReference statusRef = database.getReference("users/" + uid + "/status");
+        com.google.firebase.database.DatabaseReference connectedRef = database.getReference(".info/connected");
+
+        connectedRef.addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(com.google.firebase.database.DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class) == Boolean.TRUE;
+                if (connected) {
+                    statusRef.onDisconnect().setValue("offline");
+                    setAppStatus("online");
+                }
+            }
+
+            @Override
+            public void onCancelled(com.google.firebase.database.DatabaseError error) {}
+        });
+    }
+
+    private void resetIdleTimer() {
+        idleHandler.removeCallbacks(idleRunnable);
+        setAppStatus("online");
+        idleHandler.postDelayed(idleRunnable, 2 * 60 * 1000); // 2 minutes
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+        resetIdleTimer();
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        resetIdleTimer();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        idleHandler.removeCallbacks(idleRunnable);
+        setAppStatus("offline");
+    }
+
+    private void setAppStatus(String appState) {
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid == null) return;
+        
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String manual = prefs.getString("manual_status", "auto");
+        
+        String targetStatus = appState; 
+        if (!appState.equals("offline") && !manual.equals("auto")) {
+            targetStatus = manual;
+        }
+        
+        if (!targetStatus.equals(lastSetStatus)) {
+            lastSetStatus = targetStatus;
+            com.google.firebase.database.FirebaseDatabase.getInstance().getReference("users/" + uid + "/status").setValue(targetStatus);
+            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).update("status", targetStatus);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+    }
+}

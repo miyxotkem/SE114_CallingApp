@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_secondary"
+    android:backgroundTint="@color/discord_dark_floating"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp"
+        android:background="@color/discord_divider" />
+
+    <!-- Premium Icon Header -->
+    <FrameLayout
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_circle"
+        android:backgroundTint="#1A5865F2">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="#"
+            android:textColor="@color/discord_blurple"
+            android:textSize="32sp"
+            android:fontFamily="@font/inter" android:textStyle="bold" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvBottomSheetTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Tạo Kênh Mới"
+        android:textColor="@color/discord_text_primary"
+        android:textSize="22sp"
+        android:fontFamily="@font/inter" android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvChannelDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="6dp"
+        android:text="Kênh là nơi các thành viên trao đổi và chia sẻ với nhau."
+        android:textAlignment="center"
+        android:textColor="@color/discord_text_secondary"
+        android:textSize="14sp"
+        android:fontFamily="@font/inter" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tlChannelName"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:hint="Tên Kênh"
+        app:boxStrokeColor="@color/discord_blurple"
+        app:hintTextColor="@color/discord_blurple"
+        app:boxBackgroundColor="@color/discord_dark_elevated"
+        app:startIconDrawable="@drawable/ic_chat_bubble"
+        app:startIconTint="@color/discord_text_secondary"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etChannelName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:textColor="@color/discord_text_primary"
+            android:textSize="16sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCreateConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="24dp"
+        android:text="Tạo Kênh"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:fontFamily="@font/inter" android:textStyle="bold"
+        app:backgroundTint="@color/discord_blurple"
+        app:cornerRadius="12dp"
+        app:elevation="4dp" />
+
+</LinearLayout>

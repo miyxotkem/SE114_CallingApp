@@ -8,12 +8,49 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:554791499535:android:baec481cd443d6f9c0b07a",
+        "android_client_info": {
+          "package_name": "com.example.clonediscordapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "554791499535-2756h3j289803tbddgc1cun29t8e5n6i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJrdtyfvAR4lysXA1ZpaleJLcH3uokVhU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "554791499535-2756h3j289803tbddgc1cun29t8e5n6i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:554791499535:android:454a224f5b0c4ea6c0b07a",
         "android_client_info": {
           "package_name": "com.example.se114_callingsystem"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "554791499535-i6m8k4qessdmruk2a8fo77j74aq175d7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.se114_callingsystem",
+            "certificate_hash": "b1c9b9358241768fb0e861e0691956c50a55ca51"
+          }
+        },
         {
           "client_id": "554791499535-mnmof4999ki43deo6rpgp8jkmmif1qgg.apps.googleusercontent.com",
           "client_type": 1,
