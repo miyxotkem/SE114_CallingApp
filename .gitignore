@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Node dependencies
+calling-app-backend/node_modules/
+
+# Local env files
+calling-app-backend/.env
