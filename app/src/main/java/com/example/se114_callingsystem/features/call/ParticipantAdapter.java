@@ -18,12 +18,21 @@ import io.agora.rtc2.Constants;
 import io.agora.rtc2.RtcEngine;
 import io.agora.rtc2.video.VideoCanvas;
 import java.util.List;
+import com.bumptech.glide.Glide;
+import com.example.se114_callingsystem.core.model.ServerMember;
 
 public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.CallViewHolder> {
 
     private Context context;
     private List<Participant> participantList;
     private RtcEngine rtcEngine;
+    private List<ServerMember> serverMembers = new java.util.ArrayList<>();
+    private java.util.Map<String, String> avatarCache = new java.util.HashMap<>();
+
+    public void setServerMembers(List<ServerMember> serverMembers) {
+        this.serverMembers = serverMembers != null ? serverMembers : new java.util.ArrayList<>();
+        notifyDataSetChanged();
+    }
 
     public ParticipantAdapter(Context context, List<Participant> participantList, RtcEngine rtcEngine) {
         this.context = context;
@@ -67,6 +76,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                 holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
                 holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
                 holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
+                bindAvatar(holder, participant);
                 updateSpeakingBorder(holder, participant); // Cập nhật viền xanh ngay khi thay đổi mic
                 return;
             }
@@ -118,8 +128,75 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
         holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
         holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
+        bindAvatar(holder, participant);
 
         updateSpeakingBorder(holder, participant);
+    }
+
+    private void bindAvatar(CallViewHolder holder, Participant participant) {
+        if (!participant.isVideoOff) {
+            return;
+        }
+
+        String userId = null;
+        int targetUid = participant.uid;
+        if (targetUid >= 1000) {
+            targetUid = targetUid - 1000;
+        }
+
+        String currentMyUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+
+        if (currentMyUid != null && currentMyUid.hashCode() == targetUid) {
+            userId = currentMyUid;
+        } else if (serverMembers != null) {
+            for (ServerMember m : serverMembers) {
+                if (m.getUserId() != null && m.getUserId().hashCode() == targetUid) {
+                    userId = m.getUserId();
+                    break;
+                }
+            }
+        }
+
+        if (userId != null) {
+            final String finalUserId = userId;
+            String cachedAvatar = avatarCache.get(userId);
+            if (cachedAvatar != null) {
+                if (!cachedAvatar.isEmpty()) {
+                    Glide.with(context)
+                         .load(cachedAvatar)
+                         .placeholder(R.drawable.ic_user)
+                         .into(holder.ivUserProfile);
+                } else {
+                    holder.ivUserProfile.setImageResource(R.drawable.ic_user);
+                }
+            } else {
+                holder.ivUserProfile.setImageResource(R.drawable.ic_user);
+                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    .collection("users").document(userId).get()
+                    .addOnSuccessListener(doc -> {
+                        if (doc.exists()) {
+                            String profilePic = doc.getString("profilePic");
+                            if (profilePic == null) profilePic = "";
+                            avatarCache.put(finalUserId, profilePic);
+                            if (holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
+                                Participant currentPart = participantList.get(holder.getAdapterPosition());
+                                int currentTarget = currentPart.uid >= 1000 ? currentPart.uid - 1000 : currentPart.uid;
+                                if (finalUserId.hashCode() == currentTarget) {
+                                    if (!profilePic.isEmpty()) {
+                                        Glide.with(context)
+                                             .load(profilePic)
+                                             .placeholder(R.drawable.ic_user)
+                                             .into(holder.ivUserProfile);
+                                    }
+                                }
+                            }
+                        }
+                    });
+            }
+        } else {
+            holder.ivUserProfile.setImageResource(R.drawable.ic_user);
+        }
     }
 
     private void updateSpeakingBorder(CallViewHolder holder, Participant participant) {

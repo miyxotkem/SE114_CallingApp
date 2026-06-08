@@ -192,6 +192,7 @@ public class VoiceCallFragment extends Fragment {
     private void setupRecyclerView() {
         if (getContext() == null || binding == null) return;
         adapter = new ParticipantAdapter(requireContext(), participantList, mRtcEngine);
+        adapter.setServerMembers(serverMembers);
         binding.rvParticipants.setAdapter(adapter);
         updateGridLayout();
     }
@@ -646,6 +647,7 @@ public class VoiceCallFragment extends Fragment {
         for (Participant p : participantList) {
             p.name = resolveNameForUid(p.uid);
         }
+        adapter.setServerMembers(serverMembers);
         adapter.notifyDataSetChanged();
     }
 }

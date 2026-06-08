@@ -43,6 +43,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<String> serverMemberNames = new java.util.ArrayList<>();
     private List<ServerMember> serverMembers = new java.util.ArrayList<>();
     private String highlightMessageId = null;
+    private static final java.util.Map<String, String> avatarCache = new java.util.HashMap<>();
 
     public void setHighlightMessageId(String messageId) {
         this.highlightMessageId = messageId;
@@ -319,7 +320,38 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
                     textTime.setText(sdf.format(new Date(message.getTimestamp())));
                 }
-                if (avatarImg != null) avatarImg.setVisibility(View.VISIBLE);
+                if (avatarImg != null) {
+                    avatarImg.setVisibility(View.VISIBLE);
+                    String uid = message.getSenderId();
+                    avatarImg.setTag(uid);
+                    
+                    String cachedAvatar = avatarCache.get(uid);
+                    if (cachedAvatar != null) {
+                        if (!cachedAvatar.isEmpty()) {
+                            Glide.with(avatarImg.getContext())
+                                 .load(cachedAvatar)
+                                 .placeholder(R.drawable.ic_user)
+                                 .into(avatarImg);
+                        } else {
+                            avatarImg.setImageResource(R.drawable.ic_user);
+                        }
+                    } else {
+                        avatarImg.setImageResource(R.drawable.ic_user);
+                        db.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists() && uid.equals(avatarImg.getTag())) {
+                                String profilePic = documentSnapshot.getString("profilePic");
+                                if (profilePic == null) profilePic = "";
+                                avatarCache.put(uid, profilePic);
+                                if (!profilePic.isEmpty()) {
+                                    Glide.with(avatarImg.getContext())
+                                         .load(profilePic)
+                                         .placeholder(R.drawable.ic_user)
+                                         .into(avatarImg);
+                                }
+                            }
+                        });
+                    }
+                }
             } else {
                 if (textTime != null) textTime.setVisibility(View.GONE);
                 if (avatarImg != null) avatarImg.setVisibility(View.INVISIBLE);

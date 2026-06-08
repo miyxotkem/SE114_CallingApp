@@ -22,7 +22,9 @@ import com.example.se114_callingsystem.core.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.StorageReference;
+import com.cloudinary.android.MediaManager;
+import com.cloudinary.android.callback.ErrorInfo;
+import com.cloudinary.android.callback.UploadCallback;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +63,17 @@ public class EditProfileFragment extends Fragment {
         super.onCreate(savedInstanceState);
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        initCloudinary();
+    }
+
+    private void initCloudinary() {
+        Map config = new HashMap();
+        config.put("cloud_name", "dxoukp0yb");
+        config.put("api_key", "359217744855482");
+        config.put("api_secret", "eTG0UvW_hdsHm4hl0r2XJCvidR0");
+        try {
+            MediaManager.init(requireContext(), config);
+        } catch (IllegalStateException e) {}
     }
 
     @Nullable
@@ -130,9 +143,17 @@ public class EditProfileFragment extends Fragment {
         if (currentUser == null || binding == null) return;
         binding.btnSaveProfile.setEnabled(false);
 
+        android.app.ProgressDialog pd = new android.app.ProgressDialog(requireContext());
+        pd.setMessage("Đang lưu thay đổi...");
+        pd.setCancelable(false);
+        pd.show();
+
         uploadImage(avatarUri, "avatar_" + currentUser.getUid(), avatarUrl -> {
             uploadImage(coverUri, "cover_" + currentUser.getUid(), coverUrl -> {
-                if (binding == null) return;
+                if (binding == null) {
+                    pd.dismiss();
+                    return;
+                }
                 
                 Map<String, Object> updates = new HashMap<>();
                 updates.put("username", binding.etUsername.getText().toString().trim());
@@ -147,6 +168,7 @@ public class EditProfileFragment extends Fragment {
                 db.collection("users").document(currentUser.getUid())
                     .update(updates)
                     .addOnSuccessListener(aVoid -> {
+                        pd.dismiss();
                         if (getContext() != null) {
                             Toast.makeText(getContext(), "Changes saved successfully.", Toast.LENGTH_SHORT).show();
                         }
@@ -155,6 +177,7 @@ public class EditProfileFragment extends Fragment {
                         }
                     })
                     .addOnFailureListener(e -> {
+                        pd.dismiss();
                         if (getContext() != null) {
                             Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
@@ -172,12 +195,19 @@ public class EditProfileFragment extends Fragment {
             return;
         }
         
-        StorageReference ref = Firebase.getStorageRef().child("profile_images/" + fileName);
-        ref.putFile(uri).addOnSuccessListener(taskSnapshot -> {
-            ref.getDownloadUrl().addOnSuccessListener(downloadUrl -> {
-                onComplete.accept(downloadUrl.toString());
-            }).addOnFailureListener(e -> onComplete.accept(null));
-        }).addOnFailureListener(e -> onComplete.accept(null));
+        MediaManager.get().upload(uri).option("resource_type", "auto").callback(new UploadCallback() {
+            @Override public void onStart(String requestId) {}
+            @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
+            @Override public void onSuccess(String requestId, Map resultData) {
+                String secureUrl = (String) resultData.get("secure_url");
+                onComplete.accept(secureUrl);
+            }
+            @Override public void onError(String requestId, ErrorInfo error) {
+                Log.e(TAG, "Cloudinary upload error: " + error.getDescription());
+                onComplete.accept(null);
+            }
+            @Override public void onReschedule(String requestId, ErrorInfo error) {}
+        }).dispatch();
     }
 
     @Override
