@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Message;
 import com.example.se114_callingsystem.core.model.ServerMember;
@@ -115,6 +116,7 @@ public class PinnedMessagesAdapter extends RecyclerView.Adapter<PinnedMessagesAd
                             Glide.with(context)
                                     .load(profilePic)
                                     .placeholder(R.drawable.ic_user)
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                                     .into(holder.ivAvatar);
                         } else {
                             holder.ivAvatar.setImageResource(R.drawable.ic_user);

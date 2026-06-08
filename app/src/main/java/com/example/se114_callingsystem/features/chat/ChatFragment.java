@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
@@ -28,6 +29,7 @@ import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.databinding.FragmentChatBinding;
 import com.example.se114_callingsystem.core.model.Firebase;
 import com.example.se114_callingsystem.core.model.Message;
+import com.example.se114_callingsystem.core.di.AppDependencyProvider;
 import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -82,8 +84,7 @@ public class ChatFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        senderId = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "UNKNOWN";
-        initCloudinary();
+        senderId = AppDependencyProvider.getFirebaseAuth().getCurrentUser() != null ? AppDependencyProvider.getFirebaseAuth().getCurrentUser().getUid() : "UNKNOWN";
 
         imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) uploadToCloudinary(uri, "image");
@@ -142,43 +143,7 @@ public class ChatFragment extends Fragment {
         setupTypingIndicator();
     }
 
-    private void initCloudinary() {
-        Map config = new HashMap();
-        config.put("cloud_name", "dxoukp0yb");
-        config.put("api_key", "359217744855482"); // Optional, backend returns it too
-        try {
-            MediaManager.init(requireContext(), new com.cloudinary.android.signed.SignatureProvider() {
-                @Override
-                public com.cloudinary.android.signed.Signature provideSignature(Map options) {
-                    try {
-                        if (FirebaseAuth.getInstance().getCurrentUser() == null) return null;
-                        String idToken = com.google.android.gms.tasks.Tasks.await(FirebaseAuth.getInstance().getCurrentUser().getIdToken(true)).getToken();
-                        long timestamp = System.currentTimeMillis() / 1000L;
-                        
-                        com.example.se114_callingsystem.network.BackendService service = com.example.se114_callingsystem.network.ApiClient.getClient().create(com.example.se114_callingsystem.network.BackendService.class);
-                        java.util.Map<String, Object> body = new java.util.HashMap<>();
-                        body.put("timestamp", timestamp);
-                        retrofit2.Response<com.example.se114_callingsystem.network.BackendService.CloudinarySignatureResponse> response = 
-                                service.getCloudinarySignature("Bearer " + idToken, body).execute();
-                        
-                        if (response.isSuccessful() && response.body() != null) {
-                            return new com.cloudinary.android.signed.Signature(response.body().signature, response.body().api_key, response.body().timestamp);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
 
-                @Override
-                public String getName() {
-                    return "ChatFragmentSignatureProvider";
-                }
-            }, config);
-        } catch (IllegalStateException e) {
-            // Already initialized
-        }
-    }
 
     private void setupRecyclerView() {
         adapter = new ChatAdapter(messageList, serverColor, new ChatAdapter.OnChatInteractListener() {
@@ -409,7 +374,7 @@ public class ChatFragment extends Fragment {
         if ("image".equals(type)) {
             binding.tvReplyingToText.setText("📷 Hình ảnh");
             binding.cardReplyPreviewImage.setVisibility(View.VISIBLE);
-            Glide.with(this).load(message.getContent()).centerCrop().into(binding.ivReplyPreview);
+            Glide.with(this).load(message.getContent()).diskCacheStrategy(DiskCacheStrategy.ALL).centerCrop().into(binding.ivReplyPreview);
         } else if ("file".equals(type)) {
             String fileName = "Tài liệu đính kèm";
             try { fileName = message.getContent().substring(message.getContent().lastIndexOf('/') + 1); } catch (Exception e) {}
@@ -483,7 +448,7 @@ public class ChatFragment extends Fragment {
     private void setupServerMembersListener() {
         if (serverId == null || serverId.isEmpty()) return;
         
-        com.google.firebase.firestore.FirebaseFirestore dbFS = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        com.google.firebase.firestore.FirebaseFirestore dbFS = AppDependencyProvider.getFirestore();
         membersListener = dbFS.collection("servers").document(serverId).collection("members")
             .addSnapshotListener((snapshots, error) -> {
                 if (error != null) return;
@@ -534,7 +499,7 @@ public class ChatFragment extends Fragment {
     private void setTypingStatus(boolean typing) {
         if (groupId == null || senderId == null) return;
         isTyping = typing;
-        DatabaseReference ref = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chat_typing").child(groupId).child(senderId);
+        DatabaseReference ref = AppDependencyProvider.getRealtimeDatabase().getReference("chat_typing").child(groupId).child(senderId);
         if (typing) {
             ref.setValue(true);
             ref.onDisconnect().removeValue();
@@ -545,7 +510,7 @@ public class ChatFragment extends Fragment {
 
     private void setupTypingIndicator() {
         if (groupId == null) return;
-        DatabaseReference typingRef = com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chat_typing").child(groupId);
+        DatabaseReference typingRef = AppDependencyProvider.getRealtimeDatabase().getReference("chat_typing").child(groupId);
         typingListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -727,7 +692,7 @@ public class ChatFragment extends Fragment {
             String uid = member.getUserId();
             holder.itemView.setTag(uid);
             
-            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).get()
+            AppDependencyProvider.getFirestore().collection("users").document(uid).get()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists() && uid.equals(holder.itemView.getTag()) && getContext() != null) {
                         String profilePic = doc.getString("profilePic");
@@ -735,6 +700,7 @@ public class ChatFragment extends Fragment {
                             Glide.with(ChatFragment.this)
                                 .load(profilePic)
                                 .placeholder(R.drawable.ic_user)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .into(holder.ivAvatar);
                         } else {
                             holder.ivAvatar.setImageResource(R.drawable.ic_user);

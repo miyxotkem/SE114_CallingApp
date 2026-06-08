@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.se114_callingsystem.R;
@@ -331,6 +332,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             Glide.with(avatarImg.getContext())
                                  .load(cachedAvatar)
                                  .placeholder(R.drawable.ic_user)
+                                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                                  .into(avatarImg);
                         } else {
                             avatarImg.setImageResource(R.drawable.ic_user);
@@ -346,6 +348,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     Glide.with(avatarImg.getContext())
                                          .load(profilePic)
                                          .placeholder(R.drawable.ic_user)
+                                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                                          .into(avatarImg);
                                 }
                             }
@@ -482,6 +485,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     ivMessageImage.setVisibility(View.VISIBLE);
                     Glide.with(ivMessageImage.getContext())
                             .load(msg.getContent())
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .apply(RequestOptions.bitmapTransform(new RoundedCorners(32)))
                             .into(ivMessageImage);
 
@@ -654,10 +658,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
                         if (ivRepliedImage != null) {
                             ivRepliedImage.setVisibility(View.VISIBLE);
-                            Glide.with(ivRepliedImage.getContext())
-                                    .load(replyContent)
-                                    .apply(RequestOptions.bitmapTransform(new RoundedCorners(16)))
-                                    .into(ivRepliedImage);
+                             Glide.with(ivRepliedImage.getContext())
+                                     .load(replyContent)
+                                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                     .apply(RequestOptions.bitmapTransform(new RoundedCorners(16)))
+                                     .into(ivRepliedImage);
                         }
                     } else if ("file".equals(repliedType)) {
                         // Reply to file - show file name with icon

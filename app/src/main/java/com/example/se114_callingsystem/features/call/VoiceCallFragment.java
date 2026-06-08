@@ -43,6 +43,7 @@ import java.util.List;
 
 import com.example.se114_callingsystem.network.ApiClient;
 import com.example.se114_callingsystem.network.BackendService;
+import com.example.se114_callingsystem.core.di.AppDependencyProvider;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,7 +52,6 @@ public class VoiceCallFragment extends Fragment {
 
     private static final String TAG = "VoiceCallFragment";
 
-    private final String appId = "54381d815bd74264923f243e5a1f0660";
     private RtcEngine mRtcEngine;
     private int uid;
 
@@ -80,10 +80,10 @@ public class VoiceCallFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            uid = FirebaseAuth.getInstance().getCurrentUser().getUid().hashCode();
+        if (AppDependencyProvider.getFirebaseAuth().getCurrentUser() != null) {
+            uid = AppDependencyProvider.getFirebaseAuth().getCurrentUser().getUid().hashCode() & 0x7FFFFFFF;
         } else {
-            uid = ("GUEST_" + System.currentTimeMillis()).hashCode();
+            uid = ("GUEST_" + System.currentTimeMillis()).hashCode() & 0x7FFFFFFF;
         }
     }
 
@@ -155,14 +155,14 @@ public class VoiceCallFragment extends Fragment {
     }
 
     private void initAgoraAndJoinChannel() {
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+        if (AppDependencyProvider.getFirebaseAuth().getCurrentUser() == null) {
             if (getContext() != null) {
                 Toast.makeText(getContext(), "You must be logged in to join a call.", Toast.LENGTH_SHORT).show();
             }
             return;
         }
 
-        FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnCompleteListener(task -> {
+        AppDependencyProvider.getFirebaseAuth().getCurrentUser().getIdToken(true).addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 String idToken = task.getResult().getToken();
                 fetchAgoraTokenAndJoin(idToken);
@@ -176,7 +176,7 @@ public class VoiceCallFragment extends Fragment {
     }
 
     private void fetchAgoraTokenAndJoin(String idToken) {
-        BackendService service = ApiClient.getClient().create(BackendService.class);
+        BackendService service = AppDependencyProvider.getBackendService();
         java.util.Map<String, Object> body = new java.util.HashMap<>();
         body.put("channelName", channelName);
         body.put("uid", uid);
@@ -184,7 +184,7 @@ public class VoiceCallFragment extends Fragment {
             @Override
             public void onResponse(Call<BackendService.AgoraTokenResponse> call, Response<BackendService.AgoraTokenResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    joinChannelWithToken(response.body().token);
+                    joinChannelWithToken(response.body().token, response.body().appId);
                 } else {
                     Log.e(TAG, "Failed to fetch Agora token: " + response.code());
                     if (getContext() != null) {
@@ -203,7 +203,7 @@ public class VoiceCallFragment extends Fragment {
         });
     }
 
-    private void joinChannelWithToken(String rtcToken) {
+    private void joinChannelWithToken(String rtcToken, String appId) {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
             config.mContext = requireContext().getApplicationContext();
@@ -218,6 +218,7 @@ public class VoiceCallFragment extends Fragment {
             mRtcEngine.setParameters("{\"che.audio.enable.aec\":true}");
             mRtcEngine.setParameters("{\"che.audio.enable.ans\":true}");
             mRtcEngine.setParameters("{\"che.audio.enable.agc\":true}");
+            mRtcEngine.setParameters("{\"che.audio.enable.ns\":true}");
 
             mRtcEngine.enableVideo();
             mRtcEngine.muteLocalVideoStream(true);
@@ -255,7 +256,21 @@ public class VoiceCallFragment extends Fragment {
     private void updateGridLayout() {
         if (binding == null) return;
         int count = participantList.size();
-        int spanCount = (count <= 2) ? 1 : (count <= 4 ? 2 : 3);
+        
+        // Count video and voice users
+        int videoCount = 0;
+        for (Participant p : participantList) {
+            if (!p.isVideoOff) {
+                videoCount++;
+            }
+        }
+        
+        int spanCount;
+        if (videoCount == 0) {
+            spanCount = (count <= 2) ? 1 : (count <= 4 ? 2 : 3);
+        } else {
+            spanCount = (videoCount <= 2) ? 1 : 2;
+        }
 
         if (binding.rvParticipants.getLayoutManager() instanceof GridLayoutManager) {
             ((GridLayoutManager) binding.rvParticipants.getLayoutManager()).setSpanCount(spanCount);
@@ -267,7 +282,7 @@ public class VoiceCallFragment extends Fragment {
 
     private void updateParticipantCount() {
         if (binding != null) {
-            binding.tvParticipantCount.setText(participantList.size() + " connected");
+            binding.tvParticipantCount.setText(participantList.size() + " người tham gia");
         }
     }
 
@@ -281,10 +296,11 @@ public class VoiceCallFragment extends Fragment {
                     mRtcEngine.muteRemoteAudioStream(userUid, true);
                     return;
                 }
+                String userName = resolveNameForUid(userUid);
                 if (getContext() != null) {
-                    Toast.makeText(getContext(), "User " + userUid + " joined!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), userName + " đã tham gia cuộc gọi!", Toast.LENGTH_SHORT).show();
                 }
-                Participant newUser = new Participant(userUid, resolveNameForUid(userUid));
+                Participant newUser = new Participant(userUid, userName);
                 newUser.isVideoOff = true;
                 participantList.add(newUser);
                 updateGridLayout();
@@ -310,6 +326,16 @@ public class VoiceCallFragment extends Fragment {
                     if (adapter != null) adapter.notifyItemInserted(0);
                     updateParticipantCount();
                 }
+
+                // Update current user's voice channel in Firestore
+                String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ?
+                    com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+                if (myUid != null) {
+                    com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        .collection("users").document(myUid)
+                        .update("currentVoiceChannelName", channelName)
+                        .addOnFailureListener(e -> Log.e(TAG, "Failed to update voice channel in Firestore: " + e.getMessage()));
+                }
             });
         }
 
@@ -320,6 +346,10 @@ public class VoiceCallFragment extends Fragment {
                 if (userUid == (uid + SCREEN_SHARE_UID_OFFSET)) return;
                 for (int i = 0; i < participantList.size(); i++) {
                     if (participantList.get(i).uid == userUid) {
+                        String displayName = participantList.get(i).name;
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), displayName + " đã rời cuộc gọi!", Toast.LENGTH_SHORT).show();
+                        }
                         participantList.remove(i);
                         updateGridLayout();
                         if (adapter != null) adapter.notifyItemRemoved(i);
@@ -379,7 +409,8 @@ public class VoiceCallFragment extends Fragment {
                 for (int i = 0; i < participantList.size(); i++) {
                     if (participantList.get(i).uid == userUid) {
                         participantList.get(i).isVideoOff = muted;
-                        if (adapter != null) adapter.notifyItemChanged(i, "state_update");
+                        updateGridLayout();
+                        if (adapter != null) adapter.notifyDataSetChanged();
                         break;
                     }
                 }
@@ -392,10 +423,11 @@ public class VoiceCallFragment extends Fragment {
             getActivity().runOnUiThread(() -> {
                 for (int i = 0; i < participantList.size(); i++) {
                     if (participantList.get(i).uid == userUid) {
-                        boolean isOff = (state == 0);
+                        boolean isOff = (state == 0 || state == 4);
                         if (participantList.get(i).isVideoOff != isOff) {
                             participantList.get(i).isVideoOff = isOff;
-                            if (adapter != null) adapter.notifyItemChanged(i, "state_update");
+                            updateGridLayout();
+                            if (adapter != null) adapter.notifyDataSetChanged();
                         }
                         break;
                     }
@@ -547,10 +579,18 @@ public class VoiceCallFragment extends Fragment {
             boolean isVideoOff = !v.isSelected();
             v.setSelected(isVideoOff);
             mRtcEngine.muteLocalVideoStream(isVideoOff);
+            if (!isVideoOff) {
+                mRtcEngine.startPreview();
+            } else {
+                if (!isSharingScreen) {
+                    mRtcEngine.stopPreview();
+                }
+            }
             updateVideoButtonUI(isVideoOff);
             if (!participantList.isEmpty()) {
                 participantList.get(0).isVideoOff = isVideoOff;
-                if (adapter != null) adapter.notifyItemChanged(0, "state_update");
+                updateGridLayout();
+                if (adapter != null) adapter.notifyDataSetChanged();
             }
         });
 
@@ -606,21 +646,37 @@ public class VoiceCallFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        if (isSharingScreen) {
+            stopScreenShare();
+        }
+        
         if (membersListener != null) {
             membersListener.remove();
         }
         if (mRtcEngine != null) {
+            mRtcEngine.stopPreview();
+            mRtcEngine.removeHandler(mRtcEventHandler);
             mRtcEngine.leaveChannel();
             RtcEngine.destroy();
             mRtcEngine = null;
         }
+
+        // Clear current user's voice channel in Firestore
+        String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ?
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (myUid != null) {
+            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users").document(myUid)
+                .update("currentVoiceChannelName", "")
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to clear voice channel in Firestore: " + e.getMessage()));
+        }
+        super.onDestroy();
     }
 
     private void setupServerMembersListener() {
         if (serverId == null || serverId.isEmpty()) return;
         
-        FirebaseFirestore dbFS = FirebaseFirestore.getInstance();
+        FirebaseFirestore dbFS = AppDependencyProvider.getFirestore();
         membersListener = dbFS.collection("servers").document(serverId).collection("members")
             .addSnapshotListener((snapshots, error) -> {
                 if (error != null) return;
@@ -648,7 +704,7 @@ public class VoiceCallFragment extends Fragment {
         if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
                 if (m.getUserId() != null) {
-                    int memberHash = m.getUserId().hashCode();
+                    int memberHash = m.getUserId().hashCode() & 0x7FFFFFFF;
                     if (memberHash + SCREEN_SHARE_UID_OFFSET == agoraUid) {
                         isScreenShare = true;
                         targetUid = memberHash;
@@ -662,7 +718,7 @@ public class VoiceCallFragment extends Fragment {
             String name = "Me";
             if (serverMembers != null) {
                 for (ServerMember m : serverMembers) {
-                    if (m.getUserId() != null && m.getUserId().hashCode() == targetUid) {
+                    if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) == targetUid) {
                         String disp = m.getNickname();
                         if (disp == null || disp.trim().isEmpty()) {
                             disp = m.getUserName();
@@ -679,7 +735,7 @@ public class VoiceCallFragment extends Fragment {
 
         if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
-                if (m.getUserId() != null && m.getUserId().hashCode() == targetUid) {
+                if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) == targetUid) {
                     String name = m.getNickname();
                     if (name == null || name.trim().isEmpty()) {
                         name = m.getUserName();

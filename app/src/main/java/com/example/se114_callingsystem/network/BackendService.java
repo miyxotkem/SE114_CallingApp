@@ -10,6 +10,7 @@ public interface BackendService {
 
     class AgoraTokenResponse {
         public String token;
+        public String appId;
     }
 
     @POST("api/agora/token")

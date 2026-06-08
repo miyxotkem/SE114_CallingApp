@@ -19,6 +19,7 @@ import io.agora.rtc2.RtcEngine;
 import io.agora.rtc2.video.VideoCanvas;
 import java.util.List;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.se114_callingsystem.core.model.ServerMember;
 
 public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.CallViewHolder> {
@@ -40,23 +41,15 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         this.rtcEngine = rtcEngine;
     }
 
+    private int mParentHeight = 0;
+
     @NonNull
     @Override
     public CallViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.item_call_participant, parent, false);
-
-        // Tính toán chiều cao để các ô video chia đều màn hình
-        int totalItems = participantList.size();
-        int rows = getRowsCount(totalItems);
-
-        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
         if (parent.getHeight() > 0) {
-            layoutParams.height = parent.getHeight() / rows;
-        } else {
-            // Backup nếu parent chưa kịp tính height
-            layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            mParentHeight = parent.getHeight();
         }
-        view.setLayoutParams(layoutParams);
         return new CallViewHolder(view);
     }
 
@@ -71,24 +64,66 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                 updateSpeakingBorder(holder, participant);
                 return; // Chỉ cập nhật viền, không vẽ lại video
             }
-            else if (payload.equals("state_update")) {
-                // Cập nhật ngay lập tức trạng thái ẩn/hiện cam và mic mà không làm giật hình
-                holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
-                holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
-                holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
-                bindAvatar(holder, participant);
-                updateSpeakingBorder(holder, participant); // Cập nhật viền xanh ngay khi thay đổi mic
-                return;
-            }
         }
-        // Nếu không có payload, thực hiện bind đầy đủ như bên dưới
+        // Nếu không có danh sách payloads hoặc sự kiện khác, vẽ lại đầy đủ
         super.onBindViewHolder(holder, position, payloads);
     }
 
-    // --- 2. Hàm Bind đầy đủ (Chạy khi mới vào phòng hoặc lướt danh sách) ---
+    // --- 2. Hàm Bind đầy đủ ---
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position) {
         Participant participant = participantList.get(position);
+
+        // 0. Tính toán chiều cao động cho khung hình dựa trên camera trạng thái
+        int parentHeight = mParentHeight;
+        if (parentHeight == 0 && holder.itemView.getParent() instanceof ViewGroup) {
+            parentHeight = ((ViewGroup) holder.itemView.getParent()).getHeight();
+        }
+
+        int itemHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
+        if (parentHeight > 0) {
+            int videoCount = 0;
+            for (Participant p : participantList) {
+                if (!p.isVideoOff) {
+                    videoCount++;
+                }
+            }
+            int voiceCount = participantList.size() - videoCount;
+
+            if (videoCount == 0) {
+                int rows = getRowsCount(voiceCount);
+                itemHeight = parentHeight / rows;
+            } else {
+                int spanCount = (videoCount <= 2) ? 1 : 2;
+                int voiceHeight = dpToPx(90); // Chiều cao cố định của voice item
+                int voiceRows = (voiceCount + spanCount - 1) / spanCount;
+                int totalVoiceHeight = voiceRows * voiceHeight;
+
+                // Giới hạn chiều cao các ô voice không quá 40% màn hình
+                if (totalVoiceHeight > parentHeight * 0.4) {
+                    totalVoiceHeight = (int) (parentHeight * 0.4);
+                    if (voiceRows > 0) {
+                        voiceHeight = totalVoiceHeight / voiceRows;
+                    }
+                }
+
+                if (participant.isVideoOff) {
+                    itemHeight = voiceHeight;
+                } else {
+                    int videoRows = (videoCount <= 2) ? videoCount : 2;
+                    itemHeight = (parentHeight - totalVoiceHeight) / videoRows;
+                    if (itemHeight < dpToPx(150)) {
+                        itemHeight = dpToPx(150); // Chiều cao tối thiểu cho ô video
+                    }
+                }
+            }
+        }
+
+        ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
+        if (lp != null && lp.height != itemHeight) {
+            lp.height = itemHeight;
+            holder.itemView.setLayoutParams(lp);
+        }
 
         // 1. Dọn dẹp container để tránh chồng chéo khi cuộn RecyclerView
         holder.videoContainer.removeAllViews();
@@ -99,13 +134,14 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
 
         // 3. Thiết lập video từ Agora
         if (rtcEngine != null) {
+            boolean isScreenShare = participant.name.equals("Màn hình của tôi") || 
+                                    participant.name.startsWith("Màn hình của");
+
             if (participant.name.equals("Màn hình của tôi")) {
-                // ĐÂY LÀ Ô CỦA SCREEN SHARE (Cục bộ): Cần chỉ định nguồn là màn hình thay vì camera
-                // Không set ZOrderMediaOverlay cho screen share để tránh xung đột render
+                // ĐÂY LÀ Ô CỦA SCREEN SHARE (Cục bộ)
                 VideoCanvas canvas = new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_FIT, 0);
                 canvas.sourceType = Constants.VIDEO_SOURCE_SCREEN_PRIMARY;
                 rtcEngine.setupLocalVideo(canvas);
-                // QUAN TRỌNG: Phải gọi startPreview với nguồn SCREEN để SDK bắt đầu vẽ khung hình
                 rtcEngine.startPreview(Constants.VideoSourceType.VIDEO_SOURCE_SCREEN_PRIMARY);
 
             } else if (participant.name.contains("Me")) {
@@ -114,19 +150,21 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                 rtcEngine.setupLocalVideo(new VideoCanvas(surfaceView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
 
             } else {
-                // ĐÂY LÀ Ô CỦA NGƯỜI KHÁC (Bao gồm cả camera người khác và màn hình người khác)
+                // ĐÂY LÀ Ô CỦA NGƯỜI KHÁC
                 surfaceView.setZOrderMediaOverlay(true);
-                // Dùng RENDER_MODE_FIT cho luồng screen share (UID > 1000), RENDER_MODE_HIDDEN cho camera
-                int renderMode = (participant.uid >= 1000) ? VideoCanvas.RENDER_MODE_FIT : VideoCanvas.RENDER_MODE_HIDDEN;
+                int renderMode = isScreenShare ? VideoCanvas.RENDER_MODE_FIT : VideoCanvas.RENDER_MODE_HIDDEN;
                 rtcEngine.setupRemoteVideo(new VideoCanvas(surfaceView, renderMode, participant.uid));
             }
         }
 
         holder.tvUserName.setText(participant.name);
 
-        // 4. Thiết lập trạng thái hiển thị ban đầu (ẩn/hiện mic, cam)
+        // 4. Thiết lập trạng thái hiển thị ban đầu (ẩn/hiện mic, cam, avatar)
         holder.videoContainer.setVisibility(participant.isVideoOff ? View.GONE : View.VISIBLE);
         holder.ivUserProfile.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
+        if (holder.cardAvatar != null) {
+            holder.cardAvatar.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
+        }
         holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
         bindAvatar(holder, participant);
 
@@ -138,20 +176,27 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
             return;
         }
 
-        String userId = null;
-        int targetUid = participant.uid;
-        if (targetUid >= 1000) {
-            targetUid = targetUid - 1000;
-        }
-
         String currentMyUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
             com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
 
-        if (currentMyUid != null && currentMyUid.hashCode() == targetUid) {
+        int targetUid = participant.uid;
+        if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) + 1000 == targetUid) {
+            targetUid = currentMyUid.hashCode() & 0x7FFFFFFF;
+        } else if (serverMembers != null) {
+            for (ServerMember m : serverMembers) {
+                if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) + 1000 == targetUid) {
+                    targetUid = m.getUserId().hashCode() & 0x7FFFFFFF;
+                    break;
+                }
+            }
+        }
+
+        String userId = null;
+        if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) == targetUid) {
             userId = currentMyUid;
         } else if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
-                if (m.getUserId() != null && m.getUserId().hashCode() == targetUid) {
+                if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) == targetUid) {
                     userId = m.getUserId();
                     break;
                 }
@@ -166,6 +211,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                     Glide.with(context)
                          .load(cachedAvatar)
                          .placeholder(R.drawable.ic_user)
+                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                          .into(holder.ivUserProfile);
                 } else {
                     holder.ivUserProfile.setImageResource(R.drawable.ic_user);
@@ -181,12 +227,23 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                             avatarCache.put(finalUserId, profilePic);
                             if (holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
                                 Participant currentPart = participantList.get(holder.getAdapterPosition());
-                                int currentTarget = currentPart.uid >= 1000 ? currentPart.uid - 1000 : currentPart.uid;
-                                if (finalUserId.hashCode() == currentTarget) {
+                                int currentTarget = currentPart.uid;
+                                if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) + 1000 == currentTarget) {
+                                    currentTarget = currentMyUid.hashCode() & 0x7FFFFFFF;
+                                } else if (serverMembers != null) {
+                                    for (ServerMember m : serverMembers) {
+                                        if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) + 1000 == currentTarget) {
+                                            currentTarget = m.getUserId().hashCode() & 0x7FFFFFFF;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if ((finalUserId.hashCode() & 0x7FFFFFFF) == currentTarget) {
                                     if (!profilePic.isEmpty()) {
                                         Glide.with(context)
                                              .load(profilePic)
                                              .placeholder(R.drawable.ic_user)
+                                             .diskCacheStrategy(DiskCacheStrategy.ALL)
                                              .into(holder.ivUserProfile);
                                     }
                                 }

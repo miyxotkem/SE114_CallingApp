@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.firebase.auth.FirebaseAuth;
@@ -162,6 +163,7 @@ public class ChatMembersFragment extends Fragment {
                         Glide.with(ChatMembersFragment.this)
                             .load(profilePic)
                             .placeholder(R.drawable.ic_user)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .into(holder.ivAvatar);
                     } else {
                         holder.ivAvatar.setImageResource(R.drawable.ic_user);

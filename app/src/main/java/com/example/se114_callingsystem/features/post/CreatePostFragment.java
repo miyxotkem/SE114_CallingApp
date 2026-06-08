@@ -25,6 +25,10 @@ import com.example.se114_callingsystem.core.model.Post;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.se114_callingsystem.core.di.AppDependencyProvider;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.gms.tasks.Tasks;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -93,8 +97,7 @@ public class CreatePostFragment extends Fragment {
             }
         }
         
-        db = FirebaseFirestore.getInstance();
-        initCloudinary();
+        db = AppDependencyProvider.getFirestore();
 
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton btnPost = view.findViewById(R.id.btnPost);
@@ -118,43 +121,7 @@ public class CreatePostFragment extends Fragment {
         btnPost.setOnClickListener(v -> handlePost());
     }
 
-    private void initCloudinary() {
-        Map config = new HashMap();
-        config.put("cloud_name", "dxoukp0yb");
-        config.put("api_key", "359217744855482"); // Optional, backend returns it too
-        try {
-            MediaManager.init(requireContext(), new com.cloudinary.android.signed.SignatureProvider() {
-                @Override
-                public com.cloudinary.android.signed.Signature provideSignature(Map options) {
-                    try {
-                        if (FirebaseAuth.getInstance().getCurrentUser() == null) return null;
-                        String idToken = com.google.android.gms.tasks.Tasks.await(FirebaseAuth.getInstance().getCurrentUser().getIdToken(true)).getToken();
-                        long timestamp = System.currentTimeMillis() / 1000L;
-                        
-                        com.example.se114_callingsystem.network.BackendService service = com.example.se114_callingsystem.network.ApiClient.getClient().create(com.example.se114_callingsystem.network.BackendService.class);
-                        java.util.Map<String, Object> body = new java.util.HashMap<>();
-                        body.put("timestamp", timestamp);
-                        retrofit2.Response<com.example.se114_callingsystem.network.BackendService.CloudinarySignatureResponse> response = 
-                                service.getCloudinarySignature("Bearer " + idToken, body).execute();
-                        
-                        if (response.isSuccessful() && response.body() != null) {
-                            return new com.cloudinary.android.signed.Signature(response.body().signature, response.body().api_key, response.body().timestamp);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
 
-                @Override
-                public String getName() {
-                    return "CreatePostFragmentSignatureProvider";
-                }
-            }, config);
-        } catch (IllegalStateException e) {
-            // Already initialized
-        }
-    }
 
     private void fetchServerMembers() {
         if (serverId != null) {
@@ -271,41 +238,65 @@ public class CreatePostFragment extends Fragment {
         pd.show();
 
         if (!selectedMediaUris.isEmpty()) {
-            List<String> uploadedUrls = new ArrayList<>();
-            uploadMediaRecursive(0, uploadedUrls, content, pd);
+            uploadMediaParallel(content, pd);
         } else {
             savePostToFirestore(content, new ArrayList<>(), pd);
         }
     }
 
-    private void uploadMediaRecursive(int index, List<String> uploadedUrls, String content, ProgressDialog pd) {
-        if (index >= selectedMediaUris.size()) {
-            savePostToFirestore(content, uploadedUrls, pd);
-            return;
+    private void uploadMediaParallel(String content, ProgressDialog pd) {
+        int total = selectedMediaUris.size();
+        List<TaskCompletionSource<String>> tcsList = new ArrayList<>();
+        List<Task<String>> tasks = new ArrayList<>();
+
+        for (int i = 0; i < total; i++) {
+            TaskCompletionSource<String> tcs = new TaskCompletionSource<>();
+            tcsList.add(tcs);
+            tasks.add(tcs.getTask());
         }
 
-        Uri uri = selectedMediaUris.get(index);
-        MediaManager.get().upload(uri).option("resource_type", "auto").callback(new UploadCallback() {
-            @Override public void onStart(String requestId) {
-                pd.setMessage("Đang tải lên " + (index + 1) + "/" + selectedMediaUris.size() + "...");
-            }
-            @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
-            @Override public void onSuccess(String requestId, Map resultData) {
-                uploadedUrls.add((String) resultData.get("secure_url"));
-                uploadMediaRecursive(index + 1, uploadedUrls, content, pd);
-            }
-            @Override public void onError(String requestId, ErrorInfo error) {
+        pd.setMessage("Đang tải lên 0/" + total + "...");
+
+        java.util.concurrent.atomic.AtomicInteger finishedCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
+        for (int i = 0; i < total; i++) {
+            final int index = i;
+            Uri uri = selectedMediaUris.get(index);
+            MediaManager.get().upload(uri).option("resource_type", "auto").callback(new UploadCallback() {
+                @Override public void onStart(String requestId) {}
+                @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
+                @Override public void onSuccess(String requestId, Map resultData) {
+                    int currentFinished = finishedCount.incrementAndGet();
+                    if (getContext() != null) {
+                        pd.setMessage("Đang tải lên " + currentFinished + "/" + total + "...");
+                    }
+                    tcsList.get(index).setResult((String) resultData.get("secure_url"));
+                }
+                @Override public void onError(String requestId, ErrorInfo error) {
+                    tcsList.get(index).setException(new Exception(error.getDescription()));
+                }
+                @Override public void onReschedule(String requestId, ErrorInfo error) {}
+            }).dispatch();
+        }
+
+        Tasks.whenAll(tasks)
+            .addOnSuccessListener(aVoid -> {
+                List<String> uploadedUrls = new ArrayList<>();
+                for (Task<String> task : tasks) {
+                    uploadedUrls.add(task.getResult());
+                }
+                savePostToFirestore(content, uploadedUrls, pd);
+            })
+            .addOnFailureListener(e -> {
                 pd.dismiss();
                 if (getContext() != null) {
-                    Toast.makeText(requireContext(), "Upload lỗi: " + error.getDescription(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Upload lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-            }
-            @Override public void onReschedule(String requestId, ErrorInfo error) {}
-        }).dispatch();
+            });
     }
 
     private void savePostToFirestore(String content, List<String> mediaUrls, ProgressDialog pd) {
-        String uid = FirebaseAuth.getInstance().getUid();
+        String uid = AppDependencyProvider.getFirebaseAuth().getUid();
         if (uid == null) { pd.dismiss(); return; }
 
         if (editPostId != null) {

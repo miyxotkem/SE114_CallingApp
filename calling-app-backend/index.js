@@ -98,7 +98,7 @@ app.post('/api/agora/token', authenticateFirebaseUser, (req, res) => {
       RtcRole.PUBLISHER,
       privilegeExpiredTs
     );
-    res.json({ token });
+    res.json({ token, appId });
   } catch (err) {
     console.error("Error generating Agora token:", err);
     res.status(500).json({ error: 'Failed to generate token' });

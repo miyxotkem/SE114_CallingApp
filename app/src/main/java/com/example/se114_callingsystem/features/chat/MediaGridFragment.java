@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.example.se114_callingsystem.R;
@@ -65,6 +66,7 @@ public class MediaGridFragment extends Fragment {
             String url = mediaUrls.get(position);
             Glide.with(holder.iv.getContext())
                     .load(url)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .transform(new CenterCrop(), new RoundedCorners(8))
                     .into(holder.iv);
 

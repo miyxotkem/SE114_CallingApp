@@ -18,6 +18,7 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Firebase;
 import com.example.se114_callingsystem.core.model.Message;
@@ -291,6 +292,7 @@ public class SearchInChatFragment extends Fragment {
                             Glide.with(holder.itemView.getContext())
                                 .load(profilePic)
                                 .placeholder(R.drawable.ic_user)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
                                 .into(holder.ivAvatar);
                         }
                     }
