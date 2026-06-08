@@ -25,3 +25,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "SE114_CallingSystem"
 include(":app")
+include(":core:model")
+include(":core:network")
+include(":core:di")
+
+

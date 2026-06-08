@@ -43,7 +43,12 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
+    implementation(project(":core:network"))
+    implementation(project(":core:di"))
+
     implementation(libs.appcompat)
+
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
