@@ -18,8 +18,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:model"))
-    implementation(libs.appcompat)
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    api(project(":core:model"))
+    api(libs.appcompat)
+    api("com.squareup.retrofit2:retrofit:2.9.0")
+    api("com.squareup.retrofit2:converter-gson:2.9.0")
 }

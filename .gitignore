@@ -19,3 +19,11 @@ calling-app-backend/node_modules/
 
 # Local env files
 calling-app-backend/.env
+
+# Sensitive credentials
+calling-app-backend/serviceAccountKey.json
+
+# Android build outputs
+**/build/
+build/
+
