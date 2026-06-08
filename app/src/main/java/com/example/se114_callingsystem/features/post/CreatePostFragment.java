@@ -121,11 +121,39 @@ public class CreatePostFragment extends Fragment {
     private void initCloudinary() {
         Map config = new HashMap();
         config.put("cloud_name", "dxoukp0yb");
-        config.put("api_key", "359217744855482");
-        config.put("api_secret", "eTG0UvW_hdsHm4hl0r2XJCvidR0");
+        config.put("api_key", "359217744855482"); // Optional, backend returns it too
         try {
-            MediaManager.init(requireContext(), config);
-        } catch (IllegalStateException e) {}
+            MediaManager.init(requireContext(), new com.cloudinary.android.signed.SignatureProvider() {
+                @Override
+                public com.cloudinary.android.signed.Signature provideSignature(Map options) {
+                    try {
+                        if (FirebaseAuth.getInstance().getCurrentUser() == null) return null;
+                        String idToken = com.google.android.gms.tasks.Tasks.await(FirebaseAuth.getInstance().getCurrentUser().getIdToken(true)).getToken();
+                        long timestamp = System.currentTimeMillis() / 1000L;
+                        
+                        com.example.se114_callingsystem.network.BackendService service = com.example.se114_callingsystem.network.ApiClient.getClient().create(com.example.se114_callingsystem.network.BackendService.class);
+                        java.util.Map<String, Object> body = new java.util.HashMap<>();
+                        body.put("timestamp", timestamp);
+                        retrofit2.Response<com.example.se114_callingsystem.network.BackendService.CloudinarySignatureResponse> response = 
+                                service.getCloudinarySignature("Bearer " + idToken, body).execute();
+                        
+                        if (response.isSuccessful() && response.body() != null) {
+                            return new com.cloudinary.android.signed.Signature(response.body().signature, response.body().api_key, response.body().timestamp);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+
+                @Override
+                public String getName() {
+                    return "CreatePostFragmentSignatureProvider";
+                }
+            }, config);
+        } catch (IllegalStateException e) {
+            // Already initialized
+        }
     }
 
     private void fetchServerMembers() {

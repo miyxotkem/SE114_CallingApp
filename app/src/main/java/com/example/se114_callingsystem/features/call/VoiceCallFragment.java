@@ -41,6 +41,12 @@ import io.agora.rtc2.RtcEngineConfig;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.se114_callingsystem.network.ApiClient;
+import com.example.se114_callingsystem.network.BackendService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class VoiceCallFragment extends Fragment {
 
     private static final String TAG = "VoiceCallFragment";
@@ -149,6 +155,55 @@ public class VoiceCallFragment extends Fragment {
     }
 
     private void initAgoraAndJoinChannel() {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "You must be logged in to join a call.", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+
+        FirebaseAuth.getInstance().getCurrentUser().getIdToken(true).addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                String idToken = task.getResult().getToken();
+                fetchAgoraTokenAndJoin(idToken);
+            } else {
+                Log.e(TAG, "Failed to get Firebase Auth Token");
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Failed to authenticate.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void fetchAgoraTokenAndJoin(String idToken) {
+        BackendService service = ApiClient.getClient().create(BackendService.class);
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("channelName", channelName);
+        body.put("uid", uid);
+        service.getAgoraToken("Bearer " + idToken, body).enqueue(new Callback<BackendService.AgoraTokenResponse>() {
+            @Override
+            public void onResponse(Call<BackendService.AgoraTokenResponse> call, Response<BackendService.AgoraTokenResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    joinChannelWithToken(response.body().token);
+                } else {
+                    Log.e(TAG, "Failed to fetch Agora token: " + response.code());
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Failed to secure call connection.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BackendService.AgoraTokenResponse> call, Throwable t) {
+                Log.e(TAG, "Network error fetching token: " + t.getMessage());
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void joinChannelWithToken(String rtcToken) {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
             config.mContext = requireContext().getApplicationContext();
@@ -179,7 +234,7 @@ public class VoiceCallFragment extends Fragment {
             options.autoSubscribeVideo = true;
             options.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER;
 
-            int res = mRtcEngine.joinChannel(null, channelName, uid, options);
+            int res = mRtcEngine.joinChannel(rtcToken, channelName, uid, options);
             setupControls();
             if (res != 0) {
                 Log.e(TAG, "Join failed: " + res);
