@@ -46,23 +46,21 @@
             android:layout_marginBottom="16dp"
             android:textColorHint="@color/discord_text_muted"
             app:hintTextColor="@color/discord_blurple"
-            app:boxBackgroundColor="@color/discord_dark_floating"
             app:boxStrokeColor="@color/discord_blurple"
             app:boxCornerRadiusTopStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            android:hint="EMAIL"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="EMAIL"
+                android:layout_height="wrap_content"
                 android:textColor="@color/discord_text_primary"
                 android:inputType="textEmailAddress"
-                android:padding="16dp"
                 android:fontFamily="@font/inter"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -74,40 +72,40 @@
             android:layout_marginBottom="24dp"
             android:textColorHint="@color/discord_text_muted"
             app:hintTextColor="@color/discord_blurple"
-            app:boxBackgroundColor="@color/discord_dark_floating"
             app:boxStrokeColor="@color/discord_blurple"
             app:boxCornerRadiusTopStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
+            android:hint="PASSWORD"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/discord_text_secondary"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="PASSWORD"
+                android:layout_height="wrap_content"
                 android:textColor="@color/discord_text_primary"
                 android:inputType="textPassword"
-                android:padding="16dp"
                 android:fontFamily="@font/inter"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Log In Button -->
-        <android.widget.Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogin"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="@drawable/bg_button_primary"
             android:text="Log In"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:fontFamily="@font/inter" android:textStyle="bold"
             android:textAllCaps="false"
+            app:backgroundTint="@color/discord_blurple"
+            app:cornerRadius="8dp"
+            app:elevation="0dp"
             android:layout_marginBottom="20dp" />
 
         <LinearLayout

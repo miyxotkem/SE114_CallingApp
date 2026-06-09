@@ -1,10 +1,14 @@
 package com.example.se114_callingsystem.features.friend;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,9 +30,17 @@ import java.util.List;
 public class ManageFriendsFragment extends Fragment {
 
     private RecyclerView rvFriendRequests, rvFriends;
-    private FriendListAdapter requestAdapter, FriendListAdapter;
+    private FriendListAdapter requestAdapter, friendListAdapter;
+    
+    // Lists bound to adapters
     private List<User> requestList = new ArrayList<>();
     private List<User> friendList = new ArrayList<>();
+    
+    // Source of truth lists from Firebase
+    private List<User> allRequests = new ArrayList<>();
+    private List<User> allFriends = new ArrayList<>();
+    
+    private String currentSearchQuery = "";
     private FirebaseUser currentUser;
     private ValueEventListener requestsListener, friendsListener;
 
@@ -55,6 +67,31 @@ public class ManageFriendsFragment extends Fragment {
         btnAddFriendTop.setOnClickListener(v -> {
             AddFriendDialog dialog = new AddFriendDialog();
             dialog.show(getParentFragmentManager(), "Add_friend");
+        });
+
+        // Set up empty state button
+        View btnEmptyAddFriend = view.findViewById(R.id.btnEmptyAddFriend);
+        if (btnEmptyAddFriend != null) {
+            btnEmptyAddFriend.setOnClickListener(v -> {
+                AddFriendDialog dialog = new AddFriendDialog();
+                dialog.show(getParentFragmentManager(), "Add_friend");
+            });
+        }
+
+        // Search Bar Setup
+        EditText etSearch = view.findViewById(R.id.etSearch);
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                currentSearchQuery = s.toString();
+                filterLists();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
         });
 
         rvFriendRequests = view.findViewById(R.id.rvFriendRequests);
@@ -96,7 +133,7 @@ public class ManageFriendsFragment extends Fragment {
                 if (currentUser == null) return;
                 Firebase.getUserFriendRequestsRef(currentUser.getUid()).child(user.getUserId()).removeValue();
                 if (getContext() != null) {
-                    Toast.makeText(requireContext(), "Đã từ chối", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Đã từ chối lời mời", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -108,7 +145,7 @@ public class ManageFriendsFragment extends Fragment {
         });
         rvFriendRequests.setAdapter(requestAdapter);
 
-        FriendListAdapter = new FriendListAdapter(friendList, false, new FriendListAdapter.OnFriendActionListener() {
+        friendListAdapter = new FriendListAdapter(friendList, false, new FriendListAdapter.OnFriendActionListener() {
             @Override
             public void onAccept(User user) {}
 
@@ -158,7 +195,7 @@ public class ManageFriendsFragment extends Fragment {
                 }
             }
         });
-        rvFriends.setAdapter(FriendListAdapter);
+        rvFriends.setAdapter(friendListAdapter);
     }
 
     private void loadFriendRequests() {
@@ -168,15 +205,17 @@ public class ManageFriendsFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (getView() == null) return;
                 requestList.clear();
+                allRequests.clear();
                 if (snapshot.exists()) {
                     for (DataSnapshot snap : snapshot.getChildren()) {
                         String senderUid = snap.getKey();
                         if (senderUid != null) {
-                            loadUserAndAddToList(senderUid, requestList, requestAdapter);
+                            loadUserAndAddToList(senderUid, allRequests, requestList, requestAdapter, true);
                         }
                     }
                 } else {
                     requestAdapter.notifyDataSetChanged();
+                    updateRequestVisibility();
                 }
             }
 
@@ -192,15 +231,17 @@ public class ManageFriendsFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (getView() == null) return;
                 friendList.clear();
+                allFriends.clear();
                 if (snapshot.exists()) {
                     for (DataSnapshot snap : snapshot.getChildren()) {
                         String friendUid = snap.getKey();
                         if (friendUid != null) {
-                            loadUserAndAddToList(friendUid, friendList, FriendListAdapter);
+                            loadUserAndAddToList(friendUid, allFriends, friendList, friendListAdapter, false);
                         }
                     }
                 } else {
-                    FriendListAdapter.notifyDataSetChanged();
+                    friendListAdapter.notifyDataSetChanged();
+                    updateFriendVisibility();
                 }
             }
 
@@ -209,27 +250,122 @@ public class ManageFriendsFragment extends Fragment {
         });
     }
 
-    private void loadUserAndAddToList(String uid, List<User> list, FriendListAdapter adapter) {
+    private void loadUserAndAddToList(String uid, List<User> allList, List<User> displayList, FriendListAdapter adapter, boolean isRequest) {
         com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).get()
             .addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists() && getView() != null) {
                     User user = documentSnapshot.toObject(User.class);
                     if (user != null) {
                         user.setUserId(documentSnapshot.getId());
-                        // Check if already in list to avoid duplicates due to async
-                        boolean exists = false;
-                        for(User u : list) {
-                            if(u.getUserId() != null && u.getUserId().equals(user.getUserId())) {
-                                exists = true; break;
+                        
+                        // Check if already in allList to avoid duplicates due to async
+                        boolean existsInAll = false;
+                        for (User u : allList) {
+                            if (u.getUserId() != null && u.getUserId().equals(user.getUserId())) {
+                                existsInAll = true;
+                                break;
                             }
                         }
-                        if(!exists) {
-                            list.add(user);
-                            adapter.notifyDataSetChanged();
+                        if (!existsInAll) {
+                            allList.add(user);
+                            
+                            // Check if matches query to add to displayList
+                            String query = currentSearchQuery.toLowerCase().trim();
+                            String name = user.getUsername() != null ? user.getUsername().toLowerCase() : "";
+                            String email = user.getEmail() != null ? user.getEmail().toLowerCase() : "";
+                            if (query.isEmpty() || name.contains(query) || email.contains(query)) {
+                                displayList.add(user);
+                                adapter.notifyDataSetChanged();
+                            }
+                            
+                            if (isRequest) {
+                                updateRequestVisibility();
+                            } else {
+                                updateFriendVisibility();
+                            }
                         }
                     }
                 }
             });
+    }
+
+    private void filterLists() {
+        String query = currentSearchQuery.toLowerCase().trim();
+        
+        // Filter requests
+        requestList.clear();
+        if (query.isEmpty()) {
+            requestList.addAll(allRequests);
+        } else {
+            for (User u : allRequests) {
+                String name = u.getUsername() != null ? u.getUsername().toLowerCase() : "";
+                String email = u.getEmail() != null ? u.getEmail().toLowerCase() : "";
+                if (name.contains(query) || email.contains(query)) {
+                    requestList.add(u);
+                }
+            }
+        }
+        requestAdapter.notifyDataSetChanged();
+        updateRequestVisibility();
+
+        // Filter friends
+        friendList.clear();
+        if (query.isEmpty()) {
+            friendList.addAll(allFriends);
+        } else {
+            for (User u : allFriends) {
+                String name = u.getUsername() != null ? u.getUsername().toLowerCase() : "";
+                String email = u.getEmail() != null ? u.getEmail().toLowerCase() : "";
+                if (name.contains(query) || email.contains(query)) {
+                    friendList.add(u);
+                }
+            }
+        }
+        friendListAdapter.notifyDataSetChanged();
+        updateFriendVisibility();
+    }
+
+    private void updateRequestVisibility() {
+        View view = getView();
+        if (view == null) return;
+        
+        TextView tvFriendRequestsHeader = view.findViewById(R.id.tvFriendRequestsHeader);
+        View rvFriendRequests = view.findViewById(R.id.rvFriendRequests);
+        
+        if (requestList.isEmpty()) {
+            tvFriendRequestsHeader.setVisibility(View.GONE);
+            rvFriendRequests.setVisibility(View.GONE);
+        } else {
+            tvFriendRequestsHeader.setVisibility(View.VISIBLE);
+            tvFriendRequestsHeader.setText("Lời mời kết bạn (" + requestList.size() + ")");
+            rvFriendRequests.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void updateFriendVisibility() {
+        View view = getView();
+        if (view == null) return;
+
+        TextView tvFriendsHeader = view.findViewById(R.id.tvFriendsHeader);
+        View rvFriends = view.findViewById(R.id.rvFriends);
+        View llEmptyFriends = view.findViewById(R.id.llEmptyFriends);
+        
+        if (friendList.isEmpty()) {
+            tvFriendsHeader.setVisibility(View.GONE);
+            rvFriends.setVisibility(View.GONE);
+            
+            // Show empty state layout only if search text is empty
+            if (currentSearchQuery.isEmpty()) {
+                llEmptyFriends.setVisibility(View.VISIBLE);
+            } else {
+                llEmptyFriends.setVisibility(View.GONE);
+            }
+        } else {
+            tvFriendsHeader.setVisibility(View.VISIBLE);
+            tvFriendsHeader.setText("Tất cả bạn bè (" + friendList.size() + ")");
+            rvFriends.setVisibility(View.VISIBLE);
+            llEmptyFriends.setVisibility(View.GONE);
+        }
     }
 
     @Override

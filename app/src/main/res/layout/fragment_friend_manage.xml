@@ -6,80 +6,226 @@
     android:orientation="vertical"
     android:background="@color/bg_primary">
 
+    <!-- Top Header / Toolbar -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:paddingHorizontal="16dp"
         android:layout_marginTop="36dp">
+
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_back"
-            app:tint="@color/icon_tint" />
+            android:padding="12dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="@color/icon_tint"
+            android:clickable="true"
+            android:focusable="true"/>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Friends"
+            android:text="Bạn bè"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:layout_centerInParent="true"
             android:fontFamily="@font/inter"/>
-            
+
         <ImageView
             android:id="@+id/btnAddFriendTop"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:src="@android:drawable/ic_menu_add"
-            app:tint="@color/icon_tint" />
+            android:src="@drawable/ic_add"
+            android:padding="12dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="@color/icon_tint"
+            android:clickable="true"
+            android:focusable="true"/>
     </RelativeLayout>
 
-    <ScrollView
+    <!-- Sleek Capsule Search Bar -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="40dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_chat_input">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_search"
+            app:tint="@color/discord_text_muted" />
+
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:background="@android:color/transparent"
+            android:hint="Tìm kiếm bạn bè..."
+            android:textColorHint="@color/discord_text_muted"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"
+            android:maxLines="1"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:fontFamily="@font/inter" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/discord_divider"
+        android:layout_marginHorizontal="16dp" />
+
+    <!-- Content Area -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- ================= FRIEND REQUESTS SECTION ================= -->
             <TextView
+                android:id="@+id/tvFriendRequestsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Friend Requests"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:text="Lời mời kết bạn"
+                android:textColor="@color/discord_text_secondary"
+                android:textSize="12sp"
                 android:textStyle="bold"
+                android:letterSpacing="0.05"
                 android:layout_marginBottom="8dp"
-                android:fontFamily="@font/inter"/>
-                
+                android:fontFamily="@font/inter"
+                android:visibility="gone"/>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvFriendRequests"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"/>
 
+            <!-- Friend Requests Empty State (Optional placeholder if we ever show section always, currently kept hidden) -->
+            <LinearLayout
+                android:id="@+id/llEmptyRequests"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_tab_notifications"
+                    app:tint="@color/discord_text_muted"
+                    android:alpha="0.4" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Không có lời mời kết bạn nào"
+                    android:textColor="@color/discord_text_muted"
+                    android:textSize="13sp"
+                    android:fontFamily="@font/inter" />
+            </LinearLayout>
+
+            <!-- ================= ALL FRIENDS SECTION ================= -->
             <TextView
+                android:id="@+id/tvFriendsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="My Friends"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:text="Tất cả bạn bè"
+                android:textColor="@color/discord_text_secondary"
+                android:textSize="12sp"
                 android:textStyle="bold"
+                android:letterSpacing="0.05"
                 android:layout_marginBottom="8dp"
-                android:fontFamily="@font/inter"/>
-                
+                android:fontFamily="@font/inter"
+                android:visibility="gone"/>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvFriends"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false" />
-                
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone"/>
+
+            <!-- Friends List Empty State -->
+            <LinearLayout
+                android:id="@+id/llEmptyFriends"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginTop="60dp"
+                android:padding="24dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_user"
+                    app:tint="@color/discord_text_muted"
+                    android:alpha="0.3" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Chưa có người bạn nào"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/inter" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Hãy kết nối và bắt đầu trò chuyện với mọi người."
+                    android:textColor="@color/discord_text_muted"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:fontFamily="@font/inter" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEmptyAddFriend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="Thêm bạn ngay"
+                    app:cornerRadius="20dp"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter"
+                    app:backgroundTint="@color/discord_blurple"
+                    android:textColor="@color/white"
+                    app:elevation="0dp"
+                    app:pressedTranslationZ="0dp"/>
+            </LinearLayout>
+
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

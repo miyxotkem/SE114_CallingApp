@@ -105,15 +105,20 @@ public class CreatePostFragment extends Fragment {
         ImageView btnAddVideo = view.findViewById(R.id.btnAddVideo);
         mediaPreviewContainer = view.findViewById(R.id.mediaPreviewContainer);
 
-        try {
-            int color = android.graphics.Color.parseColor(serverColor);
-            btnPost.setTextColor(color);
-        } catch (Exception e) {}
-
         btnBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
         
         setupMentionSuggestions(view);
         fetchServerMembers();
+
+        try {
+            if (serverColor != null) {
+                int color = android.graphics.Color.parseColor(serverColor);
+                btnPost.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+                if (cardMentionSuggestions != null) {
+                    cardMentionSuggestions.setStrokeColor(color);
+                }
+            }
+        } catch (Exception e) {}
 
         btnAddImage.setOnClickListener(v -> pickMedia("image/*"));
         btnAddVideo.setOnClickListener(v -> pickMedia("video/*"));

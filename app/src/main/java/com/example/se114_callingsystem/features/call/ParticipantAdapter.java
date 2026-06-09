@@ -94,12 +94,12 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                 int rows = getRowsCount(voiceCount);
                 itemHeight = parentHeight / rows;
             } else {
-                int spanCount = (videoCount <= 2) ? 1 : 2;
-                int voiceHeight = dpToPx(90); // Chiều cao cố định của voice item
-                int voiceRows = (voiceCount + spanCount - 1) / spanCount;
+                int videoRows = (videoCount <= 2) ? videoCount : (videoCount + 1) / 2;
+                int voiceRows = (voiceCount + 1) / 2;
+                int voiceHeight = dpToPx(80); // Compact audio height in grid
                 int totalVoiceHeight = voiceRows * voiceHeight;
 
-                // Giới hạn chiều cao các ô voice không quá 40% màn hình
+                // Limit total voice height to max 40% of parent screen height
                 if (totalVoiceHeight > parentHeight * 0.4) {
                     totalVoiceHeight = (int) (parentHeight * 0.4);
                     if (voiceRows > 0) {
@@ -110,10 +110,9 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                 if (participant.isVideoOff) {
                     itemHeight = voiceHeight;
                 } else {
-                    int videoRows = (videoCount <= 2) ? videoCount : 2;
                     itemHeight = (parentHeight - totalVoiceHeight) / videoRows;
-                    if (itemHeight < dpToPx(150)) {
-                        itemHeight = dpToPx(150); // Chiều cao tối thiểu cho ô video
+                    if (itemHeight < dpToPx(160)) {
+                        itemHeight = dpToPx(160); // Minimum video height
                     }
                 }
             }
@@ -257,15 +256,29 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     }
 
     private void updateSpeakingBorder(CallViewHolder holder, Participant participant) {
-        if (holder.cardAvatar != null) {
-            holder.cardAvatar.setStrokeWidth(0); // Luôn bỏ viền xung quanh avatar
-        }
-        
         if (participant.isSpeaking && !participant.isMuted) {
-            holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // Màu xanh lá sáng
-            holder.cardView.setStrokeWidth(dpToPx(4)); // Viền dầy hơn để nổi bật xung quanh ô vuông
+            if (participant.isVideoOff) {
+                // Speaking with video off: Green border around center avatar
+                if (holder.cardAvatar != null) {
+                    holder.cardAvatar.setStrokeColor(Color.parseColor("#23A559"));
+                    holder.cardAvatar.setStrokeWidth(dpToPx(3));
+                }
+                holder.cardView.setStrokeColor(Color.parseColor("#2D2D4A"));
+                holder.cardView.setStrokeWidth(dpToPx(1));
+            } else {
+                // Speaking with video on: Green border around entire card view
+                if (holder.cardAvatar != null) {
+                    holder.cardAvatar.setStrokeWidth(0);
+                }
+                holder.cardView.setStrokeColor(Color.parseColor("#23A559"));
+                holder.cardView.setStrokeWidth(dpToPx(3));
+            }
         } else {
-            holder.cardView.setStrokeColor(Color.parseColor("#2D2D4A")); // Màu xám mặc định
+            // Not speaking
+            if (holder.cardAvatar != null) {
+                holder.cardAvatar.setStrokeWidth(0);
+            }
+            holder.cardView.setStrokeColor(Color.parseColor("#2D2D4A"));
             holder.cardView.setStrokeWidth(dpToPx(1));
         }
     }

@@ -60,7 +60,7 @@
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_search"
+            android:src="@drawable/ic_search"
             app:tint="@color/discord_text_secondary"
             android:contentDescription="Đi tới tin nhắn"
             android:layout_marginEnd="4dp"/>
@@ -70,7 +70,7 @@
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:src="@drawable/ic_close"
             app:tint="@color/discord_red"
             android:contentDescription="Bỏ ghim"/>
 

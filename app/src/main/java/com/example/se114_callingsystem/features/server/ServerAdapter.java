@@ -17,9 +17,26 @@ import java.util.List;
 
 public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder> {
     private List<Server> serverList;
+    private OnServerClickListener clickListener;
+    private String activeServerId;
+
+    public interface OnServerClickListener {
+        void onServerClick(Server server);
+    }
 
     public ServerAdapter(List<Server> serverList) {
         this.serverList = serverList;
+    }
+
+    public ServerAdapter(List<Server> serverList, String activeServerId, OnServerClickListener clickListener) {
+        this.serverList = serverList;
+        this.activeServerId = activeServerId;
+        this.clickListener = clickListener;
+    }
+
+    public void setActiveServerId(String activeServerId) {
+        this.activeServerId = activeServerId;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -37,6 +54,20 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
         // Extract initials (e.g. "My Server" -> "MS")
         String initials = getInitials(server.getServerName());
         holder.tvServerInitials.setText(initials);
+
+        // Active state and indicator handling
+        boolean isActive = server.getServerId() != null && server.getServerId().equals(activeServerId);
+        if (holder.viewActiveIndicator != null) {
+            holder.viewActiveIndicator.setVisibility(isActive ? View.VISIBLE : View.GONE);
+        }
+
+        // Morph corner radius based on active state (16dp rounded square vs 24dp circle)
+        float density = holder.itemView.getContext().getResources().getDisplayMetrics().density;
+        if (isActive) {
+            holder.cardServerContainer.setRadius(16 * density);
+        } else {
+            holder.cardServerContainer.setRadius(24 * density);
+        }
 
         // Customize card background color based on accentColor or fallback to Blurple (#5865F2)
         String accentColor = server.getAccentColor();
@@ -109,10 +140,14 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
         }
 
         holder.itemView.setOnClickListener(v -> {
-            Bundle args = new Bundle();
-            args.putString("SERVER_ID", server.getServerId());
-            args.putString("SERVER_NAME", server.getServerName());
-            androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_home_to_server, args);
+            if (clickListener != null) {
+                clickListener.onServerClick(server);
+            } else {
+                Bundle args = new Bundle();
+                args.putString("SERVER_ID", server.getServerId());
+                args.putString("SERVER_NAME", server.getServerName());
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_home_to_server, args);
+            }
         });
     }
 
@@ -139,6 +174,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
         ImageView ivServerIcon;
         MaterialCardView cardServerContainer;
         TextView tvUnreadBadge;
+        View viewActiveIndicator;
         com.google.firebase.firestore.ListenerRegistration unreadListener;
 
         public ViewHolder(@NonNull View itemView) {
@@ -148,6 +184,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
             ivServerIcon = itemView.findViewById(R.id.ivServerIcon);
             cardServerContainer = itemView.findViewById(R.id.cardServerContainer);
             tvUnreadBadge = itemView.findViewById(R.id.tvUnreadBadge);
+            viewActiveIndicator = itemView.findViewById(R.id.viewActiveIndicator);
         }
     }
 }

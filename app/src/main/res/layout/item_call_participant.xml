@@ -27,8 +27,8 @@
             android:layout_centerInParent="true"
             app:cardCornerRadius="40dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:strokeColor="#4CAF50"
+            app:cardBackgroundColor="#2B2D31"
+            app:strokeColor="#23A559"
             app:strokeWidth="0dp">
 
             <ImageView
@@ -45,24 +45,29 @@
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true"
-            android:layout_margin="8dp"
-            android:background="#80000000"
+            android:layout_margin="12dp"
+            android:background="@drawable/bg_participant_name"
             android:paddingHorizontal="10dp"
-            android:paddingVertical="4dp"
+            android:paddingVertical="5dp"
             android:text="User Name"
             android:textColor="@color/white"
             android:textSize="12sp"
-            android:fontFamily="@font/inter"/>
+            android:fontFamily="@font/inter"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
         <ImageView
             android:id="@+id/ivMuteStatus"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
-            android:layout_margin="8dp"
-            android:src="@android:drawable/ic_btn_speak_now"
-            app:tint="#FF4757" />
+            android:layout_margin="12dp"
+            android:background="@drawable/bg_circle"
+            android:backgroundTint="#DA373C"
+            android:padding="6dp"
+            android:src="@drawable/ic_mic_off"
+            app:tint="@color/white" />
 
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -5,68 +5,79 @@
     android:layout_height="match_parent"
     android:background="@color/bg_primary">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout"
+    <!-- Premium App Bar / Toolbar Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/toolbarCard"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/bg_secondary"
-        app:elevation="4dp">
+        android:layout_height="64dp"
+        app:cardBackgroundColor="@color/discord_dark_deep"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/discord_divider"
+        android:layout_alignParentTop="true">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
+            android:layout_height="match_parent"
+            android:paddingHorizontal="16dp">
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_centerVertical="true"
+                android:padding="12dp"
+                android:scaleType="centerInside"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_back"
+                app:tint="@color/text_primary"
+                android:contentDescription="Back" />
 
-                <ImageView
-                    android:id="@+id/btnBack"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_centerVertical="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_back"
-                    app:tint="@color/text_primary" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="Tạo Bài Viết"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/inter"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:text="Tạo Bài Viết"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/inter"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnPost"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginEnd="8dp"
-                    android:text="ĐĂNG"
-                    android:textColor="#5865F2"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/inter"/>
-            </RelativeLayout>
-        </androidx.appcompat.widget.Toolbar>
-    </com.google.android.material.appbar.AppBarLayout>
+            <!-- Premium Solid Rounded Post Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPost"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="4dp"
+                android:text="Đăng"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:fontFamily="@font/inter"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="0dp"
+                app:cornerRadius="18dp"
+                app:backgroundTint="@color/discord_blurple"
+                app:elevation="0dp" />
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/bottomBar"
-        android:layout_below="@id/appBarLayout">
+        android:layout_below="@id/toolbarCard"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
             <EditText
                 android:id="@+id/etContent"
@@ -76,7 +87,7 @@
                 android:gravity="top|start"
                 android:hint="Bạn đang nghĩ gì?"
                 android:inputType="textMultiLine"
-                android:minLines="5"
+                android:minLines="6"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="16sp"
@@ -97,6 +108,7 @@
         </LinearLayout>
     </ScrollView>
 
+    <!-- Mentions Suggestion Pop-up -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardMentionSuggestions"
         android:layout_width="match_parent"
@@ -107,8 +119,8 @@
         app:cardBackgroundColor="@color/bg_secondary"
         app:cardCornerRadius="12dp"
         app:cardElevation="8dp"
-        app:strokeColor="#5865F2"
-        app:strokeWidth="2dp"
+        app:strokeColor="@color/discord_blurple"
+        app:strokeWidth="1.5dp"
         android:visibility="gone">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -119,32 +131,39 @@
             android:clipToPadding="false"/>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Bottom Options Bar -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:layout_alignParentBottom="true"
-        android:background="@color/bg_secondary"
+        android:background="@color/discord_dark_deep"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:paddingHorizontal="16dp">
 
         <ImageView
             android:id="@+id/btnAddImage"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginEnd="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="16dp"
+            android:padding="12dp"
+            android:scaleType="centerInside"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_gallery"
-            app:tint="#23A559" />
+            android:src="@drawable/ic_gallery"
+            app:tint="#23A559"
+            android:contentDescription="Add Image" />
 
         <ImageView
             android:id="@+id/btnAddVideo"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:scaleType="centerInside"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_camera"
-            app:tint="#5865F2" />
+            android:src="@drawable/ic_camera"
+            app:tint="@color/discord_blurple"
+            android:contentDescription="Add Video" />
     </LinearLayout>
 
 </RelativeLayout>

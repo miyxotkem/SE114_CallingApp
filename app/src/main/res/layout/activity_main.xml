@@ -6,15 +6,136 @@
     android:layout_height="match_parent"
     android:background="@color/discord_dark_base">
 
+    <!-- ================= GLOBAL LEFT SIDEBAR ================= -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/sidebarScrollView"
+        android:layout_width="72dp"
+        android:layout_height="match_parent"
+        android:background="@color/discord_dark_deep"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="12dp"
+            android:gravity="center_horizontal">
+
+            <!-- Home Button / Direct Messages Shortcut -->
+            <FrameLayout
+                android:id="@+id/btn_sidebar_home"
+                android:layout_width="72dp"
+                android:layout_height="56dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <!-- Active Indicator Pill on Left Edge -->
+                <View
+                    android:id="@+id/viewHomeIndicator"
+                    android:layout_width="4dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="start|center_vertical"
+                    android:background="@color/white"
+                    android:visibility="visible" />
+
+                <!-- Circular icon layout -->
+                <FrameLayout
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_button_primary"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_chat_bubble"
+                        app:tint="@android:color/white" />
+                </FrameLayout>
+            </FrameLayout>
+
+            <!-- Divider separating Home button from other servers -->
+            <View
+                android:layout_width="32dp"
+                android:layout_height="2dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/discord_divider"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Scrollable Server list (RecyclerView) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:nestedScrollingEnabled="false"
+                android:clipToPadding="false"
+                android:paddingBottom="8dp" />
+
+            <!-- Create Server Button immediately below the list -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/mcvServerCreate"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/discord_dark_alt"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/discord_divider"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_add"
+                    app:tint="@color/discord_green" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Join Server Button -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/mcvServerJoin"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/discord_dark_alt"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/discord_divider"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/discord_green" />
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- ================= RIGHT CONTENT AREA ================= -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         app:defaultNavHost="true"
         app:layout_constraintBottom_toTopOf="@id/bottom_nav"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/sidebarScrollView"
         app:layout_constraintTop_toTopOf="parent"
         app:navGraph="@navigation/nav_graph" />
 

@@ -183,7 +183,7 @@
                 <ImageView
                     android:layout_width="22dp"
                     android:layout_height="22dp"
-                    android:src="@android:drawable/ic_lock_silent_mode"
+                    android:src="@drawable/ic_mic_off"
                     app:tint="@color/discord_text_secondary" />
 
                 <TextView

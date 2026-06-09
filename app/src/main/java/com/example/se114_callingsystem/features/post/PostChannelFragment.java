@@ -66,7 +66,17 @@ public class PostChannelFragment extends Fragment {
             Navigation.findNavController(v).popBackStack();
         });
 
+        // Set create post launch from FAB
         binding.fabCreatePost.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("CHANNEL_ID", channelId);
+            bundle.putString("SERVER_ID", serverId);
+            bundle.putString("SERVER_COLOR", serverColor);
+            Navigation.findNavController(v).navigate(R.id.action_post_channel_to_post_create, bundle);
+        });
+
+        // Set create post launch from Empty State CTA
+        binding.btnEmptyCreatePost.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("CHANNEL_ID", channelId);
             bundle.putString("SERVER_ID", serverId);
@@ -78,6 +88,10 @@ public class PostChannelFragment extends Fragment {
             if (serverColor != null) {
                 int color = Color.parseColor(serverColor);
                 binding.fabCreatePost.setBackgroundTintList(ColorStateList.valueOf(color));
+                binding.btnEmptyCreatePost.setBackgroundTintList(ColorStateList.valueOf(color));
+                // 10% opacity backdrop tint for circular icon holder
+                int translucentColor = (color & 0x00FFFFFF) | 0x1A000000;
+                binding.emptyIconContainer.setBackgroundTintList(ColorStateList.valueOf(translucentColor));
             }
         } catch (Exception e) {}
 
@@ -161,6 +175,15 @@ public class PostChannelFragment extends Fragment {
                   }
                   Collections.sort(postList, (a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
                   PostListAdapter.notifyDataSetChanged();
+
+                  // Toggle Empty State Layout
+                  if (postList.isEmpty()) {
+                      binding.layoutEmptyState.setVisibility(View.VISIBLE);
+                      binding.rvPosts.setVisibility(View.GONE);
+                  } else {
+                      binding.layoutEmptyState.setVisibility(View.GONE);
+                      binding.rvPosts.setVisibility(View.VISIBLE);
+                  }
               }
           });
 

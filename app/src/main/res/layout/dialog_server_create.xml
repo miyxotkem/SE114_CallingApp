@@ -314,7 +314,7 @@
                         app:strokeColor="@color/discord_blurple"
                         app:strokeWidth="1.5dp"
                         android:textColor="@color/discord_blurple"
-                        app:icon="@android:drawable/ic_menu_share"
+                        app:icon="@drawable/ic_share"
                         app:iconTint="@color/discord_blurple"
                         app:iconGravity="textStart"
                         android:layout_marginBottom="24dp"/>

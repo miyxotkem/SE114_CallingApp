@@ -30,9 +30,6 @@ public class HomeFragment extends Fragment {
     private static final String TAG = "HomeFragment";
 
     private FragmentHomeBinding binding;
-    private ServerAdapter adapter;
-    private List<Server> serverList;
-    private List<String> currentServerOrder;
     private FirebaseFirestore db;
     private HomeDMAdapter dmAdapter;
     private List<User> friendList = new java.util.ArrayList<>();
@@ -51,26 +48,8 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
-        serverList = new ArrayList<>();
-        adapter = new ServerAdapter(serverList);
-
-        binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.recyclerView.setAdapter(adapter);
-
-        setupDragAndDrop();
-
-        fetchServers();
         checkNotificationPermission();
         startMessageNotificationService();
-
-        binding.mcvServerCreate.setOnClickListener(v -> {
-            CreateServerDialog dialog = new CreateServerDialog();
-            dialog.show(getParentFragmentManager(), "Server_on_create");
-        });
-
-        binding.mcvServerJoin.setOnClickListener(v -> {
-            showJoinServerDialog();
-        });
 
         binding.btnManageFriends.setOnClickListener(v -> {
             androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_friend_manage);
@@ -120,30 +99,40 @@ public class HomeFragment extends Fragment {
         
         db.collection("servers").document(serverId).get().addOnSuccessListener(doc -> {
             if (doc.exists()) {
-                java.util.List<String> members = (java.util.List<String>) doc.get("members");
-                if (members != null && members.contains(uid)) {
-                    android.widget.Toast.makeText(getContext(), "Bạn đã ở trong server này rồi!", android.widget.Toast.LENGTH_SHORT).show();
-                    if (!currentServerOrder.contains(serverId)) {
-                        currentServerOrder.add(serverId);
-                        db.collection("users").document(uid).update("serverOrder", currentServerOrder);
+                db.collection("users").document(uid).get().addOnSuccessListener(userDoc -> {
+                    List<String> order = new ArrayList<>();
+                    if (userDoc.exists()) {
+                        List<String> currentOrder = (List<String>) userDoc.get("serverOrder");
+                        if (currentOrder != null) {
+                            order.addAll(currentOrder);
+                        }
                     }
-                    return;
-                }
+                    
+                    java.util.List<String> members = (java.util.List<String>) doc.get("members");
+                    if (members != null && members.contains(uid)) {
+                        android.widget.Toast.makeText(getContext(), "Bạn đã ở trong server này rồi!", android.widget.Toast.LENGTH_SHORT).show();
+                        if (!order.contains(serverId)) {
+                            order.add(serverId);
+                            db.collection("users").document(uid).update("serverOrder", order);
+                        }
+                        return;
+                    }
 
-                // Add user to server members array
-                db.collection("servers").document(serverId).update("members", com.google.firebase.firestore.FieldValue.arrayUnion(uid));
-                
-                // Add user to server members subcollection
-                com.example.se114_callingsystem.core.model.ServerMember newMember = new com.example.se114_callingsystem.core.model.ServerMember(uid, userName, "member");
-                db.collection("servers").document(serverId).collection("members").document(uid).set(newMember);
-                
-                // Add server to user's server order
-                if (!currentServerOrder.contains(serverId)) {
-                    currentServerOrder.add(serverId);
-                    db.collection("users").document(uid).update("serverOrder", currentServerOrder);
-                }
-                
-                android.widget.Toast.makeText(getContext(), "Tham gia server thành công!", android.widget.Toast.LENGTH_SHORT).show();
+                    // Add user to server members array
+                    db.collection("servers").document(serverId).update("members", com.google.firebase.firestore.FieldValue.arrayUnion(uid));
+                    
+                    // Add user to server members subcollection
+                    com.example.se114_callingsystem.core.model.ServerMember newMember = new com.example.se114_callingsystem.core.model.ServerMember(uid, userName, "member");
+                    db.collection("servers").document(serverId).collection("members").document(uid).set(newMember);
+                    
+                    // Add server to user's server order
+                    if (!order.contains(serverId)) {
+                        order.add(serverId);
+                        db.collection("users").document(uid).update("serverOrder", order);
+                    }
+                    
+                    android.widget.Toast.makeText(getContext(), "Tham gia server thành công!", android.widget.Toast.LENGTH_SHORT).show();
+                });
             } else {
                 android.widget.Toast.makeText(getContext(), "Mã mời không hợp lệ hoặc Server không tồn tại.", android.widget.Toast.LENGTH_SHORT).show();
             }
@@ -286,93 +275,7 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void fetchServers() {
-        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
-        if (currentUserUid.isEmpty()) return;
 
-        db.collection("users").document(currentUserUid).get().addOnSuccessListener(documentSnapshot -> {
-            if (documentSnapshot.exists()) {
-                com.example.se114_callingsystem.core.model.User user = documentSnapshot.toObject(com.example.se114_callingsystem.core.model.User.class);
-                if (user != null && user.getServerOrder() != null) {
-                    currentServerOrder = user.getServerOrder();
-                } else {
-                    currentServerOrder = new ArrayList<>();
-                }
-            } else {
-                currentServerOrder = new ArrayList<>();
-            }
-
-            db.collection("servers")
-              .whereArrayContains("members", currentUserUid)
-              .addSnapshotListener((value, error) -> {
-                if (error != null) {
-                Log.e(TAG, "Error fetching servers: " + error.getMessage());
-                return;
-            }
-            if (value != null && binding != null) {
-                serverList.clear();
-                for (com.google.firebase.firestore.DocumentSnapshot doc : value) {
-                    Server server = doc.toObject(Server.class);
-                    if (server != null) {
-                        serverList.add(server);
-                    }
-                }
-                
-                // Sort by currentServerOrder
-                serverList.sort((s1, s2) -> {
-                    int idx1 = currentServerOrder.indexOf(s1.getServerId());
-                    int idx2 = currentServerOrder.indexOf(s2.getServerId());
-                    if (idx1 == -1) idx1 = Integer.MAX_VALUE;
-                    if (idx2 == -1) idx2 = Integer.MAX_VALUE;
-                    return Integer.compare(idx1, idx2);
-                });
-                
-                adapter.notifyDataSetChanged();
-            }
-        });
-        });
-    }
-
-    private void setupDragAndDrop() {
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                int fromPosition = viewHolder.getAdapterPosition();
-                int toPosition = target.getAdapterPosition();
-
-                java.util.Collections.swap(serverList, fromPosition, toPosition);
-                adapter.notifyItemMoved(fromPosition, toPosition);
-                return true;
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // Not supported
-            }
-
-            @Override
-            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                super.clearView(recyclerView, viewHolder);
-                saveServerOrder();
-            }
-        });
-        itemTouchHelper.attachToRecyclerView(binding.recyclerView);
-    }
-
-    private void saveServerOrder() {
-        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
-        if (currentUserUid.isEmpty()) return;
-
-        List<String> order = new ArrayList<>();
-        for (Server s : serverList) {
-            order.add(s.getServerId());
-        }
-        currentServerOrder = order;
-
-        db.collection("users").document(currentUserUid)
-            .update("serverOrder", order)
-            .addOnFailureListener(e -> Log.e(TAG, "Failed to save server order", e));
-    }
 
     private void loadFriends() {
         String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
