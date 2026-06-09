@@ -62,7 +62,15 @@ public class ProfileFragment extends Fragment {
     private void initViews() {
         if (binding == null) return;
 
+        // Set up Back button
+        binding.btnBackProfile.setOnClickListener(v -> {
+            Navigation.findNavController(v).popBackStack();
+        });
+
         if (isOwnProfile) {
+            binding.tvFriendActionsHeader.setVisibility(View.GONE);
+            binding.cardSendMessage.setVisibility(View.GONE);
+
             binding.tvUserSettingsHeader.setVisibility(View.VISIBLE);
             binding.cardEditProfile.setVisibility(View.VISIBLE);
             binding.tvAccountActionsHeader.setVisibility(View.VISIBLE);
@@ -97,6 +105,33 @@ public class ProfileFragment extends Fragment {
             binding.cardEditProfile.setVisibility(View.GONE);
             binding.tvAccountActionsHeader.setVisibility(View.GONE);
             binding.cardLogout.setVisibility(View.GONE);
+
+            binding.tvFriendActionsHeader.setVisibility(View.VISIBLE);
+            binding.cardSendMessage.setVisibility(View.VISIBLE);
+
+            binding.btnSendMessage.setOnClickListener(v -> {
+                if (currentUser == null || displayUid == null || displayUid.isEmpty()) return;
+                
+                String myUid = currentUser.getUid();
+                String friendUid = displayUid;
+
+                String dmRoomId;
+                if (myUid.compareTo(friendUid) < 0) {
+                    dmRoomId = "dm_" + myUid + "_" + friendUid;
+                } else {
+                    dmRoomId = "dm_" + friendUid + "_" + myUid;
+                }
+
+                String displayName = binding.tvUsername.getText().toString();
+
+                Bundle args = new Bundle();
+                args.putString("CHAT_ID", dmRoomId);
+                args.putString("CHAT_NAME", displayName);
+                args.putString("SERVER_ID", null);
+                args.putString("SERVER_COLOR", "#5865F2");
+
+                Navigation.findNavController(v).navigate(R.id.action_profile_to_chat_detail, args);
+            });
         }
     }
 

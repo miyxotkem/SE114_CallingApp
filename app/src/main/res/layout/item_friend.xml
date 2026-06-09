@@ -63,16 +63,32 @@
         </LinearLayout>
         
         <!-- For Friends -->
-        <ImageView
-            android:id="@+id/btnRemoveFriend"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+        <LinearLayout
+            android:id="@+id/llFriendActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:padding="6dp"
-            android:src="@android:drawable/ic_delete"
-            app:tint="#F44336"
-            android:visibility="gone" />
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/btnMessageFriend"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:padding="6dp"
+                android:src="@drawable/ic_chat_bubble"
+                app:tint="@color/discord_blurple" />
+
+            <ImageView
+                android:id="@+id/btnRemoveFriend"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="6dp"
+                android:src="@android:drawable/ic_delete"
+                app:tint="#F44336" />
+        </LinearLayout>
 
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

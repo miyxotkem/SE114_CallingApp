@@ -99,6 +99,13 @@
             app:exitAnim="@anim/anim_exit"
             app:popEnterAnim="@anim/anim_pop_enter"
             app:popExitAnim="@anim/anim_pop_exit"/>
+        <action
+            android:id="@+id/action_profile_to_chat_detail"
+            app:destination="@id/nav_chat_detail" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment
@@ -299,7 +306,15 @@
         android:id="@+id/nav_friend_manage"
         android:name="com.example.se114_callingsystem.features.friend.ManageFriendsFragment"
         android:label="Manage Friends"
-        tools:layout="@layout/fragment_friend_manage" />
+        tools:layout="@layout/fragment_friend_manage">
+        <action
+            android:id="@+id/action_friend_manage_to_chat_detail"
+            app:destination="@id/nav_chat_detail" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
+    </fragment>
 
     <!-- 4. Tìm kiếm tin nhắn chat -->
     <fragment

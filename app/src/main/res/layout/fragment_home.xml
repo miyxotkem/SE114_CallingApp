@@ -299,13 +299,23 @@
                         android:focusable="true" />
                 </LinearLayout>
 
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvDirectMessages"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false"
+                    android:paddingBottom="12dp" />
+
                 <!-- DMs Placeholder or list (Clean modern look) -->
                 <LinearLayout
+                    android:id="@+id/layoutNoDMs"
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:visibility="gone">
 
                     <ImageView
                         android:layout_width="48dp"

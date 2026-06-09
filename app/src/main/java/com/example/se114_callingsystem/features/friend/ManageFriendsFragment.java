@@ -99,6 +99,9 @@ public class ManageFriendsFragment extends Fragment {
 
             @Override
             public void onRemove(User user) {}
+
+            @Override
+            public void onMessage(User user) {}
         });
         rvFriendRequests.setAdapter(requestAdapter);
 
@@ -119,6 +122,36 @@ public class ManageFriendsFragment extends Fragment {
                 Firebase.getUserFriendsRef(friendUid).child(myUid).removeValue();
                 if (getContext() != null) {
                     Toast.makeText(requireContext(), "Đã xóa bạn bè", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onMessage(User user) {
+                if (currentUser == null) return;
+                String myUid = currentUser.getUid();
+                String friendUid = user.getUserId();
+                if (friendUid == null || friendUid.isEmpty()) return;
+
+                String dmRoomId;
+                if (myUid.compareTo(friendUid) < 0) {
+                    dmRoomId = "dm_" + myUid + "_" + friendUid;
+                } else {
+                    dmRoomId = "dm_" + friendUid + "_" + myUid;
+                }
+
+                String displayName = user.getUsername();
+                if (displayName == null || displayName.trim().isEmpty()) {
+                    displayName = user.getEmail();
+                }
+
+                Bundle args = new Bundle();
+                args.putString("CHAT_ID", dmRoomId);
+                args.putString("CHAT_NAME", displayName);
+                args.putString("SERVER_ID", null);
+                args.putString("SERVER_COLOR", "#5865F2");
+
+                if (getView() != null) {
+                    Navigation.findNavController(getView()).navigate(R.id.action_friend_manage_to_chat_detail, args);
                 }
             }
         });

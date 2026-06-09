@@ -16,6 +16,7 @@ import com.example.se114_callingsystem.databinding.FragmentHomeBinding;
 import com.example.se114_callingsystem.R;
 
 import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.core.model.User;
 import com.example.se114_callingsystem.features.server.CreateServerDialog;
 import com.example.se114_callingsystem.features.server.ServerAdapter;
 import com.example.se114_callingsystem.core.service.MessageNotificationService;
@@ -33,6 +34,10 @@ public class HomeFragment extends Fragment {
     private List<Server> serverList;
     private List<String> currentServerOrder;
     private FirebaseFirestore db;
+    private HomeDMAdapter dmAdapter;
+    private List<User> friendList = new java.util.ArrayList<>();
+    private com.google.firebase.database.ValueEventListener friendsListener;
+    private List<com.google.firebase.firestore.ListenerRegistration> friendProfileListeners = new java.util.ArrayList<>();
 
     @Nullable
     @Override
@@ -73,6 +78,12 @@ public class HomeFragment extends Fragment {
 
         binding.btnStatus.setOnClickListener(v -> showStatusDialog());
 
+        // Setup Direct Messages list
+        binding.rvDirectMessages.setLayoutManager(new LinearLayoutManager(getContext()));
+        dmAdapter = new HomeDMAdapter(friendList, this::onFriendClick);
+        binding.rvDirectMessages.setAdapter(dmAdapter);
+
+        loadFriends();
         loadUserStatus();
     }
     
@@ -363,9 +374,141 @@ public class HomeFragment extends Fragment {
             .addOnFailureListener(e -> Log.e(TAG, "Failed to save server order", e));
     }
 
+    private void loadFriends() {
+        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUserUid.isEmpty()) return;
+
+        friendsListener = com.example.se114_callingsystem.core.model.Firebase.getUserFriendsRef(currentUserUid).addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
+                if (binding == null) return;
+                
+                // Clear old snapshot listeners
+                for (com.google.firebase.firestore.ListenerRegistration registration : friendProfileListeners) {
+                    if (registration != null) {
+                        registration.remove();
+                    }
+                }
+                friendProfileListeners.clear();
+                friendList.clear();
+                dmAdapter.notifyDataSetChanged();
+                
+                if (snapshot.exists()) {
+                    binding.layoutNoDMs.setVisibility(View.GONE);
+                    binding.rvDirectMessages.setVisibility(View.VISIBLE);
+                    
+                    for (com.google.firebase.database.DataSnapshot snap : snapshot.getChildren()) {
+                        String friendUid = snap.getKey();
+                        if (friendUid != null) {
+                            listenToFriendProfile(friendUid);
+                        }
+                    }
+                } else {
+                    binding.layoutNoDMs.setVisibility(View.VISIBLE);
+                    binding.rvDirectMessages.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {
+                Log.e(TAG, "Error loading friends from Realtime DB", error.toException());
+            }
+        });
+    }
+
+    private void listenToFriendProfile(String friendUid) {
+        com.google.firebase.firestore.ListenerRegistration registration = db.collection("users").document(friendUid)
+            .addSnapshotListener((documentSnapshot, error) -> {
+                if (error != null) {
+                    Log.e(TAG, "Error listening to friend: " + friendUid, error);
+                    return;
+                }
+                if (binding == null) return;
+                
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    User user = documentSnapshot.toObject(User.class);
+                    if (user != null) {
+                        user.setUserId(documentSnapshot.getId());
+                        
+                        // Find if this friend already exists in our list
+                        int foundIndex = -1;
+                        for (int i = 0; i < friendList.size(); i++) {
+                            if (friendList.get(i).getUserId() != null && friendList.get(i).getUserId().equals(user.getUserId())) {
+                                foundIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        if (foundIndex != -1) {
+                            // Update existing friend's profile details
+                            friendList.set(foundIndex, user);
+                        } else {
+                            // Add new friend to the list
+                            friendList.add(user);
+                        }
+                        
+                        dmAdapter.notifyDataSetChanged();
+                        
+                        // Check if list is empty to toggle visibility
+                        if (friendList.isEmpty()) {
+                            binding.layoutNoDMs.setVisibility(View.VISIBLE);
+                            binding.rvDirectMessages.setVisibility(View.GONE);
+                        } else {
+                            binding.layoutNoDMs.setVisibility(View.GONE);
+                            binding.rvDirectMessages.setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
+            });
+        friendProfileListeners.add(registration);
+    }
+
+    private void onFriendClick(User friend) {
+        String myUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String friendUid = friend.getUserId();
+        if (myUid.isEmpty() || friendUid == null || friendUid.isEmpty()) return;
+
+        String dmRoomId;
+        if (myUid.compareTo(friendUid) < 0) {
+            dmRoomId = "dm_" + myUid + "_" + friendUid;
+        } else {
+            dmRoomId = "dm_" + friendUid + "_" + myUid;
+        }
+
+        String displayName = friend.getUsername();
+        if (displayName == null || displayName.trim().isEmpty()) {
+            displayName = friend.getEmail();
+        }
+
+        Bundle args = new Bundle();
+        args.putString("CHAT_ID", dmRoomId);
+        args.putString("CHAT_NAME", displayName);
+        args.putString("SERVER_ID", null);
+        args.putString("SERVER_COLOR", "#5865F2");
+
+        if (getView() != null) {
+            androidx.navigation.Navigation.findNavController(getView()).navigate(R.id.action_home_to_chat_detail, args);
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        
+        // Remove Realtime DB friend list listener
+        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (!currentUserUid.isEmpty() && friendsListener != null) {
+            com.example.se114_callingsystem.core.model.Firebase.getUserFriendsRef(currentUserUid).removeEventListener(friendsListener);
+        }
+        
+        // Remove Firestore profile listeners
+        for (com.google.firebase.firestore.ListenerRegistration registration : friendProfileListeners) {
+            if (registration != null) {
+                registration.remove();
+            }
+        }
+        friendProfileListeners.clear();
+        
         binding = null;
     }
 }

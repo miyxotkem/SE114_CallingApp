@@ -24,6 +24,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Fr
         void onAccept(User user);
         void onReject(User user);
         void onRemove(User user);
+        void onMessage(User user);
     }
 
     public FriendListAdapter(List<User> userList, boolean isRequestList, OnFriendActionListener listener) {
@@ -51,7 +52,11 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Fr
 
         if (isRequestList) {
             holder.llRequestActions.setVisibility(View.VISIBLE);
-            holder.btnRemoveFriend.setVisibility(View.GONE);
+            if (holder.llFriendActions != null) {
+                holder.llFriendActions.setVisibility(View.GONE);
+            } else {
+                holder.btnRemoveFriend.setVisibility(View.GONE);
+            }
             
             holder.btnAccept.setOnClickListener(v -> {
                 if (listener != null) listener.onAccept(user);
@@ -61,11 +66,21 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Fr
             });
         } else {
             holder.llRequestActions.setVisibility(View.GONE);
-            holder.btnRemoveFriend.setVisibility(View.VISIBLE);
+            if (holder.llFriendActions != null) {
+                holder.llFriendActions.setVisibility(View.VISIBLE);
+            } else {
+                holder.btnRemoveFriend.setVisibility(View.VISIBLE);
+            }
             
             holder.btnRemoveFriend.setOnClickListener(v -> {
                 if (listener != null) listener.onRemove(user);
             });
+
+            if (holder.btnMessageFriend != null) {
+                holder.btnMessageFriend.setOnClickListener(v -> {
+                    if (listener != null) listener.onMessage(user);
+                });
+            }
         }
         
         // Open Profile on click
@@ -84,15 +99,18 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Fr
     public static class FriendViewHolder extends RecyclerView.ViewHolder {
         TextView tvUserName;
         LinearLayout llRequestActions;
-        ImageView btnAccept, btnReject, btnRemoveFriend;
+        LinearLayout llFriendActions;
+        ImageView btnAccept, btnReject, btnRemoveFriend, btnMessageFriend;
 
         public FriendViewHolder(@NonNull View itemView) {
             super(itemView);
             tvUserName = itemView.findViewById(R.id.tvUserName);
             llRequestActions = itemView.findViewById(R.id.llRequestActions);
+            llFriendActions = itemView.findViewById(R.id.llFriendActions);
             btnAccept = itemView.findViewById(R.id.btnAccept);
             btnReject = itemView.findViewById(R.id.btnReject);
             btnRemoveFriend = itemView.findViewById(R.id.btnRemoveFriend);
+            btnMessageFriend = itemView.findViewById(R.id.btnMessageFriend);
         }
     }
 }
