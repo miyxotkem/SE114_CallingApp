@@ -350,6 +350,7 @@ public class ChatFragment extends Fragment {
                 }
                 adapter.notifyDataSetChanged();
 
+                updatePinnedMessageHeader();
                 
                 if (!messageList.isEmpty()) {
                     Message lastMsg = messageList.get(messageList.size() - 1);
@@ -386,6 +387,46 @@ public class ChatFragment extends Fragment {
             binding.cardReplyPreviewImage.setVisibility(View.GONE);
         }
         binding.edtMessage.requestFocus();
+    }
+
+    private void updatePinnedMessageHeader() {
+        if (binding == null) return;
+        View layoutPinnedMessage = binding.getRoot().findViewById(R.id.layoutPinnedMessage);
+        TextView tvPinnedContent = binding.getRoot().findViewById(R.id.tvPinnedMessageContent);
+        if (layoutPinnedMessage == null || tvPinnedContent == null) return;
+
+        Message latestPinned = null;
+        // Search backwards to find the latest pinned message
+        for (int i = messageList.size() - 1; i >= 0; i--) {
+            Message m = messageList.get(i);
+            if (m.isPinned() && !m.isDeleted()) {
+                latestPinned = m;
+                break;
+            }
+        }
+
+        if (latestPinned != null) {
+            layoutPinnedMessage.setVisibility(View.VISIBLE);
+            String type = latestPinned.getType();
+            if ("image".equals(type)) {
+                tvPinnedContent.setText("📷 Hình ảnh");
+            } else if ("file".equals(type)) {
+                String fileName = "Tài liệu đính kèm";
+                try { fileName = latestPinned.getContent().substring(latestPinned.getContent().lastIndexOf('/') + 1); } catch (Exception e) {}
+                tvPinnedContent.setText("📎 " + fileName);
+            } else if ("reminder".equals(type)) {
+                tvPinnedContent.setText("⏰ Lời nhắc: " + latestPinned.getContent());
+            } else {
+                tvPinnedContent.setText(latestPinned.getContent());
+            }
+
+            final String pinnedMessageId = latestPinned.getMessageId();
+            layoutPinnedMessage.setOnClickListener(v -> {
+                scrollToMessage(pinnedMessageId);
+            });
+        } else {
+            layoutPinnedMessage.setVisibility(View.GONE);
+        }
     }
 
     private void setupMentionSuggestions() {

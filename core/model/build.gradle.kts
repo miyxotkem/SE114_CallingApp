@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.se114_callingsystem.core.model"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 32
