@@ -18,6 +18,9 @@ public class Message {
     private boolean pinned;
     private long reminderTime;
 
+    @com.google.firebase.database.Exclude
+    private boolean isPending;
+
 
     // Constructor trống để Firebase mapping
     public Message() {
@@ -95,4 +98,9 @@ public class Message {
     
     public long getReminderTime() { return reminderTime; }
     public void setReminderTime(long reminderTime) { this.reminderTime = reminderTime; }
+
+    @com.google.firebase.database.Exclude
+    public boolean isPending() { return isPending; }
+    @com.google.firebase.database.Exclude
+    public void setPending(boolean pending) { this.isPending = pending; }
 }

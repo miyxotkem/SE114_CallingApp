@@ -56,6 +56,7 @@ public class ChatFragment extends Fragment {
     private FragmentChatBinding binding;
     private ChatAdapter adapter;
     private List<Message> messageList = new ArrayList<>();
+    private List<String> pendingMessageIds = new java.util.ArrayList<>();
     
     private ActivityResultLauncher<String> imagePickerLauncher;
     private ActivityResultLauncher<String> filePickerLauncher;
@@ -291,15 +292,36 @@ public class ChatFragment extends Fragment {
                 messageToReply = null;
                 binding.tvReplyingToLayout.setVisibility(View.GONE);
             }
-            groupChatRef.push().setValue(messageModel).addOnSuccessListener(aVoid -> {
-                if (binding != null) binding.edtMessage.setText("");
-                setTypingStatus(false);
+            
+            DatabaseReference newMsgRef = groupChatRef.push();
+            final String messageId = newMsgRef.getKey();
+            messageModel.setMessageId(messageId);
+            
+            if (getContext() != null && !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+                pendingMessageIds.add(messageId);
+                messageModel.setPending(true);
+            }
+            
+            newMsgRef.setValue(messageModel).addOnCompleteListener(task -> {
+                if (task.isSuccessful() && messageId != null) {
+                    pendingMessageIds.remove(messageId);
+                    if (adapter != null) {
+                        adapter.notifyDataSetChanged();
+                    }
+                }
             });
+
+            if (binding != null) binding.edtMessage.setText("");
+            setTypingStatus(false);
         }
     }
 
     private void uploadToCloudinary(Uri fileUri, String type) {
         if (getContext() == null) return;
+        if (!com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+            Toast.makeText(getContext(), "Không có kết nối mạng. Không thể tải lên file.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         ProgressDialog pd = new ProgressDialog(getContext());
         pd.setMessage("Uploading payload...");
         pd.show();
@@ -345,6 +367,9 @@ public class ChatFragment extends Fragment {
                     Message model = data.getValue(Message.class);
                     if (model != null) {
                         model.setMessageId(data.getKey());
+                        if (pendingMessageIds.contains(data.getKey())) {
+                            model.setPending(true);
+                        }
                         messageList.add(model);
                     }
                 }

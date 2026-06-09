@@ -18,6 +18,8 @@ public class MainActivity extends AppCompatActivity {
     private android.os.Handler idleHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable idleRunnable = () -> setAppStatus("idle");
     private String lastSetStatus = "";
+    private com.example.se114_callingsystem.core.util.NetworkMonitor networkMonitor;
+    private boolean isFirstNetworkCheck = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +55,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         handleNotificationIntent(getIntent());
+
+        networkMonitor = new com.example.se114_callingsystem.core.util.NetworkMonitor(this);
+        networkMonitor.getIsConnected().observe(this, this::handleNetworkChange);
     }
 
     @Override
@@ -151,6 +156,51 @@ public class MainActivity extends AppCompatActivity {
             com.google.firebase.database.FirebaseDatabase.getInstance().getReference("users/" + uid + "/status").setValue(targetStatus);
             com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).update("status", targetStatus);
         }
+    }
+
+    private void handleNetworkChange(boolean isConnected) {
+        if (isFirstNetworkCheck) {
+            isFirstNetworkCheck = false;
+            if (!isConnected) {
+                showOfflineBanner();
+            }
+            return;
+        }
+
+        if (isConnected) {
+            showOnlineBanner();
+        } else {
+            showOfflineBanner();
+        }
+    }
+
+    private void showOfflineBanner() {
+        if (binding == null || binding.tvNetworkBanner == null) return;
+        binding.tvNetworkBanner.setText("Không có kết nối mạng");
+        binding.tvNetworkBanner.setBackgroundColor(android.graphics.Color.parseColor("#E25C5C"));
+        binding.tvNetworkBanner.setVisibility(View.VISIBLE);
+        binding.tvNetworkBanner.setTranslationY(-100f);
+        binding.tvNetworkBanner.animate().translationY(0f).setDuration(300).start();
+    }
+
+    private void showOnlineBanner() {
+        if (binding == null || binding.tvNetworkBanner == null) return;
+        binding.tvNetworkBanner.setText("Đã khôi phục kết nối");
+        binding.tvNetworkBanner.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50"));
+        
+        binding.tvNetworkBanner.postDelayed(() -> {
+            if (binding != null && binding.tvNetworkBanner != null) {
+                binding.tvNetworkBanner.animate()
+                        .translationY(-100f)
+                        .setDuration(300)
+                        .withEndAction(() -> {
+                            if (binding != null && binding.tvNetworkBanner != null) {
+                                binding.tvNetworkBanner.setVisibility(View.GONE);
+                            }
+                        })
+                        .start();
+            }
+        }, 2000);
     }
 
     @Override

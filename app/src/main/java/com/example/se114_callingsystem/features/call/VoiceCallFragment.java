@@ -77,6 +77,15 @@ public class VoiceCallFragment extends Fragment {
     private List<ServerMember> serverMembers = new ArrayList<>();
     private ListenerRegistration membersListener;
 
+    private androidx.appcompat.app.AlertDialog reconnectDialog;
+    private android.os.Handler reconnectHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable reconnectRunnable = () -> {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), "Không thể kết nối lại. Đang thoát cuộc gọi.", Toast.LENGTH_SHORT).show();
+        }
+        leaveAndExit();
+    };
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -455,6 +464,25 @@ public class VoiceCallFragment extends Fragment {
                 }
             }
         }
+
+        @Override
+        public void onConnectionStateChanged(int state, int reason) {
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                Log.d(TAG, "onConnectionStateChanged: state = " + state + ", reason = " + reason);
+                if (state == io.agora.rtc2.Constants.CONNECTION_STATE_RECONNECTING) {
+                    showReconnectingUI();
+                } else if (state == io.agora.rtc2.Constants.CONNECTION_STATE_CONNECTED) {
+                    hideReconnectingUI();
+                } else if (state == io.agora.rtc2.Constants.CONNECTION_STATE_FAILED) {
+                    hideReconnectingUI();
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Kết nối cuộc gọi thất bại.", Toast.LENGTH_SHORT).show();
+                    }
+                    leaveAndExit();
+                }
+            });
+        }
     };
 
     private void setupScreenShareExConnection() {
@@ -760,6 +788,46 @@ public class VoiceCallFragment extends Fragment {
         }
         adapter.setServerMembers(serverMembers);
         adapter.notifyDataSetChanged();
+    }
+
+    private void showReconnectingUI() {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            if (reconnectDialog == null) {
+                reconnectDialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Đang kết nối lại...")
+                        .setMessage("Kết nối mạng không ổn định. Đang thử kết nối lại cuộc gọi. Tự động ngắt sau 20s.")
+                        .setCancelable(false)
+                        .create();
+            }
+            if (!reconnectDialog.isShowing()) {
+                reconnectDialog.show();
+                reconnectHandler.postDelayed(reconnectRunnable, 20000); // 20 seconds timeout
+            }
+        });
+    }
+
+    private void hideReconnectingUI() {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            if (reconnectDialog != null && reconnectDialog.isShowing()) {
+                reconnectDialog.dismiss();
+            }
+            reconnectHandler.removeCallbacks(reconnectRunnable);
+        });
+    }
+
+    private void leaveAndExit() {
+        if (getActivity() == null || getView() == null) return;
+        getActivity().runOnUiThread(() -> {
+            try {
+                androidx.navigation.Navigation.findNavController(requireView()).popBackStack();
+            } catch (Exception e) {
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
+                }
+            }
+        });
     }
 }
 

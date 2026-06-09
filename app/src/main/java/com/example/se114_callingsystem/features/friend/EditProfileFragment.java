@@ -141,6 +141,14 @@ public class EditProfileFragment extends Fragment {
 
     private void saveProfile() {
         if (currentUser == null || binding == null) return;
+
+        // Kiểm tra kết nối mạng nếu người dùng thay đổi ảnh đại diện hoặc ảnh bìa
+        if ((avatarUri != null || coverUri != null) && 
+                !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(requireContext())) {
+            Toast.makeText(getContext(), "Không có kết nối mạng. Không thể tải lên hình ảnh mới.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         binding.btnSaveProfile.setEnabled(false);
 
         android.app.ProgressDialog pd = new android.app.ProgressDialog(requireContext());
@@ -164,6 +172,17 @@ public class EditProfileFragment extends Fragment {
                 
                 if (avatarUrl != null) updates.put("profilePic", avatarUrl);
                 if (coverUrl != null) updates.put("coverPic", coverUrl);
+
+                // Nếu ngoại tuyến và chỉ cập nhật text
+                if (!com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(requireContext())) {
+                    db.collection("users").document(currentUser.getUid()).update(updates);
+                    pd.dismiss();
+                    Toast.makeText(getContext(), "Đã lưu thay đổi ngoại tuyến. Sẽ đồng bộ khi có mạng.", Toast.LENGTH_SHORT).show();
+                    if (getView() != null) {
+                        Navigation.findNavController(getView()).popBackStack();
+                    }
+                    return;
+                }
 
                 db.collection("users").document(currentUser.getUid())
                     .update(updates)

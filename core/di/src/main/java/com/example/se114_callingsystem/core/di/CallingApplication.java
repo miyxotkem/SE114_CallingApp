@@ -4,6 +4,8 @@ import android.app.Application;
 import com.cloudinary.android.MediaManager;
 import com.example.se114_callingsystem.network.BackendService;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +20,26 @@ public class CallingApplication extends Application {
 
         // Khởi tạo Cloudinary MediaManager một lần duy nhất tại đây
         initCloudinary();
+
+        // Bật offline persistence cho Firebase
+        initFirebaseOfflineSettings();
+    }
+
+    private void initFirebaseOfflineSettings() {
+        // Bật offline persistence cho Firestore
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+                .build();
+        FirebaseFirestore.getInstance().setFirestoreSettings(settings);
+
+        // Bật offline persistence cho Realtime Database
+        try {
+            com.google.firebase.database.FirebaseDatabase.getInstance("https://calling-app-5374e-default-rtdb.asia-southeast1.firebasedatabase.app/")
+                    .setPersistenceEnabled(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void initCloudinary() {

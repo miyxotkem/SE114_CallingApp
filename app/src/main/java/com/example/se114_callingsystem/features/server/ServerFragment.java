@@ -541,6 +541,10 @@ public class ServerFragment extends Fragment {
             @Override public void onRemove(CallChannel channel) { db.collection("CallChannels").document(channel.getCallId()).delete().addOnSuccessListener(a -> loadCallData()); }
             @Override
             public void onJoinCall(CallChannel channel) {
+                if (getContext() != null && !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+                    Toast.makeText(getContext(), "Không có kết nối mạng. Không thể tham gia cuộc gọi.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Bundle args = new Bundle();
                 args.putString("CALL_CHANNEL_NAME", channel.getCallName());
                 args.putString("SERVER_ID", channel.getServerId());

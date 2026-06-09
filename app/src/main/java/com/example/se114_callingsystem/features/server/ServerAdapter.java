@@ -57,6 +57,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
             holder.tvServerInitials.setVisibility(View.GONE);
             Glide.with(holder.itemView.getContext())
                  .load(iconUrl)
+                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                  .into(holder.ivServerIcon);
         } else {
             holder.ivServerIcon.setVisibility(View.GONE);
