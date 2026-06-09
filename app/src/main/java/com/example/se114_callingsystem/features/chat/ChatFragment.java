@@ -135,6 +135,7 @@ public class ChatFragment extends Fragment {
         if (groupId != null) {
             groupChatRef = Firebase.getDatabase().getReference("chats").child(groupId);
             listenForMessages(groupId);
+            markNotificationsAsRead(groupId);
         }
 
         setupRecyclerView();
@@ -926,6 +927,33 @@ public class ChatFragment extends Fragment {
                     .document(notifId)
                     .set(notif);
             });
+    }
+
+    private void markNotificationsAsRead(String chatId) {
+        String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId == null || chatId == null) return;
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                .document(currentUserId)
+                .collection("notifications")
+                .whereEqualTo("targetId", chatId)
+                .whereEqualTo("isRead", false)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        com.google.firebase.firestore.WriteBatch batch = com.google.firebase.firestore.FirebaseFirestore.getInstance().batch();
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            batch.update(doc.getReference(), "isRead", true);
+                        }
+                        batch.commit().addOnFailureListener(e -> {
+                            android.util.Log.e("ChatFragment", "Failed to mark notifications as read", e);
+                        });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("ChatFragment", "Failed to fetch notifications to mark as read", e);
+                });
     }
 
     @Override

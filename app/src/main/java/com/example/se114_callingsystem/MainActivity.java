@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private String lastSetStatus = "";
     private com.example.se114_callingsystem.core.util.NetworkMonitor networkMonitor;
     private boolean isFirstNetworkCheck = true;
+    private com.google.firebase.firestore.ListenerRegistration unreadNotificationsListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         resetIdleTimer();
+        setupNotificationBadgeListener();
     }
 
     @Override
@@ -136,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         idleHandler.removeCallbacks(idleRunnable);
         setAppStatus("offline");
+        removeNotificationBadgeListener();
     }
 
     private void setAppStatus(String appState) {
@@ -203,9 +206,50 @@ public class MainActivity extends AppCompatActivity {
         }, 2000);
     }
 
+    private void setupNotificationBadgeListener() {
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid == null) {
+            removeNotificationBadgeListener();
+            return;
+        }
+
+        if (unreadNotificationsListener != null) return; // Already listening
+
+        unreadNotificationsListener = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users").document(uid).collection("notifications")
+                .whereEqualTo("isRead", false)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        android.util.Log.e("MainActivity", "Error listening for unread notifications", error);
+                        return;
+                    }
+                    if (binding == null || binding.bottomNav == null) return;
+
+                    int unreadCount = (value != null) ? value.size() : 0;
+                    com.google.android.material.badge.BadgeDrawable badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications);
+                    if (unreadCount > 0) {
+                        badge.setVisible(true);
+                        badge.setNumber(unreadCount);
+                        badge.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.discord_red));
+                        badge.setBadgeTextColor(android.graphics.Color.WHITE);
+                    } else {
+                        badge.setVisible(false);
+                    }
+                });
+    }
+
+    private void removeNotificationBadgeListener() {
+        if (unreadNotificationsListener != null) {
+            unreadNotificationsListener.remove();
+            unreadNotificationsListener = null;
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        removeNotificationBadgeListener();
         binding = null;
     }
 }

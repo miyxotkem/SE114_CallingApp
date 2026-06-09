@@ -69,8 +69,8 @@ public class NotificationsFragment extends Fragment {
                         for (com.google.firebase.firestore.DocumentSnapshot doc : value.getDocuments()) {
                             NotificationItem item = doc.toObject(NotificationItem.class);
                             if (item != null) {
-                                // Firestore mapping might map boolean "read" to JavaBean "isRead" getter
-                                Boolean isReadVal = doc.getBoolean("read");
+                                // Firestore mapping might map boolean "isRead" to JavaBean "isRead" getter
+                                Boolean isReadVal = doc.getBoolean("isRead");
                                 if (isReadVal != null) {
                                     item.setRead(isReadVal);
                                 }
@@ -102,7 +102,7 @@ public class NotificationsFragment extends Fragment {
                     .document(currentUserId)
                     .collection("notifications")
                     .document(item.getNotificationId())
-                    .update("read", true);
+                    .update("isRead", true);
         }
 
         // Navigate based on notification type

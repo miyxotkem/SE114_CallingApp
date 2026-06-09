@@ -89,11 +89,49 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
 
         holder.viewStatusIndicator.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, colorRes)));
 
+        // Listen for unread notification count from this specific friend
+        if (holder.unreadListener != null) {
+            holder.unreadListener.remove();
+            holder.unreadListener = null;
+        }
+
+        String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        String friendUid = friend.getUserId();
+
+        if (myUid != null && friendUid != null) {
+            holder.unreadListener = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    .collection("users").document(myUid)
+                    .collection("notifications")
+                    .whereEqualTo("isRead", false)
+                    .whereEqualTo("senderId", friendUid)
+                    .addSnapshotListener((value, error) -> {
+                        if (error != null) return;
+                        if (value != null && !value.isEmpty()) {
+                            holder.tvUnreadBadge.setText(String.valueOf(value.size()));
+                            holder.tvUnreadBadge.setVisibility(View.VISIBLE);
+                        } else {
+                            holder.tvUnreadBadge.setVisibility(View.GONE);
+                        }
+                    });
+        } else {
+            holder.tvUnreadBadge.setVisibility(View.GONE);
+        }
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onFriendClick(friend);
             }
         });
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull DMViewHolder holder) {
+        super.onViewRecycled(holder);
+        if (holder.unreadListener != null) {
+            holder.unreadListener.remove();
+            holder.unreadListener = null;
+        }
     }
 
     @Override
@@ -105,12 +143,15 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
         ImageView ivAvatar;
         View viewStatusIndicator;
         TextView tvUserName;
+        TextView tvUnreadBadge;
+        com.google.firebase.firestore.ListenerRegistration unreadListener;
 
         public DMViewHolder(@NonNull View itemView) {
             super(itemView);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
             viewStatusIndicator = itemView.findViewById(R.id.viewStatusIndicator);
             tvUserName = itemView.findViewById(R.id.tvUserName);
+            tvUnreadBadge = itemView.findViewById(R.id.tvUnreadBadge);
         }
     }
 }
