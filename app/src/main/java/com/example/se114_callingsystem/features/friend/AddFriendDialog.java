@@ -65,6 +65,7 @@ public class AddFriendDialog extends DialogFragment {
                             if (friendUid != null) {
                                 // Send a friend request
                                 Firebase.getUserFriendRequestsRef(friendUid).child(currentUser.getUid()).setValue(true);
+                                sendFriendNotification(friendUid, "friend_request");
                                 
                                 if (getActivity() != null) {
                                     Toast.makeText(getContext(), "Đã gửi lời mời kết bạn!", Toast.LENGTH_SHORT).show();
@@ -94,6 +95,56 @@ public class AddFriendDialog extends DialogFragment {
                     ViewGroup.LayoutParams.WRAP_CONTENT
             );
         }
+    }
+
+    private void sendFriendNotification(String targetUid, String type) {
+        String myUid = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (myUid.isEmpty() || targetUid == null || targetUid.isEmpty()) return;
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(myUid).get()
+            .addOnSuccessListener(doc -> {
+                String myName = "Ai đó";
+                if (doc.exists()) {
+                    String name = doc.getString("username");
+                    if (name != null && !name.isEmpty()) {
+                        myName = name;
+                    } else {
+                        String email = doc.getString("email");
+                        if (email != null && !email.isEmpty()) {
+                            myName = email;
+                        }
+                    }
+                }
+                
+                String title;
+                String content;
+                if ("friend_request".equals(type)) {
+                    title = "Lời mời kết bạn";
+                    content = myName + " đã gửi cho bạn một lời mời kết bạn.";
+                } else {
+                    title = "Chấp nhận kết bạn";
+                    content = myName + " đã đồng ý lời mời kết bạn của bạn.";
+                }
+
+                java.util.Map<String, Object> notif = new java.util.HashMap<>();
+                String notifId = String.valueOf(System.currentTimeMillis());
+                notif.put("notificationId", notifId);
+                notif.put("title", title);
+                notif.put("content", content);
+                notif.put("type", type);
+                notif.put("senderId", myUid);
+                notif.put("senderName", myName);
+                notif.put("targetId", myUid); // Redirect to Friends list
+                notif.put("timestamp", System.currentTimeMillis());
+                notif.put("isRead", false);
+
+                com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                    .document(targetUid)
+                    .collection("notifications")
+                    .document(notifId)
+                    .set(notif);
+            });
     }
 }
 
