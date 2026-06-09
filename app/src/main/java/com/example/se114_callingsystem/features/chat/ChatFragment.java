@@ -56,6 +56,7 @@ public class ChatFragment extends Fragment {
     private FragmentChatBinding binding;
     private ChatAdapter adapter;
     private List<Message> messageList = new ArrayList<>();
+    private List<String> pendingMessageIds = new java.util.ArrayList<>();
     
     private ActivityResultLauncher<String> imagePickerLauncher;
     private ActivityResultLauncher<String> filePickerLauncher;
@@ -134,6 +135,7 @@ public class ChatFragment extends Fragment {
         if (groupId != null) {
             groupChatRef = Firebase.getDatabase().getReference("chats").child(groupId);
             listenForMessages(groupId);
+            markNotificationsAsRead(groupId);
         }
 
         setupRecyclerView();
@@ -291,15 +293,37 @@ public class ChatFragment extends Fragment {
                 messageToReply = null;
                 binding.tvReplyingToLayout.setVisibility(View.GONE);
             }
-            groupChatRef.push().setValue(messageModel).addOnSuccessListener(aVoid -> {
-                if (binding != null) binding.edtMessage.setText("");
-                setTypingStatus(false);
+            
+            DatabaseReference newMsgRef = groupChatRef.push();
+            final String messageId = newMsgRef.getKey();
+            messageModel.setMessageId(messageId);
+            
+            if (getContext() != null && !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+                pendingMessageIds.add(messageId);
+                messageModel.setPending(true);
+            }
+            
+            newMsgRef.setValue(messageModel).addOnCompleteListener(task -> {
+                if (task.isSuccessful() && messageId != null) {
+                    pendingMessageIds.remove(messageId);
+                    if (adapter != null) {
+                        adapter.notifyDataSetChanged();
+                    }
+                    checkAndTriggerMentions(messageModel);
+                }
             });
+
+            if (binding != null) binding.edtMessage.setText("");
+            setTypingStatus(false);
         }
     }
 
     private void uploadToCloudinary(Uri fileUri, String type) {
         if (getContext() == null) return;
+        if (!com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+            Toast.makeText(getContext(), "Không có kết nối mạng. Không thể tải lên file.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         ProgressDialog pd = new ProgressDialog(getContext());
         pd.setMessage("Uploading payload...");
         pd.show();
@@ -331,7 +355,14 @@ public class ChatFragment extends Fragment {
             messageToReply = null;
             if (binding != null) binding.tvReplyingToLayout.setVisibility(View.GONE);
         }
-        groupChatRef.push().setValue(model);
+        DatabaseReference newMsgRef = groupChatRef.push();
+        String messageId = newMsgRef.getKey();
+        model.setMessageId(messageId);
+        newMsgRef.setValue(model).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                checkAndTriggerMentions(model);
+            }
+        });
     }
 
     private void listenForMessages(String chatRoomID) {
@@ -345,6 +376,9 @@ public class ChatFragment extends Fragment {
                     Message model = data.getValue(Message.class);
                     if (model != null) {
                         model.setMessageId(data.getKey());
+                        if (pendingMessageIds.contains(data.getKey())) {
+                            model.setPending(true);
+                        }
                         messageList.add(model);
                     }
                 }
@@ -853,6 +887,114 @@ public class ChatFragment extends Fragment {
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    private void checkAndTriggerMentions(Message message) {
+        if (message == null || message.getContent() == null || message.getContent().trim().isEmpty()) return;
+        
+        // Mentions are only applicable in server channels.
+        if (serverId == null) return;
+        
+        String content = message.getContent();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@(\\w+)");
+        java.util.regex.Matcher matcher = pattern.matcher(content);
+        
+        java.util.Set<String> mentionedUsernames = new java.util.HashSet<>();
+        while (matcher.find()) {
+            String username = matcher.group(1);
+            if (username != null) {
+                mentionedUsernames.add(username.toLowerCase());
+            }
+        }
+        
+        if (mentionedUsernames.isEmpty()) return;
+        
+        // Query users collection in Firestore to match usernames
+        for (String username : mentionedUsernames) {
+            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                .whereEqualTo("username", username)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            String targetUid = doc.getId();
+                            
+                            // Don't notify yourself
+                            String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                                    ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+                            if (targetUid.equals(myUid)) continue;
+                            
+                            // Write notification document to target user's notifications subcollection
+                            writeMentionNotificationToUser(targetUid, message);
+                        }
+                    }
+                });
+        }
+    }
+
+    private void writeMentionNotificationToUser(String targetUid, Message message) {
+        String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        
+        // Get my username or display name
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(myUid).get()
+            .addOnSuccessListener(doc -> {
+                String myName = "Ai đó";
+                if (doc.exists()) {
+                    String name = doc.getString("username");
+                    if (name != null && !name.isEmpty()) {
+                        myName = name;
+                    }
+                }
+                
+                String channelName = binding.tvChannelName.getText().toString();
+                String title = "Nhắc tới bạn ở #" + channelName;
+                
+                Map<String, Object> notif = new HashMap<>();
+                String notifId = message.getMessageId() != null ? message.getMessageId() : String.valueOf(System.currentTimeMillis());
+                notif.put("notificationId", notifId);
+                notif.put("title", title);
+                notif.put("content", message.getContent());
+                notif.put("type", "mention");
+                notif.put("senderId", myUid);
+                notif.put("senderName", myName);
+                notif.put("targetId", groupId);
+                notif.put("timestamp", message.getTimestamp());
+                notif.put("isRead", false);
+                
+                com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                    .document(targetUid)
+                    .collection("notifications")
+                    .document(notifId)
+                    .set(notif);
+            });
+    }
+
+    private void markNotificationsAsRead(String chatId) {
+        String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId == null || chatId == null) return;
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                .document(currentUserId)
+                .collection("notifications")
+                .whereEqualTo("targetId", chatId)
+                .whereEqualTo("isRead", false)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        com.google.firebase.firestore.WriteBatch batch = com.google.firebase.firestore.FirebaseFirestore.getInstance().batch();
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : queryDocumentSnapshots.getDocuments()) {
+                            batch.update(doc.getReference(), "isRead", true);
+                        }
+                        batch.commit().addOnFailureListener(e -> {
+                            android.util.Log.e("ChatFragment", "Failed to mark notifications as read", e);
+                        });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("ChatFragment", "Failed to fetch notifications to mark as read", e);
+                });
     }
 
     @Override

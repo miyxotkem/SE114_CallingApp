@@ -64,7 +64,7 @@
         android:id="@+id/btnDownloadFile"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:src="@android:drawable/stat_sys_download"
+        android:src="@drawable/ic_download"
         app:tint="@color/accent" />
 
 </LinearLayout>

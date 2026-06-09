@@ -81,6 +81,15 @@ public class CommentListAdapter extends RecyclerView.Adapter<CommentListAdapter.
             holder.itemView.setPadding(indent, holder.itemView.getPaddingTop(), holder.itemView.getPaddingRight(), holder.itemView.getPaddingBottom());
             holder.layoutReplyIndicator.setVisibility(View.VISIBLE);
             holder.tvReplyAuthorName.setText("@" + (comment.getParentCommentAuthorName() != null ? comment.getParentCommentAuthorName() : "người dùng"));
+            if (serverColor != null && !serverColor.isEmpty()) {
+                try {
+                    holder.tvReplyAuthorName.setTextColor(android.graphics.Color.parseColor(serverColor));
+                } catch (Exception e) {
+                    holder.tvReplyAuthorName.setTextColor(android.graphics.Color.parseColor("#5865F2"));
+                }
+            } else {
+                holder.tvReplyAuthorName.setTextColor(android.graphics.Color.parseColor("#5865F2"));
+            }
         } else {
             int normalPadding = (int) (12 * context.getResources().getDisplayMetrics().density);
             holder.itemView.setPadding(normalPadding, holder.itemView.getPaddingTop(), holder.itemView.getPaddingRight(), holder.itemView.getPaddingBottom());
@@ -100,7 +109,19 @@ public class CommentListAdapter extends RecyclerView.Adapter<CommentListAdapter.
                 String authorName = user.getUsername();
                 if (comment.getAuthorId().equals(postAuthorId)) {
                     holder.tvAuthorTag.setVisibility(View.VISIBLE);
-                    holder.tvCommentAuthor.setTextColor(android.graphics.Color.parseColor("#5865F2"));
+                    if (serverColor != null && !serverColor.isEmpty()) {
+                        try {
+                            int parsedColor = android.graphics.Color.parseColor(serverColor);
+                            holder.tvCommentAuthor.setTextColor(parsedColor);
+                            holder.tvAuthorTag.setBackgroundTintList(android.content.res.ColorStateList.valueOf(parsedColor));
+                        } catch (Exception e) {
+                            holder.tvCommentAuthor.setTextColor(android.graphics.Color.parseColor("#5865F2"));
+                            holder.tvAuthorTag.setBackgroundTintList(null);
+                        }
+                    } else {
+                        holder.tvCommentAuthor.setTextColor(android.graphics.Color.parseColor("#5865F2"));
+                        holder.tvAuthorTag.setBackgroundTintList(null);
+                    }
                 } else {
                     holder.tvAuthorTag.setVisibility(View.GONE);
                     holder.tvCommentAuthor.setTextColor(context.getResources().getColor(R.color.text_primary));

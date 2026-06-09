@@ -27,7 +27,6 @@ import com.example.se114_callingsystem.core.model.CallChannel;
 import com.example.se114_callingsystem.core.model.ChatChannel;
 import com.example.se114_callingsystem.core.model.PostChannel;
 import com.example.se114_callingsystem.core.model.Server;
-import com.example.se114_callingsystem.core.util.ThemeHelper;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -81,6 +80,8 @@ public class ServerFragment extends Fragment {
     private PostChannelAdapter PostListAdapter;
     private List<PostChannel> postList = new ArrayList<>();
     private boolean isPostExpanded = true;
+
+
 
     // Avatar Variables
     private ActivityResultLauncher<String> imagePickerLauncher;
@@ -145,6 +146,8 @@ public class ServerFragment extends Fragment {
         loadChatData();
         loadCallData();
         loadPostData();
+
+
     }
 
     private void loadUserRole() {
@@ -253,10 +256,6 @@ public class ServerFragment extends Fragment {
 
     private void initViews() {
         if (binding == null) return;
-
-        binding.btnBack.setOnClickListener(v -> {
-            Navigation.findNavController(v).popBackStack();
-        });
 
         binding.btnAddChannel.setOnClickListener(v -> showAddChannelDialog("chat"));
         binding.btnAddCallChannel.setOnClickListener(v -> showAddChannelDialog("call"));
@@ -480,8 +479,6 @@ public class ServerFragment extends Fragment {
             });
         }
 
-
-
         dialog.show();
         View bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet != null) bottomSheet.setBackgroundResource(android.R.color.transparent);
@@ -520,9 +517,9 @@ public class ServerFragment extends Fragment {
 
     private void loadChatData() {
         if (serverId == null) return;
-        db.collection("Channels").whereEqualTo("serverId", serverId).orderBy("orderIndex", Query.Direction.ASCENDING).get()
-                .addOnSuccessListener(snapshots -> {
-                    if (binding == null) return;
+        chatListener = db.collection("Channels").whereEqualTo("serverId", serverId).orderBy("orderIndex", Query.Direction.ASCENDING)
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null || binding == null || snapshots == null) return;
                     chatList.clear();
                     for (DocumentSnapshot doc : snapshots) {
                         ChatChannel c = doc.toObject(ChatChannel.class);
@@ -541,6 +538,10 @@ public class ServerFragment extends Fragment {
             @Override public void onRemove(CallChannel channel) { db.collection("CallChannels").document(channel.getCallId()).delete().addOnSuccessListener(a -> loadCallData()); }
             @Override
             public void onJoinCall(CallChannel channel) {
+                if (getContext() != null && !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+                    Toast.makeText(getContext(), "Không có kết nối mạng. Không thể tham gia cuộc gọi.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 Bundle args = new Bundle();
                 args.putString("CALL_CHANNEL_NAME", channel.getCallName());
                 args.putString("SERVER_ID", channel.getServerId());
@@ -556,9 +557,9 @@ public class ServerFragment extends Fragment {
 
     private void loadCallData() {
         if (serverId == null) return;
-        db.collection("CallChannels").whereEqualTo("serverId", serverId).orderBy("orderIndex", Query.Direction.ASCENDING).get()
-                .addOnSuccessListener(snapshots -> {
-                    if (binding == null) return;
+        callListener = db.collection("CallChannels").whereEqualTo("serverId", serverId).orderBy("orderIndex", Query.Direction.ASCENDING)
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null || binding == null || snapshots == null) return;
                     callList.clear();
                     for (DocumentSnapshot doc : snapshots) {
                         CallChannel c = doc.toObject(CallChannel.class);
@@ -584,9 +585,9 @@ public class ServerFragment extends Fragment {
 
     private void loadPostData() {
         if (serverId == null) return;
-        db.collection("PostChannels").whereEqualTo("serverId", serverId).get()
-                .addOnSuccessListener(snapshots -> {
-                    if (binding == null) return;
+        postListener = db.collection("PostChannels").whereEqualTo("serverId", serverId)
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null || binding == null || snapshots == null) return;
                     postList.clear();
                     for (DocumentSnapshot doc : snapshots) {
                         PostChannel c = doc.toObject(PostChannel.class);
@@ -789,10 +790,46 @@ public class ServerFragment extends Fragment {
         }
     }
 
+    public void switchServer(String newServerId, String newServerName) {
+        // Remove old database listeners
+        if (chatListener != null) { chatListener.remove(); chatListener = null; }
+        if (callListener != null) { callListener.remove(); callListener = null; }
+        if (postListener != null) { postListener.remove(); postListener = null; }
+        if (memberRoleListener != null) { memberRoleListener.remove(); memberRoleListener = null; }
+        
+        // Update server details
+        this.serverId = newServerId;
+        this.serverName = newServerName;
+        this.serverPurpose = "";
+        
+        isChatLoaded = false;
+        isCallLoaded = false;
+        isPostLoaded = false;
+        
+        // Update UI state to loading
+        if (binding != null) {
+            binding.tvServerName.setText(serverName);
+            binding.tvServerDescription.setVisibility(View.GONE);
+            binding.shimmerViewContainer.setVisibility(View.VISIBLE);
+            binding.shimmerViewContainer.startShimmer();
+            binding.channelsContainer.setVisibility(View.GONE);
+        }
+        
+        // Reload data
+        loadUserRole();
+        loadServerInfo();
+        loadChatData();
+        loadCallData();
+        loadPostData();
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (chatListener != null) { chatListener.remove(); chatListener = null; }
+        if (callListener != null) { callListener.remove(); callListener = null; }
+        if (postListener != null) { postListener.remove(); postListener = null; }
+        if (memberRoleListener != null) { memberRoleListener.remove(); memberRoleListener = null; }
         binding = null;
     }
 }
-

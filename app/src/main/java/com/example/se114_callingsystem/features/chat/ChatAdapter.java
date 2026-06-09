@@ -413,6 +413,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
             cardBubble.setLayoutParams(lp);
         }
+        if (msg.isPending()) {
+            cardBubble.setAlpha(0.5f);
+        } else {
+            cardBubble.setAlpha(1.0f);
+        }
 
         if (isHighlighted) {
             cardBubble.animate().scaleX(1.08f).scaleY(1.08f).setDuration(250).start();

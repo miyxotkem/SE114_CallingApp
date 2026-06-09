@@ -1,5 +1,7 @@
 package com.example.se114_callingsystem.features.post;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -92,6 +94,20 @@ public class PostCommentFragment extends Fragment {
 
         setupMentionSuggestions(view);
         fetchServerMembers();
+
+        try {
+            if (serverColor != null && !serverColor.isEmpty()) {
+                int color = Color.parseColor(serverColor);
+                if (btnSendComment != null) {
+                    btnSendComment.setImageTintList(ColorStateList.valueOf(color));
+                }
+                if (cardMentionSuggestions != null) {
+                    cardMentionSuggestions.setStrokeColor(color);
+                }
+            }
+        } catch (Exception e) {
+            // fallback
+        }
 
         rvComments = view.findViewById(R.id.rvComments);
         CommentListAdapter = new CommentListAdapter(requireContext(), commentList, postAuthorId, serverColor, new CommentListAdapter.OnCommentInteractionListener() {

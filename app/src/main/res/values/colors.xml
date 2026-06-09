@@ -15,9 +15,9 @@
     <color name="discord_dark_floating">#FFFFFF</color>   <!-- Bottom Sheets, Popup Dialogs -->
     
     <!-- Light Text Palette -->
-    <color name="discord_text_primary">#060607</color>
+    <color name="discord_text_primary">#313338</color>     <!-- Charcoal for softer dark text -->
     <color name="discord_text_secondary">#4E5058</color>
-    <color name="discord_text_muted">#80848E</color>
+    <color name="discord_text_muted">#5C5E66</color>
     <color name="discord_text_link">#0068E0</color>
     
     <!-- Light System & Dividers -->
@@ -27,7 +27,7 @@
     <!-- Legacy compatibility layer to prevent compile errors during migration -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="text_black_white">#F2F3F5</color>
+    <color name="text_black_white">#313338</color>         <!-- Charcoal text in Light Mode -->
     <color name="bg_primary">@color/discord_dark_base</color>
     <color name="bg_secondary">@color/discord_dark_alt</color>
     <color name="bg_tertiary">@color/discord_dark_deep</color>
@@ -41,7 +41,7 @@
     <color name="accent_surface">@color/discord_dark_elevated</color>
     <color name="bubble_sent">@color/discord_blurple</color>
     <color name="bubble_received">@color/discord_dark_alt</color>
-    <color name="bubble_text_sent">@color/discord_text_primary</color>
+    <color name="bubble_text_sent">@color/white</color>     <!-- White text on blue bubble -->
     <color name="bubble_text_received">@color/discord_text_primary</color>
     <color name="divider">@color/discord_divider</color>
     <color name="icon_tint">@color/discord_text_secondary</color>
@@ -53,10 +53,13 @@
     <color name="quote_bg">@color/discord_dark_deep</color>
     <color name="quote_bar">@color/discord_blurple</color>
     <color name="quote_text">@color/discord_text_secondary</color>
-    <color name="call_bg">@color/discord_dark_floating</color>
-    <color name="call_surface">@color/discord_dark_base</color>
-    <color name="call_control_bg">@color/discord_dark_elevated</color>
+    
+    <!-- Call Screen (always dark for video contrast) -->
+    <color name="call_bg">#1E1F22</color>                  <!-- Dark deep background -->
+    <color name="call_surface">#2B2D31</color>             <!-- Dark alt grid item background -->
+    <color name="call_control_bg">#313338</color>          <!-- Dark base bar background -->
     <color name="call_end">@color/discord_red</color>
+    
     <color name="reaction_bg">@color/discord_dark_elevated</color>
     <color name="reaction_stroke">@color/discord_divider</color>
     <color name="file_bg">#1A5865F2</color>

@@ -77,6 +77,15 @@ public class VoiceCallFragment extends Fragment {
     private List<ServerMember> serverMembers = new ArrayList<>();
     private ListenerRegistration membersListener;
 
+    private androidx.appcompat.app.AlertDialog reconnectDialog;
+    private android.os.Handler reconnectHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable reconnectRunnable = () -> {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), "Không thể kết nối lại. Đang thoát cuộc gọi.", Toast.LENGTH_SHORT).show();
+        }
+        leaveAndExit();
+    };
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -265,19 +274,38 @@ public class VoiceCallFragment extends Fragment {
             }
         }
         
-        int spanCount;
+        GridLayoutManager layoutManager;
         if (videoCount == 0) {
-            spanCount = (count <= 2) ? 1 : (count <= 4 ? 2 : 3);
+            int spanCount = (count <= 2) ? 1 : 2;
+            layoutManager = new GridLayoutManager(getContext(), spanCount);
         } else {
-            spanCount = (videoCount <= 2) ? 1 : 2;
+            final int totalVideo = videoCount;
+            layoutManager = new GridLayoutManager(getContext(), 2);
+            layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    if (position >= 0 && position < participantList.size()) {
+                        Participant p = participantList.get(position);
+                        if (!p.isVideoOff) {
+                            // Video / Screen Share item
+                            if (totalVideo <= 2) {
+                                return 2;
+                            } else {
+                                if (totalVideo % 2 != 0 && position == totalVideo - 1) {
+                                    return 2; // Last odd video takes full width
+                                }
+                                return 1;
+                            }
+                        } else {
+                            // Voice-only item
+                            return 1;
+                        }
+                    }
+                    return 1;
+                }
+            });
         }
-
-        if (binding.rvParticipants.getLayoutManager() instanceof GridLayoutManager) {
-            ((GridLayoutManager) binding.rvParticipants.getLayoutManager()).setSpanCount(spanCount);
-        } else {
-            GridLayoutManager layoutManager = new GridLayoutManager(getContext(), spanCount);
-            binding.rvParticipants.setLayoutManager(layoutManager);
-        }
+        binding.rvParticipants.setLayoutManager(layoutManager);
     }
 
     private void updateParticipantCount() {
@@ -303,6 +331,7 @@ public class VoiceCallFragment extends Fragment {
                 Participant newUser = new Participant(userUid, userName);
                 newUser.isVideoOff = true;
                 participantList.add(newUser);
+                sortParticipantList();
                 updateGridLayout();
                 if (adapter != null) adapter.notifyDataSetChanged();
                 updateParticipantCount();
@@ -322,8 +351,9 @@ public class VoiceCallFragment extends Fragment {
                     Participant me = new Participant(userUid, resolveNameForUid(userUid));
                     me.isVideoOff = true;
                     participantList.add(0, me);
+                    sortParticipantList();
                     updateGridLayout();
-                    if (adapter != null) adapter.notifyItemInserted(0);
+                    if (adapter != null) adapter.notifyDataSetChanged();
                     updateParticipantCount();
                 }
 
@@ -351,8 +381,9 @@ public class VoiceCallFragment extends Fragment {
                             Toast.makeText(getContext(), displayName + " đã rời cuộc gọi!", Toast.LENGTH_SHORT).show();
                         }
                         participantList.remove(i);
+                        sortParticipantList();
                         updateGridLayout();
-                        if (adapter != null) adapter.notifyItemRemoved(i);
+                        if (adapter != null) adapter.notifyDataSetChanged();
                         updateParticipantCount();
                         break;
                     }
@@ -409,6 +440,7 @@ public class VoiceCallFragment extends Fragment {
                 for (int i = 0; i < participantList.size(); i++) {
                     if (participantList.get(i).uid == userUid) {
                         participantList.get(i).isVideoOff = muted;
+                        sortParticipantList();
                         updateGridLayout();
                         if (adapter != null) adapter.notifyDataSetChanged();
                         break;
@@ -426,6 +458,7 @@ public class VoiceCallFragment extends Fragment {
                         boolean isOff = (state == 0 || state == 4);
                         if (participantList.get(i).isVideoOff != isOff) {
                             participantList.get(i).isVideoOff = isOff;
+                            sortParticipantList();
                             updateGridLayout();
                             if (adapter != null) adapter.notifyDataSetChanged();
                         }
@@ -455,6 +488,25 @@ public class VoiceCallFragment extends Fragment {
                 }
             }
         }
+
+        @Override
+        public void onConnectionStateChanged(int state, int reason) {
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                Log.d(TAG, "onConnectionStateChanged: state = " + state + ", reason = " + reason);
+                if (state == io.agora.rtc2.Constants.CONNECTION_STATE_RECONNECTING) {
+                    showReconnectingUI();
+                } else if (state == io.agora.rtc2.Constants.CONNECTION_STATE_CONNECTED) {
+                    hideReconnectingUI();
+                } else if (state == io.agora.rtc2.Constants.CONNECTION_STATE_FAILED) {
+                    hideReconnectingUI();
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Kết nối cuộc gọi thất bại.", Toast.LENGTH_SHORT).show();
+                    }
+                    leaveAndExit();
+                }
+            });
+        }
     };
 
     private void setupScreenShareExConnection() {
@@ -475,9 +527,11 @@ public class VoiceCallFragment extends Fragment {
 
         Participant myScreen = new Participant(screenShareConnection.localUid, resolveNameForUid(screenShareConnection.localUid));
         myScreen.isVideoOff = false;
+        myScreen.isSharingScreen = true;
         participantList.add(myScreen);
+        sortParticipantList();
         updateGridLayout();
-        if (adapter != null) adapter.notifyItemInserted(participantList.size() - 1);
+        if (adapter != null) adapter.notifyDataSetChanged();
         updateParticipantCount();
     }
 
@@ -496,8 +550,9 @@ public class VoiceCallFragment extends Fragment {
         for (int i = 0; i < participantList.size(); i++) {
             if (participantList.get(i).name.equals("Màn hình của tôi")) {
                 participantList.remove(i);
+                sortParticipantList();
                 updateGridLayout();
-                if (adapter != null) adapter.notifyItemRemoved(i);
+                if (adapter != null) adapter.notifyDataSetChanged();
                 updateParticipantCount();
                 break;
             }
@@ -589,6 +644,7 @@ public class VoiceCallFragment extends Fragment {
             updateVideoButtonUI(isVideoOff);
             if (!participantList.isEmpty()) {
                 participantList.get(0).isVideoOff = isVideoOff;
+                sortParticipantList();
                 updateGridLayout();
                 if (adapter != null) adapter.notifyDataSetChanged();
             }
@@ -758,8 +814,72 @@ public class VoiceCallFragment extends Fragment {
         for (Participant p : participantList) {
             p.name = resolveNameForUid(p.uid);
         }
+        sortParticipantList();
         adapter.setServerMembers(serverMembers);
         adapter.notifyDataSetChanged();
+    }
+
+    private void sortParticipantList() {
+        if (participantList == null || participantList.isEmpty()) return;
+        java.util.Collections.sort(participantList, (p1, p2) -> {
+            boolean isScreen1 = p1.isSharingScreen || p1.name.contains("Màn hình");
+            boolean isScreen2 = p2.isSharingScreen || p2.name.contains("Màn hình");
+            if (isScreen1 != isScreen2) {
+                return isScreen1 ? -1 : 1;
+            }
+
+            if (p1.isVideoOff != p2.isVideoOff) {
+                return p1.isVideoOff ? 1 : -1;
+            }
+
+            boolean isMe1 = p1.uid == this.uid || p1.name.contains("(Me)") || p1.name.equals("Me");
+            boolean isMe2 = p2.uid == this.uid || p2.name.contains("(Me)") || p2.name.equals("Me");
+            if (isMe1 != isMe2) {
+                return isMe1 ? -1 : 1;
+            }
+
+            return p1.name.compareToIgnoreCase(p2.name);
+        });
+    }
+
+    private void showReconnectingUI() {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            if (reconnectDialog == null) {
+                reconnectDialog = new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Đang kết nối lại...")
+                        .setMessage("Kết nối mạng không ổn định. Đang thử kết nối lại cuộc gọi. Tự động ngắt sau 20s.")
+                        .setCancelable(false)
+                        .create();
+            }
+            if (!reconnectDialog.isShowing()) {
+                reconnectDialog.show();
+                reconnectHandler.postDelayed(reconnectRunnable, 20000); // 20 seconds timeout
+            }
+        });
+    }
+
+    private void hideReconnectingUI() {
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            if (reconnectDialog != null && reconnectDialog.isShowing()) {
+                reconnectDialog.dismiss();
+            }
+            reconnectHandler.removeCallbacks(reconnectRunnable);
+        });
+    }
+
+    private void leaveAndExit() {
+        if (getActivity() == null || getView() == null) return;
+        getActivity().runOnUiThread(() -> {
+            try {
+                androidx.navigation.Navigation.findNavController(requireView()).popBackStack();
+            } catch (Exception e) {
+                if (getActivity() != null) {
+                    getActivity().onBackPressed();
+                }
+            }
+        });
     }
 }
 

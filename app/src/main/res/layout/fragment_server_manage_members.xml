@@ -34,7 +34,7 @@
             android:layout_height="24dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:src="@android:drawable/ic_menu_add"
+            android:src="@drawable/ic_add"
             app:tint="@color/icon_tint"
             android:visibility="gone" />
     </RelativeLayout>

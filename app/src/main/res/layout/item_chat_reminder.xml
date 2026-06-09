@@ -59,7 +59,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@android:drawable/ic_menu_today"
+                    android:src="@drawable/ic_alarm"
                     app:tint="#6C63FF" />
 
                 <TextView

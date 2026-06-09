@@ -4,75 +4,182 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    app:cardBackgroundColor="@color/bg_input"
+    android:layout_marginHorizontal="2dp"
+    app:cardBackgroundColor="@color/discord_dark_base"
     app:cardCornerRadius="12dp"
-    app:cardElevation="0dp">
+    app:cardElevation="0dp"
+    app:strokeColor="@color/discord_divider"
+    app:strokeWidth="1dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="12dp">
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/ivAvatar"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_centerVertical="true"
-            android:src="@mipmap/ic_launcher"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize50Percent" />
+        <!-- Avatar Container with Status Indicator overlay -->
+        <FrameLayout
+            android:id="@+id/flAvatarContainer"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_centerVertical="true">
 
-        <TextView
-            android:id="@+id/tvUserName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="12dp"
-            android:layout_toEndOf="@id/ivAvatar"
-            android:text="User Name"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:fontFamily="@font/inter"/>
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivAvatar"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_user"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize50Percent" />
 
-        <!-- For Friend Requests -->
+            <View
+                android:id="@+id/viewStatusIndicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="@color/discord_text_muted" />
+        </FrameLayout>
+
+        <!-- User Information (Name & Email) -->
         <LinearLayout
-            android:id="@+id/llRequestActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="8dp"
+            android:layout_toEndOf="@id/flAvatarContainer"
+            android:layout_toStartOf="@id/flActionContainer"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter"
+                android:maxLines="1"
+                android:text="User Name"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvUserEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="@font/inter"
+                android:maxLines="1"
+                android:text="user@email.com"
+                android:textColor="@color/discord_text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- Actions Container -->
+        <FrameLayout
+            android:id="@+id/flActionContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:orientation="horizontal"
-            android:visibility="gone">
+            android:layout_centerVertical="true">
 
-            <ImageView
-                android:id="@+id/btnAccept"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginEnd="8dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_input_add"
-                app:tint="#4CAF50" />
+            <!-- For Friend Requests -->
+            <LinearLayout
+                android:id="@+id/llRequestActions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone">
 
-            <ImageView
-                android:id="@+id/btnReject"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="6dp"
-                android:src="@android:drawable/ic_delete"
-                app:tint="#F44336" />
-        </LinearLayout>
-        
-        <!-- For Friends -->
-        <ImageView
-            android:id="@+id/btnRemoveFriend"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:padding="6dp"
-            android:src="@android:drawable/ic_delete"
-            app:tint="#F44336"
-            android:visibility="gone" />
+                <!-- Accept Friend Button (Solid Green Background with check icon) -->
+                <FrameLayout
+                    android:id="@+id/btnAccept"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/discord_green"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_check"
+                        app:tint="@color/white" />
+                </FrameLayout>
+
+                <!-- Reject Friend Button (Soft Red Background with cross icon) -->
+                <FrameLayout
+                    android:id="@+id/btnReject"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#1ADA373C"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_close"
+                        app:tint="@color/discord_red" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- For Friends -->
+            <LinearLayout
+                android:id="@+id/llFriendActions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <!-- Message Friend Button (Soft Blurple Background with chat bubble icon) -->
+                <FrameLayout
+                    android:id="@+id/btnMessageFriend"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#1A5865F2"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_chat_bubble"
+                        app:tint="@color/discord_blurple" />
+                </FrameLayout>
+
+                <!-- Remove Friend Button (Soft Red Background with trash icon) -->
+                <FrameLayout
+                    android:id="@+id/btnRemoveFriend"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="#1ADA373C"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_delete"
+                        app:tint="@color/discord_red" />
+                </FrameLayout>
+            </LinearLayout>
+        </FrameLayout>
 
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

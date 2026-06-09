@@ -35,11 +35,17 @@ public class MessageNotificationService extends Service {
     private static final String TAG = "MessageNotificationService";
     private static final String CHANNEL_ID = "MessageChannel";
     private static final String CHANNEL_NAME = "Message Notifications";
+    
+    private static final String FOREGROUND_CHANNEL_ID = "MessageServiceChannel";
+    private static final String FOREGROUND_CHANNEL_NAME = "Message Service";
+    private static final int FOREGROUND_NOTIF_ID = 9999;
 
     private long serviceStartTime;
     private ListenerRegistration firestoreListener;
+    private com.google.firebase.database.ValueEventListener friendsListener;
     private final Map<String, ChildEventListener> dbListeners = new HashMap<>();
     private final Map<String, String> channelNames = new HashMap<>();
+    private final Map<String, ListenerRegistration> friendProfileListeners = new HashMap<>();
     private String currentUserUsername;
 
     @Override
@@ -47,7 +53,10 @@ public class MessageNotificationService extends Service {
         super.onCreate();
         serviceStartTime = System.currentTimeMillis();
         createNotificationChannel();
+        createForegroundChannel();
+        startForegroundService();
         listenToChannels();
+        listenToDMs();
         loadCurrentUserUsername();
     }
 
@@ -82,6 +91,21 @@ public class MessageNotificationService extends Service {
             ref.removeEventListener(entry.getValue());
         }
         dbListeners.clear();
+
+        // Clean up Realtime Database friends listener
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId != null && friendsListener != null) {
+            Firebase.getDatabase().getReference("friends").child(currentUserId).removeEventListener(friendsListener);
+        }
+
+        // Clean up friend profile listener registrations
+        for (ListenerRegistration reg : friendProfileListeners.values()) {
+            if (reg != null) {
+                reg.remove();
+            }
+        }
+        friendProfileListeners.clear();
     }
 
     @Nullable
@@ -103,6 +127,40 @@ public class MessageNotificationService extends Service {
                 manager.createNotificationChannel(channel);
             }
         }
+    }
+
+    private void createForegroundChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    FOREGROUND_CHANNEL_ID,
+                    FOREGROUND_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_MIN
+            );
+            channel.setDescription("Duy trì kết nối nhận tin nhắn");
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void startForegroundService() {
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, FOREGROUND_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.stat_notify_sync)
+                .setContentTitle("Calling App is running")
+                .setContentText("Listening for new messages...")
+                .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setContentIntent(pendingIntent);
+
+        startForeground(FOREGROUND_NOTIF_ID, builder.build());
     }
 
     private void listenToChannels() {
@@ -132,7 +190,7 @@ public class MessageNotificationService extends Service {
                         while (iterator.hasNext()) {
                             Map.Entry<String, ChildEventListener> entry = iterator.next();
                             String chatId = entry.getKey();
-                            if (!activeChannelIds.contains(chatId)) {
+                            if (!chatId.startsWith("dm_") && !activeChannelIds.contains(chatId)) {
                                 DatabaseReference ref = Firebase.getMessagesRefByRoom(chatId);
                                 ref.removeEventListener(entry.getValue());
                                 iterator.remove();
@@ -140,6 +198,91 @@ public class MessageNotificationService extends Service {
                         }
                     }
                 });
+    }
+
+    private void listenToDMs() {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId == null) return;
+
+        friendsListener = Firebase.getDatabase().getReference("friends").child(currentUserId)
+                .addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Set<String> activeDMRoomIds = new HashSet<>();
+                Set<String> currentFriendUids = new HashSet<>();
+
+                if (snapshot.exists()) {
+                    for (DataSnapshot snap : snapshot.getChildren()) {
+                        String friendUid = snap.getKey();
+                        if (friendUid != null) {
+                            currentFriendUids.add(friendUid);
+                            
+                            // Compute DM Room ID
+                            String dmRoomId = currentUserId.compareTo(friendUid) < 0 
+                                    ? "dm_" + currentUserId + "_" + friendUid 
+                                    : "dm_" + friendUid + "_" + currentUserId;
+                            activeDMRoomIds.add(dmRoomId);
+
+                            // Listen to friend profile to resolve display name
+                            if (!friendProfileListeners.containsKey(friendUid)) {
+                                listenToFriendProfileForName(friendUid, dmRoomId);
+                            }
+                        }
+                    }
+                }
+
+                // Clean up profile listeners for friends that are no longer friends
+                Iterator<String> friendIter = friendProfileListeners.keySet().iterator();
+                while (friendIter.hasNext()) {
+                    String friendUid = friendIter.next();
+                    if (!currentFriendUids.contains(friendUid)) {
+                        friendProfileListeners.get(friendUid).remove();
+                        friendIter.remove();
+                    }
+                }
+
+                // Clean up DM message listeners
+                Iterator<Map.Entry<String, ChildEventListener>> dbIter = dbListeners.entrySet().iterator();
+                while (dbIter.hasNext()) {
+                    Map.Entry<String, ChildEventListener> entry = dbIter.next();
+                    String roomId = entry.getKey();
+                    if (roomId.startsWith("dm_")) {
+                        if (!activeDMRoomIds.contains(roomId)) {
+                            DatabaseReference ref = Firebase.getMessagesRefByRoom(roomId);
+                            ref.removeEventListener(entry.getValue());
+                            dbIter.remove();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error listening to friends in service", error.toException());
+            }
+        });
+    }
+
+    private void listenToFriendProfileForName(String friendUid, String dmRoomId) {
+        ListenerRegistration reg = FirebaseFirestore.getInstance().collection("users").document(friendUid)
+                .addSnapshotListener((doc, err) -> {
+                    if (err != null) return;
+                    if (doc != null && doc.exists()) {
+                        String username = doc.getString("username");
+                        if (username == null || username.trim().isEmpty()) {
+                            username = doc.getString("email");
+                        }
+                        if (username != null) {
+                            channelNames.put(dmRoomId, username);
+                            // Attach message listener if not already attached
+                            if (!dbListeners.containsKey(dmRoomId)) {
+                                attachMessageListener(dmRoomId, username);
+                            }
+                        }
+                    }
+                });
+        friendProfileListeners.put(friendUid, reg);
     }
 
     private void attachMessageListener(String chatId, String chatName) {
@@ -234,18 +377,24 @@ public class MessageNotificationService extends Service {
             contentText = message.getContent();
         }
 
-        String title = senderName + " (#" + chatName + ")";
-        if (currentUserUsername != null && !currentUserUsername.isEmpty()) {
-            String mentionTag = "@" + currentUserUsername.toLowerCase();
-            if (contentText != null && contentText.toLowerCase().contains(mentionTag)) {
-                title = "📌 Nhắc tới bạn: " + senderName + " (#" + chatName + ")";
+        String title;
+        if (chatId.startsWith("dm_")) {
+            title = senderName;
+        } else {
+            title = senderName + " (#" + chatName + ")";
+            if (currentUserUsername != null && !currentUserUsername.isEmpty()) {
+                String mentionTag = "@" + currentUserUsername.toLowerCase();
+                if (contentText != null && contentText.toLowerCase().contains(mentionTag)) {
+                    title = "📌 Nhắc tới bạn: " + senderName + " (#" + chatName + ")";
+                }
             }
         }
 
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("CHAT_ID", chatId);
         intent.putExtra("CHAT_NAME", chatName);
-        intent.putExtra("SERVER_COLOR", "#6C63FF");
+        intent.putExtra("SERVER_COLOR", "#5865F2");
+        intent.putExtra("SERVER_ID", (String) null);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -267,6 +416,63 @@ public class MessageNotificationService extends Service {
         if (manager != null) {
             manager.notify(chatId.hashCode(), builder.build());
         }
+
+        // Save this notification event to Firestore history
+        saveNotificationToFirestore(chatId, chatName, senderName, message);
+    }
+
+    private void saveNotificationToFirestore(String chatId, String chatName, String senderName, Message message) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId == null) return;
+
+        String contentText;
+        if ("image".equals(message.getType())) {
+            contentText = "📷 Đã gửi một ảnh";
+        } else if ("file".equals(message.getType())) {
+            contentText = "📎 Đã gửi một tài liệu";
+        } else {
+            contentText = message.getContent();
+        }
+
+        String title;
+        String type;
+        if (chatId.startsWith("dm_")) {
+            title = "Tin nhắn từ " + senderName;
+            type = "dm";
+        } else {
+            title = "Nhắc tới bạn ở #" + chatName;
+            type = "mention";
+
+            // If it is a channel, only save notification history if user was mentioned
+            if (currentUserUsername != null && !currentUserUsername.isEmpty()) {
+                String mentionTag = "@" + currentUserUsername.toLowerCase();
+                if (contentText == null || !contentText.toLowerCase().contains(mentionTag)) {
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+
+        Map<String, Object> notif = new HashMap<>();
+        String notifId = message.getMessageId() != null ? message.getMessageId() : String.valueOf(System.currentTimeMillis());
+        notif.put("notificationId", notifId);
+        notif.put("title", title);
+        notif.put("content", contentText);
+        notif.put("type", type);
+        notif.put("senderId", message.getSenderId());
+        notif.put("senderName", senderName);
+        notif.put("targetId", chatId);
+        notif.put("timestamp", message.getTimestamp());
+        notif.put("isRead", false);
+
+        FirebaseFirestore.getInstance().collection("users")
+                .document(currentUserId)
+                .collection("notifications")
+                .document(notifId)
+                .set(notif)
+                .addOnFailureListener(e -> Log.e(TAG, "Error saving notification to Firestore", e));
     }
 
     private void scheduleReminder(String chatId, String chatName, Message message) {
@@ -305,4 +511,3 @@ public class MessageNotificationService extends Service {
         }
     }
 }
-
