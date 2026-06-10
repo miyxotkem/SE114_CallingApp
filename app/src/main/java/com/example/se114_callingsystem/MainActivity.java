@@ -11,7 +11,13 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 import com.example.se114_callingsystem.databinding.ActivityMainBinding;
+import com.example.se114_callingsystem.features.server.ui.ServerAdapter;
+import com.example.se114_callingsystem.features.server.ui.ServerFragment;
+import com.example.se114_callingsystem.features.server.ui.CreateServerDialog;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
@@ -22,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isFirstNetworkCheck = true;
     private com.google.firebase.firestore.ListenerRegistration unreadNotificationsListener;
 
-    private com.example.se114_callingsystem.features.server.ServerAdapter sidebarAdapter;
+    private ServerAdapter sidebarAdapter;
     private java.util.List<com.example.se114_callingsystem.core.model.Server> serverList = new java.util.ArrayList<>();
     private java.util.List<String> currentServerOrder = new java.util.ArrayList<>();
     private com.google.firebase.firestore.ListenerRegistration sidebarServersListener;
@@ -61,13 +67,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Sidebar RecyclerView
         binding.recyclerView.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
-        sidebarAdapter = new com.example.se114_callingsystem.features.server.ServerAdapter(serverList, null, server -> {
+        sidebarAdapter = new ServerAdapter(serverList, null, server -> {
             NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
             if (nhf != null) {
                 NavController navController = nhf.getNavController();
                 androidx.fragment.app.Fragment currentFragment = nhf.getChildFragmentManager().getPrimaryNavigationFragment();
-                if (currentFragment instanceof com.example.se114_callingsystem.features.server.ServerFragment) {
-                    ((com.example.se114_callingsystem.features.server.ServerFragment) currentFragment).switchServer(server.getServerId(), server.getServerName());
+                if (currentFragment instanceof ServerFragment) {
+                    ((ServerFragment) currentFragment).switchServer(server.getServerId(), server.getServerName());
                     sidebarAdapter.setActiveServerId(server.getServerId());
                 } else {
                     Bundle args = new Bundle();
@@ -89,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.mcvServerCreate.setOnClickListener(v -> {
-            com.example.se114_callingsystem.features.server.CreateServerDialog dialog = new com.example.se114_callingsystem.features.server.CreateServerDialog();
+            CreateServerDialog dialog = new CreateServerDialog();
             dialog.show(getSupportFragmentManager(), "Server_on_create");
         });
 
@@ -530,8 +536,8 @@ public class MainActivity extends AppCompatActivity {
                 if (navHostFragment != null) {
                     NavController navController = navHostFragment.getNavController();
                     androidx.fragment.app.Fragment currentFragment = navHostFragment.getChildFragmentManager().getPrimaryNavigationFragment();
-                    if (currentFragment instanceof com.example.se114_callingsystem.features.server.ServerFragment) {
-                        ((com.example.se114_callingsystem.features.server.ServerFragment) currentFragment).switchServer(serverIdToJoin, doc.getString("serverName"));
+                    if (currentFragment instanceof ServerFragment) {
+                        ((ServerFragment) currentFragment).switchServer(serverIdToJoin, doc.getString("serverName"));
                     } else {
                         Bundle args = new Bundle();
                         args.putString("SERVER_ID", serverIdToJoin);

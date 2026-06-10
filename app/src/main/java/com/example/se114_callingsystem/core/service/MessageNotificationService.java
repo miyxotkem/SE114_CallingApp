@@ -12,7 +12,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import com.example.se114_callingsystem.features.chat.ChatFragment;
+import com.example.se114_callingsystem.features.chat.ui.ChatFragment;
 import com.example.se114_callingsystem.MainActivity;
 import com.example.se114_callingsystem.core.model.Firebase;
 import com.example.se114_callingsystem.core.model.Message;

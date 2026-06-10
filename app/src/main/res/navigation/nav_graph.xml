@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/nav_login"
-        android:name="com.example.se114_callingsystem.features.auth.LoginFragment"
+        android:name="com.example.se114_callingsystem.features.auth.ui.LoginFragment"
         android:label="Login"
         tools:layout="@layout/fragment_auth_login">
         <action
@@ -30,7 +30,7 @@
 
     <fragment
         android:id="@+id/nav_register"
-        android:name="com.example.se114_callingsystem.features.auth.RegisterFragment"
+        android:name="com.example.se114_callingsystem.features.auth.ui.RegisterFragment"
         android:label="Register"
         tools:layout="@layout/fragment_auth_register">
         <action
@@ -46,7 +46,7 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="com.example.se114_callingsystem.features.home.HomeFragment"
+        android:name="com.example.se114_callingsystem.features.home.ui.HomeFragment"
         android:label="Home"
         tools:layout="@layout/fragment_home">
         <action
@@ -67,7 +67,7 @@
 
     <fragment
         android:id="@+id/nav_notifications"
-        android:name="com.example.se114_callingsystem.features.home.NotificationsFragment"
+        android:name="com.example.se114_callingsystem.features.home.ui.NotificationsFragment"
         android:label="Notifications"
         tools:layout="@layout/fragment_home_notifications">
         <action
@@ -88,7 +88,7 @@
 
     <fragment
         android:id="@+id/nav_profile"
-        android:name="com.example.se114_callingsystem.features.friend.ProfileFragment"
+        android:name="com.example.se114_callingsystem.features.friend.ui.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_friend_profile">
         <action
@@ -125,13 +125,13 @@
 
     <fragment
         android:id="@+id/nav_edit_profile"
-        android:name="com.example.se114_callingsystem.features.friend.EditProfileFragment"
+        android:name="com.example.se114_callingsystem.features.friend.ui.EditProfileFragment"
         android:label="Edit Profile"
         tools:layout="@layout/fragment_friend_edit_profile" />
 
     <fragment
         android:id="@+id/nav_chat_detail"
-        android:name="com.example.se114_callingsystem.features.chat.ChatFragment"
+        android:name="com.example.se114_callingsystem.features.chat.ui.ChatFragment"
         android:label="Chat Detail"
         tools:layout="@layout/fragment_chat">
         <argument
@@ -173,7 +173,7 @@
 
     <fragment
         android:id="@+id/nav_voice_call"
-        android:name="com.example.se114_callingsystem.features.call.VoiceCallFragment"
+        android:name="com.example.se114_callingsystem.features.call.ui.VoiceCallFragment"
         android:label="Voice Call"
         tools:layout="@layout/fragment_call_voice">
         <argument
@@ -192,7 +192,7 @@
 
     <fragment
         android:id="@+id/nav_server"
-        android:name="com.example.se114_callingsystem.features.server.ServerFragment"
+        android:name="com.example.se114_callingsystem.features.server.ui.ServerFragment"
         android:label="Server"
         tools:layout="@layout/fragment_server">
         <argument
@@ -241,7 +241,7 @@
 
     <fragment
         android:id="@+id/nav_chat_info"
-        android:name="com.example.se114_callingsystem.features.chat.ChatInfoFragment"
+        android:name="com.example.se114_callingsystem.features.chat.ui.ChatInfoFragment"
         android:label="Chat Info"
         tools:layout="@layout/fragment_chat_info">
         <argument
@@ -265,7 +265,7 @@
 
     <fragment
         android:id="@+id/nav_post_channel"
-        android:name="com.example.se114_callingsystem.features.post.PostChannelFragment"
+        android:name="com.example.se114_callingsystem.features.post.ui.PostChannelFragment"
         android:label="Post Channel"
         tools:layout="@layout/fragment_post_channel">
         <argument
@@ -300,7 +300,7 @@
     <!-- 1. Đổi màu theme máy chủ -->
     <fragment
         android:id="@+id/nav_server_change_color"
-        android:name="com.example.se114_callingsystem.features.server.ChangeColorFragment"
+        android:name="com.example.se114_callingsystem.features.server.ui.ChangeColorFragment"
         android:label="Change Server Color"
         tools:layout="@layout/fragment_server_change_color">
         <argument android:name="SERVER_ID" app:argType="string" />
@@ -310,7 +310,7 @@
     <!-- 2. Quản lý thành viên máy chủ -->
     <fragment
         android:id="@+id/nav_server_manage_members"
-        android:name="com.example.se114_callingsystem.features.server.ManageMembersFragment"
+        android:name="com.example.se114_callingsystem.features.server.ui.ManageMembersFragment"
         android:label="Manage Server Members"
         tools:layout="@layout/fragment_server_manage_members">
         <argument android:name="SERVER_ID" app:argType="string" />
@@ -319,7 +319,7 @@
     <!-- 3. Quản lý bạn bè -->
     <fragment
         android:id="@+id/nav_friend_manage"
-        android:name="com.example.se114_callingsystem.features.friend.ManageFriendsFragment"
+        android:name="com.example.se114_callingsystem.features.friend.ui.ManageFriendsFragment"
         android:label="Manage Friends"
         tools:layout="@layout/fragment_friend_manage">
         <action
@@ -334,7 +334,7 @@
     <!-- 4. Tìm kiếm tin nhắn chat -->
     <fragment
         android:id="@+id/nav_chat_search"
-        android:name="com.example.se114_callingsystem.features.chat.SearchInChatFragment"
+        android:name="com.example.se114_callingsystem.features.chat.ui.SearchInChatFragment"
         android:label="Search in Chat"
         tools:layout="@layout/fragment_chat_search">
         <argument android:name="CHAT_ID" app:argType="string" />
@@ -346,7 +346,7 @@
     <!-- 5. Tạo bài viết mới -->
     <fragment
         android:id="@+id/nav_post_create"
-        android:name="com.example.se114_callingsystem.features.post.CreatePostFragment"
+        android:name="com.example.se114_callingsystem.features.post.ui.CreatePostFragment"
         android:label="Create Post"
         tools:layout="@layout/fragment_post_create">
         <argument android:name="CHANNEL_ID" app:argType="string" />
@@ -359,7 +359,7 @@
     <!-- 6. Bình luận bài viết -->
     <fragment
         android:id="@+id/nav_post_comment"
-        android:name="com.example.se114_callingsystem.features.post.PostCommentFragment"
+        android:name="com.example.se114_callingsystem.features.post.ui.PostCommentFragment"
         android:label="Post Comments"
         tools:layout="@layout/fragment_post_comment">
         <argument android:name="POST_ID" app:argType="string" />
@@ -388,4 +388,3 @@
     </fragment>
 
 </navigation>
-
