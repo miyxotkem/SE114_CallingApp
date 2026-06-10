@@ -76,6 +76,7 @@ public class ChatViewModel extends ViewModel {
                         list.add(m);
                     }
                 }
+                java.util.Collections.sort(list, (m1, m2) -> Long.compare(m1.getTimestamp(), m2.getTimestamp()));
                 messages.setValue(list);
             }
 

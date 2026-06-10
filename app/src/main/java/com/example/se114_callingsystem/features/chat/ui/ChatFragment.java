@@ -392,7 +392,7 @@ public class ChatFragment extends Fragment {
             messageToReply = null;
             if (binding != null) binding.tvReplyingToLayout.setVisibility(View.GONE);
         }
-        String messageId = "msg_media_" + System.currentTimeMillis();
+        String messageId = "msg_" + System.currentTimeMillis();
         model.setMessageId(messageId);
         viewModel.sendMessage(model, task -> {
             if (task.isSuccessful()) {
