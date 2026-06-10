@@ -153,9 +153,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder instanceof ReminderViewHolder) {
             ((ReminderViewHolder) holder).bind(message, serverColor, listener);
         } else if (holder instanceof SentMessageViewHolder) {
-            ((SentMessageViewHolder) holder).bind(message, mMessages, listener, currentUserId, isLastInGroup, serverColor, serverMembers, highlightMessageId);
+            ((SentMessageViewHolder) holder).bind(message, mMessages, listener, currentUserId, isLastInGroup, serverColor, serverMembers, highlightMessageId, this);
         } else if (holder instanceof ReceivedMessageViewHolder) {
-            ((ReceivedMessageViewHolder) holder).bind(message, mMessages, isFirstInGroup, isLastInGroup, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
+            ((ReceivedMessageViewHolder) holder).bind(message, mMessages, isFirstInGroup, isLastInGroup, listener, currentUserId, serverColor, serverMembers, highlightMessageId, this);
         }
     }
 
@@ -241,8 +241,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tvReplyHeader = itemView.findViewById(R.id.tvReplyHeader);
         }
 
-        void bind(Message message, List<Message> messages, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
+        void bind(Message message, List<Message> messages, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -278,8 +278,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tvReplyHeader = itemView.findViewById(R.id.tvReplyHeader);
         }
 
-        void bind(Message message, List<Message> messages, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId);
+        void bind(Message message, List<Message> messages, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
             
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
@@ -376,7 +376,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, View layoutRepliedContainer, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, TextView tvReplyHeader, List<Message> messages, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId) {
+    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, View layoutRepliedContainer, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, TextView tvReplyHeader, List<Message> messages, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
         Context ctx = textMessage.getContext();
         Typeface interTypeface = androidx.core.content.res.ResourcesCompat.getFont(ctx, R.font.inter);
         boolean isSentByMe = msg.getSenderId() != null && msg.getSenderId().equals(currentUserId);
@@ -611,10 +611,86 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
                     });
                 });
+            } else if ("audio".equals(msg.getType())) {
+                textMessage.setVisibility(View.GONE);
+                if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
+
+                if (layoutFile != null) {
+                    layoutFile.setVisibility(View.VISIBLE);
+                    ImageView iconView = (ImageView) layoutFile.getChildAt(0);
+                    final String audioUrl = msg.getContent();
+
+                    boolean isPlaying = com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl);
+                    if (isPlaying) {
+                        if (iconView != null) {
+                            iconView.setImageResource(android.R.drawable.ic_media_pause);
+                            try {
+                                iconView.setImageTintList(android.content.res.ColorStateList.valueOf(
+                                    Color.parseColor(isSentByMe ? "#FFFFFF" : "#B9BBBE")
+                                ));
+                            } catch (Exception ignored) {}
+                        }
+                        if (tvFileName != null) {
+                            tvFileName.setText("Đang phát tin nhắn thoại...");
+                        }
+                    } else {
+                        if (iconView != null) {
+                            iconView.setImageResource(android.R.drawable.ic_media_play);
+                            try {
+                                iconView.setImageTintList(android.content.res.ColorStateList.valueOf(
+                                    Color.parseColor(isSentByMe ? "#FFFFFF" : "#B9BBBE")
+                                ));
+                            } catch (Exception ignored) {}
+                        }
+                        if (tvFileName != null) {
+                            tvFileName.setText("Tin nhắn thoại (Nhấn để phát)");
+                        }
+                    }
+
+                    layoutFile.setOnClickListener(v -> {
+                        if (isPlaying) {
+                            com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+                            adapter.notifyDataSetChanged();
+                        } else {
+                            com.example.se114_callingsystem.core.util.AudioPlayerManager.play(audioUrl, new com.example.se114_callingsystem.core.util.AudioPlayerManager.AudioPlayerListener() {
+                                @Override
+                                public void onStart() {
+                                    adapter.notifyDataSetChanged();
+                                }
+
+                                @Override
+                                public void onStop() {
+                                    adapter.notifyDataSetChanged();
+                                }
+
+                                @Override
+                                public void onComplete() {
+                                    adapter.notifyDataSetChanged();
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    android.widget.Toast.makeText(ctx, "Lỗi phát âm thanh: " + error, android.widget.Toast.LENGTH_SHORT).show();
+                                    adapter.notifyDataSetChanged();
+                                }
+                            });
+                        }
+                    });
+
+                    layoutFile.setOnLongClickListener(v -> {
+                        cardBubble.performLongClick();
+                        return true;
+                    });
+                }
             } else {
                 // Tin nhắn văn bản bình thường
                 textMessage.setVisibility(View.VISIBLE);
-                textMessage.setText(msg.getContent());
+                
+                try {
+                    io.noties.markwon.Markwon.create(ctx).setMarkdown(textMessage, msg.getContent());
+                } catch (Exception e) {
+                    textMessage.setText(msg.getContent());
+                }
                 
                 // Tự động nhận diện URL, gạch chân và cho phép click
                 android.text.util.Linkify.addLinks(textMessage, android.text.util.Linkify.WEB_URLS);
@@ -797,8 +873,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (textView == null) return;
         CharSequence text = textView.getText();
         if (text == null) return;
-        android.text.SpannableString spannable = new android.text.SpannableString(text);
-
+        
+        android.text.SpannableStringBuilder spannable = new android.text.SpannableStringBuilder(text);
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@(\\w+)");
         java.util.regex.Matcher matcher = pattern.matcher(text);
         boolean hasMention = false;

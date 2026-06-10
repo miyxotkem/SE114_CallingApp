@@ -3,16 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent"
+    android:background="@color/discord_dark_base"
     android:animateLayoutChanges="true">
-
-    <!-- Background Wallpaper -->
-    <ImageView
-        android:id="@+id/bgImageView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/bg_app_wallpaper" />
 
     <!-- Top Action bar / Header -->
     <LinearLayout

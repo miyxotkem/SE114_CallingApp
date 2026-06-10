@@ -263,7 +263,7 @@
             app:cardElevation="0dp"
             app:strokeWidth="0dp"
             app:layout_constraintStart_toEndOf="@id/btnAttachHome"
-            app:layout_constraintEnd_toStartOf="@id/btnSend"
+            app:layout_constraintEnd_toStartOf="@id/sendButtonContainer"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
 
@@ -282,16 +282,34 @@
                 android:fontFamily="@font/inter"/>
         </com.google.android.material.card.MaterialCardView>
 
-        <ImageButton
-            android:id="@+id/btnSend"
+        <!-- Container cố định chứa 2 nút Send & Mic để messageCard luôn constrain đúng -->
+        <FrameLayout
+            android:id="@+id/sendButtonContainer"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_send"
-            app:tint="@color/discord_blurple"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageButton
+                android:id="@+id/btnSend"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_send"
+                app:tint="@color/discord_blurple"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/btnRecordAudio"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_mic_on"
+                app:tint="@color/discord_text_secondary"
+                android:visibility="visible" />
+
+        </FrameLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

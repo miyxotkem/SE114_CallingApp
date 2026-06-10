@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":core:di"))
 
     implementation(libs.appcompat)
+    implementation(libs.markwon)
 
     implementation(libs.material)
     implementation(libs.activity)

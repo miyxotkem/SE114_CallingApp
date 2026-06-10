@@ -14,8 +14,10 @@ navigation = "2.7.6"
 lottie = "6.0.0"
 hilt = "2.59.2"
 lifecycle = "2.8.1"
+markwon = "4.6.2"
 
 [libraries]
+markwon = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

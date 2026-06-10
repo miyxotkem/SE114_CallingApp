@@ -48,6 +48,9 @@ import android.widget.Button;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import android.view.MotionEvent;
+import android.media.MediaRecorder;
+import java.io.File;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -81,6 +84,11 @@ public class ChatFragment extends Fragment {
     private boolean isTyping = false;
     private ChatViewModel viewModel;
 
+    private ActivityResultLauncher<String> requestAudioPermissionLauncher;
+    private android.media.MediaRecorder mediaRecorder = null;
+    private String audioFilePath = null;
+    private long recordStartTime = 0;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,6 +100,25 @@ public class ChatFragment extends Fragment {
         filePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) uploadToCloudinary(uri, "file");
         });
+
+        requestAudioPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Toast.makeText(getContext(), "Quyền ghi âm đã được cấp. Hãy nhấn giữ để ghi âm.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Cần quyền ghi âm để sử dụng tính năng này.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        );
+
+        com.google.android.material.transition.MaterialContainerTransform transform = 
+            new com.google.android.material.transition.MaterialContainerTransform();
+        transform.setDrawingViewId(R.id.nav_host_fragment);
+        transform.setDuration(300L);
+        transform.setFadeMode(com.google.android.material.transition.MaterialContainerTransform.FADE_MODE_THROUGH);
+        transform.setStartContainerColor(android.graphics.Color.parseColor("#2B2D31"));
+        transform.setEndContainerColor(android.graphics.Color.parseColor("#313338"));
+        setSharedElementEnterTransition(transform);
     }
 
     @Nullable
@@ -105,10 +132,23 @@ public class ChatFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Đảm bảo thanh nhắn tin nâng lên khi bàn phím mở
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            int imeBottom = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom;
+            int navBottom = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.navigationBars()).bottom;
+            int bottomPadding = Math.max(imeBottom, navBottom);
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), bottomPadding);
+            return insets;
+        });
+
         viewModel = new androidx.lifecycle.ViewModelProvider(this).get(ChatViewModel.class);
 
         // Retrieve Arguments passed via navigation bundle
         if (getArguments() != null) {
+            String transitionName = getArguments().getString("TRANSITION_NAME");
+            if (transitionName != null) {
+                binding.chatRoot.setTransitionName(transitionName);
+            }
             groupId = getArguments().getString("CHAT_ID");
             String channelName = getArguments().getString("CHAT_NAME");
             serverColor = getArguments().getString("SERVER_COLOR", "#5865F2");
@@ -142,6 +182,7 @@ public class ChatFragment extends Fragment {
             viewModel.startChatSession(groupId, serverId, senderId);
             markNotificationsAsRead(groupId);
         }
+        setupAudioRecording();
     }
 
     private void setupObservers() {
@@ -263,12 +304,13 @@ public class ChatFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            String[] options = {"📷 Send Image", "📎 Send File", "⏰ Đặt lời nhắc"};
+            String[] options = {"📷 Send Image", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Upload Media & Options")
                     .setItems(options, (dialog, which) -> {
                         if (which == 0) imagePickerLauncher.launch("image/*");
                         else if (which == 1) filePickerLauncher.launch("*/*");
+                        else if (which == 2) showGifSearchDialog();
                         else showReminderDialog(null, null);
                     })
                     .show();
@@ -444,6 +486,14 @@ public class ChatFragment extends Fragment {
                 } else {
                     setTypingStatus(false);
                     typingHandler.removeCallbacks(typingStopRunnable);
+                }
+
+                if (s.toString().trim().isEmpty()) {
+                    binding.btnSend.setVisibility(View.GONE);
+                    binding.btnRecordAudio.setVisibility(View.VISIBLE);
+                } else {
+                    binding.btnSend.setVisibility(View.VISIBLE);
+                    binding.btnRecordAudio.setVisibility(View.GONE);
                 }
 
                 int cursor = binding.edtMessage.getSelectionStart();
@@ -872,6 +922,252 @@ public class ChatFragment extends Fragment {
                 });
     }
 
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupAudioRecording() {
+        binding.btnRecordAudio.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    if (androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO) 
+                            != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                        requestAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO);
+                    } else {
+                        startRecording();
+                    }
+                    return true;
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    stopRecording();
+                    return true;
+            }
+            return false;
+        });
+    }
+
+    private void startRecording() {
+        try {
+            audioFilePath = requireContext().getCacheDir().getAbsolutePath() + "/temp_audio.m4a";
+            
+            com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+            
+            mediaRecorder = new android.media.MediaRecorder();
+            mediaRecorder.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
+            mediaRecorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4);
+            mediaRecorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
+            mediaRecorder.setOutputFile(audioFilePath);
+            mediaRecorder.prepare();
+            mediaRecorder.start();
+            
+            recordStartTime = System.currentTimeMillis();
+            binding.edtMessage.setHint("🔴 Đang ghi âm...");
+            binding.edtMessage.setEnabled(false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Không thể khởi động ghi âm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopRecording() {
+        if (mediaRecorder == null) return;
+        
+        try {
+            mediaRecorder.stop();
+            mediaRecorder.release();
+            mediaRecorder = null;
+        } catch (Exception e) {
+            mediaRecorder = null;
+            return;
+        }
+
+        binding.edtMessage.setEnabled(true);
+        if (serverId == null) {
+            String channelName = binding.tvChannelName.getText().toString();
+            binding.edtMessage.setHint("Message " + channelName);
+        } else {
+            String channelName = binding.tvChannelName.getText().toString();
+            binding.edtMessage.setHint("Message #" + channelName.toLowerCase());
+        }
+
+        long duration = System.currentTimeMillis() - recordStartTime;
+        if (duration < 1000) {
+            Toast.makeText(getContext(), "Tin nhắn quá ngắn", Toast.LENGTH_SHORT).show();
+            try {
+                new java.io.File(audioFilePath).delete();
+            } catch (Exception ignored) {}
+        } else {
+            uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)));
+        }
+    }
+
+    private void uploadAudioToCloudinary(Uri fileUri) {
+        if (getContext() == null) return;
+        if (!com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+            Toast.makeText(getContext(), "Không có kết nối mạng. Không thể gửi tin nhắn thoại.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ProgressDialog pd = new ProgressDialog(getContext());
+        pd.setMessage("Đang gửi tin nhắn thoại...");
+        pd.show();
+        MediaManager.get().upload(fileUri).option("resource_type", "video").callback(new UploadCallback() {
+            @Override public void onStart(String requestId) {}
+            @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
+            @Override public void onSuccess(String requestId, Map resultData) {
+                pd.dismiss();
+                sendMediaMessage((String) resultData.get("secure_url"), "audio");
+                try {
+                    new java.io.File(audioFilePath).delete();
+                } catch (Exception ignored) {}
+            }
+            @Override public void onError(String requestId, ErrorInfo error) {
+                pd.dismiss();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Lỗi tải âm thanh: " + error.getDescription(), Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override public void onReschedule(String requestId, ErrorInfo error) {}
+        }).dispatch();
+    }
+
+    private void showGifSearchDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(requireContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setBackgroundColor(Color.parseColor("#313338"));
+        layout.setPadding(32, 32, 32, 32);
+
+        android.widget.EditText etSearch = new android.widget.EditText(requireContext());
+        etSearch.setHint("Tìm kiếm GIF trên Giphy...");
+        etSearch.setHintTextColor(Color.parseColor("#949BA4"));
+        etSearch.setTextColor(Color.WHITE);
+        etSearch.setBackgroundResource(R.drawable.bg_chat_input);
+        etSearch.setPadding(32, 24, 32, 24);
+        etSearch.setSingleLine(true);
+        etSearch.setTextSize(14f);
+
+        RecyclerView rvGifs = new RecyclerView(requireContext());
+        rvGifs.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), 2));
+        rvGifs.setPadding(0, 16, 0, 0);
+
+        layout.addView(etSearch);
+        layout.addView(rvGifs);
+
+        dialog.setContentView(layout);
+        
+        List<String> gifUrls = new ArrayList<>();
+        
+        class GifViewHolder extends RecyclerView.ViewHolder {
+            android.widget.ImageView ivGif;
+            public GifViewHolder(@NonNull View itemView) {
+                super(itemView);
+                ivGif = (android.widget.ImageView) itemView;
+                ivGif.setLayoutParams(new RecyclerView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, 300));
+                ivGif.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                ivGif.setPadding(4, 4, 4, 4);
+            }
+        }
+
+        RecyclerView.Adapter<GifViewHolder> gifAdapter = new RecyclerView.Adapter<GifViewHolder>() {
+            @NonNull
+            @Override
+            public GifViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                android.widget.ImageView imageView = new android.widget.ImageView(parent.getContext());
+                return new GifViewHolder(imageView);
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull GifViewHolder holder, int position) {
+                String url = gifUrls.get(position);
+                Glide.with(ChatFragment.this)
+                        .asGif()
+                        .load(url)
+                        .placeholder(R.drawable.bg_circle_transparent)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(holder.ivGif);
+                holder.itemView.setOnClickListener(v -> {
+                    dialog.dismiss();
+                    sendMediaMessage(url, "image");
+                });
+            }
+
+            @Override
+            public int getItemCount() {
+                return gifUrls.size();
+            }
+        };
+        rvGifs.setAdapter(gifAdapter);
+
+        Runnable searchGif = () -> {
+            String query = etSearch.getText().toString().trim();
+            String urlStr = "https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=25";
+            if (!query.isEmpty()) {
+                try {
+                    urlStr = "https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&limit=25&q=" + java.net.URLEncoder.encode(query, "UTF-8");
+                } catch (Exception ignored) {}
+            }
+            final String requestUrl = urlStr;
+            new Thread(() -> {
+                try {
+                    java.net.URL url = new java.net.URL(requestUrl);
+                    java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    org.json.JSONObject json = new org.json.JSONObject(response.toString());
+                    org.json.JSONArray data = json.getJSONArray("data");
+                    List<String> newUrls = new ArrayList<>();
+                    for (int i = 0; i < data.length(); i++) {
+                        org.json.JSONObject gif = data.getJSONObject(i);
+                        org.json.JSONObject images = gif.getJSONObject("images");
+                        org.json.JSONObject fixedWidth = images.getJSONObject("fixed_width");
+                        String gifUrl = fixedWidth.getString("url");
+                        newUrls.add(gifUrl);
+                    }
+
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            gifUrls.clear();
+                            gifUrls.addAll(newUrls);
+                            gifAdapter.notifyDataSetChanged();
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        };
+
+        final Runnable[] searchRunnable = {null};
+        final android.os.Handler searchHandler = new android.os.Handler();
+        etSearch.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (searchRunnable[0] != null) {
+                    searchHandler.removeCallbacks(searchRunnable[0]);
+                }
+                searchRunnable[0] = searchGif;
+                searchHandler.postDelayed(searchRunnable[0], 500);
+            }
+            @Override public void afterTextChanged(android.text.Editable s) {}
+        });
+
+        searchGif.run();
+
+        dialog.show();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -881,5 +1177,11 @@ public class ChatFragment extends Fragment {
         }
         activeChatId = null;
         binding = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
     }
 }

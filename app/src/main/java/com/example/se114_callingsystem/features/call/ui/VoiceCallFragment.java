@@ -45,6 +45,15 @@ public class VoiceCallFragment extends Fragment {
 
     private static final String TAG = "VoiceCallFragment";
 
+    public static io.agora.rtc2.RtcEngine sRtcEngine;
+    public static List<com.example.se114_callingsystem.core.model.Participant> sParticipantList = new java.util.ArrayList<>();
+    public static String sChannelName;
+    public static int sUid;
+    public static String sServerColor;
+    public static String sServerId;
+    public static boolean isMinimized = false;
+    public static final androidx.lifecycle.MutableLiveData<Boolean> minimizedCallEvent = new androidx.lifecycle.MutableLiveData<>(false);
+
     private RtcEngine mRtcEngine;
     private int uid;
 
@@ -102,10 +111,32 @@ public class VoiceCallFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            binding.bgImageView.setRenderEffect(
-                android.graphics.RenderEffect.createBlurEffect(30f, 30f, android.graphics.Shader.TileMode.CLAMP)
-            );
+        if (isMinimized) {
+            mRtcEngine = sRtcEngine;
+            participantList.clear();
+            participantList.addAll(sParticipantList);
+            channelName = sChannelName;
+            uid = sUid;
+            serverColor = sServerColor;
+            serverId = sServerId;
+            isMinimized = false;
+            minimizedCallEvent.setValue(false);
+            
+            if (mRtcEngine != null) {
+                mRtcEngine.addHandler(mRtcEventHandler);
+            }
+            
+            binding.tvCallChannelName.setText(channelName);
+            setupRecyclerView();
+            setupControls();
+            updateParticipantCount();
+            
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+            }
+            
+            viewModel.loadServerMembers(serverId);
+            return;
         }
 
         // Fetch Bundle arguments
@@ -123,6 +154,16 @@ public class VoiceCallFragment extends Fragment {
         setupTapToHide();
 
         binding.btnMinimize.setOnClickListener(v -> {
+            isMinimized = true;
+            sRtcEngine = mRtcEngine;
+            sParticipantList.clear();
+            sParticipantList.addAll(participantList);
+            sChannelName = channelName;
+            sUid = uid;
+            sServerColor = serverColor;
+            sServerId = serverId;
+            minimizedCallEvent.setValue(true);
+
             Navigation.findNavController(v).popBackStack();
         });
 
@@ -608,6 +649,11 @@ public class VoiceCallFragment extends Fragment {
         binding.btnMute.setSelected(false);
         binding.btnToggleVideo.setSelected(true); // Video ban đầu tắt nên set selected = true để click lần đầu bật lên
 
+        binding.btnToggleVideo.setOnLongClickListener(v -> {
+            showVirtualBgDialog();
+            return true;
+        });
+
         binding.btnMute.setOnClickListener(v -> {
             boolean isMuted = !v.isSelected();
             v.setSelected(isMuted);
@@ -691,6 +737,14 @@ public class VoiceCallFragment extends Fragment {
 
     @Override
     public void onDestroy() {
+        if (isMinimized) {
+            if (mRtcEngine != null) {
+                mRtcEngine.removeHandler(mRtcEventHandler);
+            }
+            super.onDestroy();
+            return;
+        }
+
         if (isSharingScreen) {
             stopScreenShare();
         }
@@ -703,10 +757,58 @@ public class VoiceCallFragment extends Fragment {
             mRtcEngine = null;
         }
 
+        sRtcEngine = null;
+        sParticipantList.clear();
+        isMinimized = false;
+        minimizedCallEvent.setValue(false);
+
         // Clear user's active call channel in Firestore
         viewModel.clearVoiceChannel();
 
         super.onDestroy();
+    }
+
+    private void showVirtualBgDialog() {
+        if (getContext() == null || mRtcEngine == null) return;
+        
+        String[] options = {"Không dùng (Normal)", "Làm mờ nền (Background Blur)", "Hình nền ảo (Virtual Background)"};
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Bộ lọc nền Video")
+            .setItems(options, (dialog, which) -> {
+                if (which == 0) {
+                    mRtcEngine.enableVirtualBackground(false, null, null);
+                    Toast.makeText(getContext(), "Đã tắt bộ lọc nền", Toast.LENGTH_SHORT).show();
+                } else if (which == 1) {
+                    io.agora.rtc2.video.VirtualBackgroundSource source = new io.agora.rtc2.video.VirtualBackgroundSource();
+                    source.backgroundSourceType = io.agora.rtc2.video.VirtualBackgroundSource.BACKGROUND_BLUR;
+                    source.blurDegree = io.agora.rtc2.video.VirtualBackgroundSource.BLUR_DEGREE_MEDIUM;
+                    
+                    io.agora.rtc2.video.SegmentationProperty segProperty = new io.agora.rtc2.video.SegmentationProperty();
+                    segProperty.modelType = io.agora.rtc2.video.SegmentationProperty.SEG_MODEL_AI;
+                    
+                    int res = mRtcEngine.enableVirtualBackground(true, source, segProperty);
+                    if (res == 0) {
+                        Toast.makeText(getContext(), "Đã bật làm mờ nền", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Không hỗ trợ trên thiết bị này: " + res, Toast.LENGTH_SHORT).show();
+                    }
+                } else if (which == 2) {
+                    io.agora.rtc2.video.VirtualBackgroundSource source = new io.agora.rtc2.video.VirtualBackgroundSource();
+                    source.backgroundSourceType = io.agora.rtc2.video.VirtualBackgroundSource.BACKGROUND_COLOR;
+                    source.color = 0x2B2D31; // màu tối Discord
+                    
+                    io.agora.rtc2.video.SegmentationProperty segProperty = new io.agora.rtc2.video.SegmentationProperty();
+                    segProperty.modelType = io.agora.rtc2.video.SegmentationProperty.SEG_MODEL_AI;
+                    
+                    int res = mRtcEngine.enableVirtualBackground(true, source, segProperty);
+                    if (res == 0) {
+                        Toast.makeText(getContext(), "Đã đặt màu nền tối Discord", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Không hỗ trợ trên thiết bị này: " + res, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            })
+            .show();
     }
 
     private String resolveNameForUid(int agoraUid) {

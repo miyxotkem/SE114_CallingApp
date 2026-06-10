@@ -31,6 +31,31 @@ public class HomeFragment extends Fragment {
     private HomeDMAdapter dmAdapter;
     private final List<User> friendList = new ArrayList<>();
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        com.google.android.material.transition.MaterialSharedAxis enterTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ true);
+        com.google.android.material.transition.MaterialSharedAxis returnTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ false);
+        
+        setEnterTransition(enterTransition);
+        setReturnTransition(returnTransition);
+        
+        com.google.android.material.transition.MaterialSharedAxis exitTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ true);
+        com.google.android.material.transition.MaterialSharedAxis reenterTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ false);
+        
+        setExitTransition(exitTransition);
+        setReenterTransition(reenterTransition);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -245,7 +270,7 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void onFriendClick(User friend) {
+    private void onFriendClick(User friend, View itemView) {
         if (viewModel.getCurrentUser() == null) return;
         String myUid = viewModel.getCurrentUser().getUid();
         String friendUid = friend.getUserId();
@@ -269,8 +294,18 @@ public class HomeFragment extends Fragment {
         args.putString("SERVER_ID", null);
         args.putString("SERVER_COLOR", "#5865F2");
 
+        String transitionName = "chat_transform_" + dmRoomId;
+        itemView.setTransitionName(transitionName);
+        args.putString("TRANSITION_NAME", transitionName);
+
+        androidx.navigation.fragment.FragmentNavigator.Extras extras = 
+            new androidx.navigation.fragment.FragmentNavigator.Extras.Builder()
+                .addSharedElement(itemView, transitionName)
+                .build();
+
         if (getView() != null) {
-            androidx.navigation.Navigation.findNavController(getView()).navigate(R.id.action_home_to_chat_detail, args);
+            androidx.navigation.Navigation.findNavController(getView()).navigate(
+                R.id.action_home_to_chat_detail, args, null, extras);
         }
     }
 

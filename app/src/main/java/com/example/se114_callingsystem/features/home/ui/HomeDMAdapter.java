@@ -22,7 +22,7 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
     private OnFriendClickListener listener;
 
     public interface OnFriendClickListener {
-        void onFriendClick(User friend);
+        void onFriendClick(User friend, View itemView);
     }
 
     public HomeDMAdapter(List<User> friendList, OnFriendClickListener listener) {
@@ -120,7 +120,7 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onFriendClick(friend);
+                listener.onFriendClick(friend, holder.itemView);
             }
         });
     }

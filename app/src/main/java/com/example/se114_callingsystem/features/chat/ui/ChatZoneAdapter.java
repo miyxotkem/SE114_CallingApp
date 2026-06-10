@@ -81,7 +81,18 @@ public class ChatZoneAdapter extends RecyclerView.Adapter<ChatZoneAdapter.ViewHo
                 args.putString("CHAT_ID", currentChannel.getChatId());
                 args.putString("SERVER_ID", currentChannel.getServerId());
                 args.putString("SERVER_COLOR", serverColor);
-                androidx.navigation.Navigation.findNavController(v).navigate(R.id.action_server_to_server_chat, args);
+                
+                String transitionName = "chat_transform_" + currentChannel.getChatId();
+                holder.itemView.setTransitionName(transitionName);
+                args.putString("TRANSITION_NAME", transitionName);
+                
+                androidx.navigation.fragment.FragmentNavigator.Extras extras = 
+                    new androidx.navigation.fragment.FragmentNavigator.Extras.Builder()
+                        .addSharedElement(holder.itemView, transitionName)
+                        .build();
+                
+                androidx.navigation.Navigation.findNavController(v).navigate(
+                    R.id.action_server_to_server_chat, args, null, extras);
             }
         });
     }

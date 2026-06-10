@@ -29,6 +29,31 @@ public class NotificationsFragment extends Fragment {
     private NotificationAdapter adapter;
     private final List<NotificationItem> notificationList = new ArrayList<>();
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        com.google.android.material.transition.MaterialSharedAxis enterTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ true);
+        com.google.android.material.transition.MaterialSharedAxis returnTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ false);
+        
+        setEnterTransition(enterTransition);
+        setReturnTransition(returnTransition);
+        
+        com.google.android.material.transition.MaterialSharedAxis exitTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ true);
+        com.google.android.material.transition.MaterialSharedAxis reenterTransition = 
+            new com.google.android.material.transition.MaterialSharedAxis(
+                com.google.android.material.transition.MaterialSharedAxis.X, /* forward= */ false);
+        
+        setExitTransition(exitTransition);
+        setReenterTransition(reenterTransition);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
