@@ -165,12 +165,11 @@
                                 android:clickable="false"
                                 android:importantForAccessibility="no" />
 
-                            <!-- Edit Pencil Icon overlay on Avatar -->
                             <ImageView
                                 android:layout_width="18dp"
                                 android:layout_height="18dp"
                                 android:layout_gravity="center"
-                                android:src="@drawable/ic_edit_pencil"
+                                android:src="@drawable/ic_edit"
                                 app:tint="@color/white"
                                 android:clickable="false" />
                         </FrameLayout>

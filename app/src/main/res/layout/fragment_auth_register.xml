@@ -36,23 +36,21 @@
             android:layout_marginBottom="16dp"
             android:textColorHint="@color/discord_text_muted"
             app:hintTextColor="@color/discord_blurple"
-            app:boxBackgroundColor="@color/discord_dark_floating"
             app:boxStrokeColor="@color/discord_blurple"
             app:boxCornerRadiusTopStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            android:hint="USERNAME"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etUsername"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="USERNAME"
+                android:layout_height="wrap_content"
                 android:textColor="@color/discord_text_primary"
                 android:inputType="textPersonName"
-                android:padding="16dp"
                 android:fontFamily="@font/inter"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -64,23 +62,21 @@
             android:layout_marginBottom="16dp"
             android:textColorHint="@color/discord_text_muted"
             app:hintTextColor="@color/discord_blurple"
-            app:boxBackgroundColor="@color/discord_dark_floating"
             app:boxStrokeColor="@color/discord_blurple"
             app:boxCornerRadiusTopStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            android:hint="EMAIL"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="EMAIL"
+                android:layout_height="wrap_content"
                 android:textColor="@color/discord_text_primary"
                 android:inputType="textEmailAddress"
-                android:padding="16dp"
                 android:fontFamily="@font/inter"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -92,25 +88,23 @@
             android:layout_marginBottom="16dp"
             android:textColorHint="@color/discord_text_muted"
             app:hintTextColor="@color/discord_blurple"
-            app:boxBackgroundColor="@color/discord_dark_floating"
             app:boxStrokeColor="@color/discord_blurple"
             app:boxCornerRadiusTopStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
+            android:hint="PASSWORD"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/discord_text_secondary"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="PASSWORD"
+                android:layout_height="wrap_content"
                 android:textColor="@color/discord_text_primary"
                 android:inputType="textPassword"
-                android:padding="16dp"
                 android:fontFamily="@font/inter"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -122,40 +116,40 @@
             android:layout_marginBottom="32dp"
             android:textColorHint="@color/discord_text_muted"
             app:hintTextColor="@color/discord_blurple"
-            app:boxBackgroundColor="@color/discord_dark_floating"
             app:boxStrokeColor="@color/discord_blurple"
             app:boxCornerRadiusTopStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
+            android:hint="CONFIRM PASSWORD"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/discord_text_secondary"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etConfirmPassword"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="CONFIRM PASSWORD"
+                android:layout_height="wrap_content"
                 android:textColor="@color/discord_text_primary"
                 android:inputType="textPassword"
-                android:padding="16dp"
                 android:fontFamily="@font/inter"
                 android:textSize="14sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Register Button -->
-        <android.widget.Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="@drawable/bg_button_primary"
             android:text="Register"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:fontFamily="@font/inter" android:textStyle="bold"
             android:textAllCaps="false"
+            app:backgroundTint="@color/discord_blurple"
+            app:cornerRadius="8dp"
+            app:elevation="0dp"
             android:layout_marginBottom="24dp" />
 
         <!-- Go back to login -->

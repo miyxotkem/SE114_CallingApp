@@ -16,41 +16,69 @@
         android:background="@color/white"
         android:visibility="gone" />
 
-    <!-- Centered Server circular card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardServerContainer"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+    <!-- Centered Server circular card and Badge container -->
+    <FrameLayout
+        android:layout_width="54dp"
+        android:layout_height="54dp"
         android:layout_gravity="center"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="0dp"
-        app:strokeWidth="0dp"
-        app:cardBackgroundColor="#5865F2">
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardServerContainer"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|start"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:cardBackgroundColor="#5865F2">
 
-            <!-- Server Initials TextView (shown if there is no iconUrl) -->
-            <TextView
-                android:id="@+id/tvServerInitials"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/inter"/>
+                android:layout_height="match_parent">
 
-            <!-- Server Icon Image (shown if iconUrl is present) -->
-            <ImageView
-                android:id="@+id/ivServerIcon"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:visibility="gone" />
-        </FrameLayout>
-    </com.google.android.material.card.MaterialCardView>
+                <!-- Server Initials TextView (shown if there is no iconUrl) -->
+                <TextView
+                    android:id="@+id/tvServerInitials"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter"/>
+
+                <!-- Server Icon Image (shown if iconUrl is present) -->
+                <ImageView
+                    android:id="@+id/ivServerIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Unread Badge -->
+        <TextView
+            android:id="@+id/tvUnreadBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="2dp"
+            android:layout_marginBottom="2dp"
+            android:paddingHorizontal="5dp"
+            android:paddingVertical="1dp"
+            android:background="@drawable/bg_circle"
+            android:backgroundTint="@color/discord_red"
+            android:textColor="@color/white"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:visibility="gone"
+            android:elevation="4dp"
+            android:text="0" />
+    </FrameLayout>
 
     <!-- Hidden TextView for backward compatibility/adapter mapping -->
     <TextView

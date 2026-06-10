@@ -29,7 +29,7 @@ public class ThemeHelper {
      */
     public static void applyTheme(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        boolean isDark = prefs.getBoolean(getDarkModeKey(), false);
+        boolean isDark = prefs.getBoolean(getDarkModeKey(), true);
         AppCompatDelegate.setDefaultNightMode(
                 isDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
         );
@@ -42,7 +42,7 @@ public class ThemeHelper {
     public static void toggleTheme(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String key = getDarkModeKey();
-        boolean isDark = prefs.getBoolean(key, false);
+        boolean isDark = prefs.getBoolean(key, true);
         boolean newMode = !isDark;
         prefs.edit().putBoolean(key, newMode).apply();
         AppCompatDelegate.setDefaultNightMode(
@@ -66,7 +66,7 @@ public class ThemeHelper {
      */
     public static boolean isDarkMode(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getBoolean(getDarkModeKey(), false);
+        return prefs.getBoolean(getDarkModeKey(), true);
     }
 }
 

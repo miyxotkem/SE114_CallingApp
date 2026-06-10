@@ -11,7 +11,13 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 import com.example.se114_callingsystem.databinding.ActivityMainBinding;
+import com.example.se114_callingsystem.features.server.ui.ServerAdapter;
+import com.example.se114_callingsystem.features.server.ui.ServerFragment;
+import com.example.se114_callingsystem.features.server.ui.CreateServerDialog;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
@@ -20,6 +26,13 @@ public class MainActivity extends AppCompatActivity {
     private String lastSetStatus = "";
     private com.example.se114_callingsystem.core.util.NetworkMonitor networkMonitor;
     private boolean isFirstNetworkCheck = true;
+    private com.google.firebase.firestore.ListenerRegistration unreadNotificationsListener;
+
+    private ServerAdapter sidebarAdapter;
+    private java.util.List<com.example.se114_callingsystem.core.model.Server> serverList = new java.util.ArrayList<>();
+    private java.util.List<String> currentServerOrder = new java.util.ArrayList<>();
+    private com.google.firebase.firestore.ListenerRegistration sidebarServersListener;
+    private int systemBarsBottom = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +48,60 @@ public class MainActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0); // Bottom is handled by bottom nav
+            systemBarsBottom = systemBars.bottom;
+            
+            // Add padding to bottomNav and sidebar to avoid being cut off by navigation bar
+            binding.sidebarScrollView.setPadding(0, 0, 0, systemBarsBottom);
+            
+            NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+            if (nhf != null) {
+                try {
+                    int currentId = nhf.getNavController().getCurrentDestination().getId();
+                    updateBottomNavPadding(currentId);
+                    updateBottomPadding(nhf.getNavController().getCurrentDestination());
+                } catch (Exception e) {}
+            }
+            
             return insets;
         });
+
+        // Initialize Sidebar RecyclerView
+        binding.recyclerView.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        sidebarAdapter = new ServerAdapter(serverList, null, server -> {
+            NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+            if (nhf != null) {
+                NavController navController = nhf.getNavController();
+                androidx.fragment.app.Fragment currentFragment = nhf.getChildFragmentManager().getPrimaryNavigationFragment();
+                if (currentFragment instanceof ServerFragment) {
+                    ((ServerFragment) currentFragment).switchServer(server.getServerId(), server.getServerName());
+                    sidebarAdapter.setActiveServerId(server.getServerId());
+                } else {
+                    Bundle args = new Bundle();
+                    args.putString("SERVER_ID", server.getServerId());
+                    args.putString("SERVER_NAME", server.getServerName());
+                    navController.navigate(R.id.nav_server, args);
+                }
+            }
+        });
+        binding.recyclerView.setAdapter(sidebarAdapter);
+
+        // Sidebar actions click listeners
+        binding.btnSidebarHome.setOnClickListener(v -> {
+            NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+            if (nhf != null) {
+                NavController navController = nhf.getNavController();
+                navController.popBackStack(R.id.nav_home, false);
+            }
+        });
+
+        binding.mcvServerCreate.setOnClickListener(v -> {
+            CreateServerDialog dialog = new CreateServerDialog();
+            dialog.show(getSupportFragmentManager(), "Server_on_create");
+        });
+
+        binding.mcvServerJoin.setOnClickListener(v -> showJoinServerDialog());
+
+        setupSidebarDragAndDrop();
 
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment);
@@ -46,10 +111,58 @@ public class MainActivity extends AppCompatActivity {
             
             navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
                 int id = destination.getId();
-                if (id == R.id.nav_home || id == R.id.nav_notifications || id == R.id.nav_profile) {
+                if (id == R.id.nav_home || id == R.id.nav_notifications || id == R.id.nav_profile || id == R.id.nav_server) {
                     binding.bottomNav.setVisibility(View.VISIBLE);
                 } else {
                     binding.bottomNav.setVisibility(View.GONE);
+                }
+
+                // Global sidebar visibility: show ONLY on Home and Server fragments
+                if (id == R.id.nav_home || id == R.id.nav_server) {
+                    binding.sidebarScrollView.setVisibility(View.VISIBLE);
+                    setupSidebarListeners();
+                } else {
+                    binding.sidebarScrollView.setVisibility(View.GONE);
+                    removeSidebarListeners();
+                }
+
+                // Update bottom padding of main container
+                updateBottomPadding(destination);
+                
+                // Update start padding of bottom navigation to offset the sidebar width
+                updateBottomNavPadding(id);
+
+                // Active server / Home indicator management
+                if (id == R.id.nav_server) {
+                    if (arguments != null) {
+                        String serverId = arguments.getString("SERVER_ID");
+                        if (sidebarAdapter != null) {
+                            sidebarAdapter.setActiveServerId(serverId);
+                        }
+                    }
+                    binding.viewHomeIndicator.setVisibility(View.GONE);
+                } else if (id == R.id.nav_home || id == R.id.nav_friend_manage || (id == R.id.nav_chat_detail && (arguments == null || arguments.getString("SERVER_ID") == null))) {
+                    if (sidebarAdapter != null) {
+                        sidebarAdapter.setActiveServerId(null);
+                    }
+                    binding.viewHomeIndicator.setVisibility(View.VISIBLE);
+                } else {
+                    // For sub-views, keep current highlight if serverId exists in arguments
+                    if (arguments != null && arguments.getString("SERVER_ID") != null) {
+                        String serverId = arguments.getString("SERVER_ID");
+                        if (sidebarAdapter != null) {
+                            sidebarAdapter.setActiveServerId(serverId);
+                        }
+                        binding.viewHomeIndicator.setVisibility(View.GONE);
+                    } else {
+                        // Highlight home indicator for app wide utilities
+                        if (id == R.id.nav_notifications || id == R.id.nav_profile) {
+                            if (sidebarAdapter != null) {
+                                sidebarAdapter.setActiveServerId(null);
+                            }
+                            binding.viewHomeIndicator.setVisibility(View.VISIBLE);
+                        }
+                    }
                 }
             });
         }
@@ -129,6 +242,18 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         resetIdleTimer();
+        setupNotificationBadgeListener();
+        
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        if (navHostFragment != null) {
+            NavController navController = navHostFragment.getNavController();
+            if (navController.getCurrentDestination() != null) {
+                int id = navController.getCurrentDestination().getId();
+                if (id == R.id.nav_home || id == R.id.nav_server) {
+                    setupSidebarListeners();
+                }
+            }
+        }
     }
 
     @Override
@@ -136,6 +261,8 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         idleHandler.removeCallbacks(idleRunnable);
         setAppStatus("offline");
+        removeNotificationBadgeListener();
+        removeSidebarListeners();
     }
 
     private void setAppStatus(String appState) {
@@ -203,9 +330,252 @@ public class MainActivity extends AppCompatActivity {
         }, 2000);
     }
 
+    private void setupNotificationBadgeListener() {
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (uid == null) {
+            removeNotificationBadgeListener();
+            return;
+        }
+
+        if (unreadNotificationsListener != null) return; // Already listening
+
+        unreadNotificationsListener = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users").document(uid).collection("notifications")
+                .whereEqualTo("isRead", false)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        android.util.Log.e("MainActivity", "Error listening for unread notifications", error);
+                        return;
+                    }
+                    if (binding == null || binding.bottomNav == null) return;
+
+                    int unreadCount = (value != null) ? value.size() : 0;
+                    com.google.android.material.badge.BadgeDrawable badge = binding.bottomNav.getOrCreateBadge(R.id.nav_notifications);
+                    if (unreadCount > 0) {
+                        badge.setVisible(true);
+                        badge.setNumber(unreadCount);
+                        badge.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.discord_red));
+                        badge.setBadgeTextColor(android.graphics.Color.WHITE);
+                    } else {
+                        badge.setVisible(false);
+                    }
+                });
+    }
+
+    private void removeNotificationBadgeListener() {
+        if (unreadNotificationsListener != null) {
+            unreadNotificationsListener.remove();
+            unreadNotificationsListener = null;
+        }
+    }
+
+    private void setupSidebarListeners() {
+        String currentUserUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUserUid.isEmpty()) {
+            removeSidebarListeners();
+            return;
+        }
+
+        if (sidebarServersListener != null) return; // Already listening
+
+        com.google.firebase.firestore.FirebaseFirestore dbInstance = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        dbInstance.collection("users").document(currentUserUid).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                com.example.se114_callingsystem.core.model.User user = documentSnapshot.toObject(com.example.se114_callingsystem.core.model.User.class);
+                if (user != null && user.getServerOrder() != null) {
+                    currentServerOrder = user.getServerOrder();
+                } else {
+                    currentServerOrder = new java.util.ArrayList<>();
+                }
+            } else {
+                currentServerOrder = new java.util.ArrayList<>();
+            }
+
+            if (sidebarServersListener == null) {
+                sidebarServersListener = dbInstance.collection("servers")
+                    .whereArrayContains("members", currentUserUid)
+                    .addSnapshotListener((value, error) -> {
+                        if (error != null) {
+                            android.util.Log.e("MainActivity", "Error fetching servers: " + error.getMessage());
+                            return;
+                        }
+                        if (value != null && binding != null) {
+                            serverList.clear();
+                            for (com.google.firebase.firestore.DocumentSnapshot doc : value) {
+                                com.example.se114_callingsystem.core.model.Server server = doc.toObject(com.example.se114_callingsystem.core.model.Server.class);
+                                if (server != null) {
+                                    server.setServerId(doc.getId());
+                                    serverList.add(server);
+                                }
+                            }
+                            
+                            serverList.sort((s1, s2) -> {
+                                int idx1 = currentServerOrder.indexOf(s1.getServerId());
+                                int idx2 = currentServerOrder.indexOf(s2.getServerId());
+                                if (idx1 == -1) idx1 = Integer.MAX_VALUE;
+                                if (idx2 == -1) idx2 = Integer.MAX_VALUE;
+                                return java.lang.Integer.compare(idx1, idx2);
+                            });
+                            
+                            if (sidebarAdapter != null) {
+                                sidebarAdapter.notifyDataSetChanged();
+                            }
+                        }
+                    });
+            }
+        });
+    }
+
+    private void removeSidebarListeners() {
+        if (sidebarServersListener != null) {
+            sidebarServersListener.remove();
+            sidebarServersListener = null;
+        }
+    }
+
+    private void setupSidebarDragAndDrop() {
+        androidx.recyclerview.widget.ItemTouchHelper itemTouchHelper = new androidx.recyclerview.widget.ItemTouchHelper(
+            new androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(androidx.recyclerview.widget.ItemTouchHelper.UP | androidx.recyclerview.widget.ItemTouchHelper.DOWN, 0) {
+                @Override
+                public boolean onMove(@androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView recyclerView, @androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, @androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder target) {
+                    int fromPosition = viewHolder.getAdapterPosition();
+                    int toPosition = target.getAdapterPosition();
+
+                    java.util.Collections.swap(serverList, fromPosition, toPosition);
+                    sidebarAdapter.notifyItemMoved(fromPosition, toPosition);
+                    return true;
+                }
+
+                @Override
+                public void onSwiped(@androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, int direction) {}
+
+                @Override
+                public void clearView(@androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView recyclerView, @androidx.annotation.NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder) {
+                    super.clearView(recyclerView, viewHolder);
+                    saveServerOrder();
+                }
+            }
+        );
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView);
+    }
+
+    private void saveServerOrder() {
+        String currentUserUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUserUid.isEmpty()) return;
+
+        java.util.List<String> order = new java.util.ArrayList<>();
+        for (com.example.se114_callingsystem.core.model.Server s : serverList) {
+            order.add(s.getServerId());
+        }
+        currentServerOrder = order;
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(currentUserUid)
+            .update("serverOrder", order)
+            .addOnFailureListener(e -> android.util.Log.e("MainActivity", "Failed to save server order", e));
+    }
+
+    private void showJoinServerDialog() {
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_join_server, null);
+        dialog.setContentView(view);
+        
+        View parent = (View) view.getParent();
+        if (parent != null) {
+            parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        }
+
+        com.google.android.material.textfield.TextInputEditText edtInviteCode = view.findViewById(R.id.edtInviteCode);
+        com.google.android.material.button.MaterialButton btnJoin = view.findViewById(R.id.btnJoinServer);
+
+        btnJoin.setOnClickListener(v -> {
+            String inviteCode = edtInviteCode.getText() != null ? edtInviteCode.getText().toString().trim() : "";
+            if (!inviteCode.isEmpty()) {
+                joinServer(inviteCode);
+                dialog.dismiss();
+            } else {
+                edtInviteCode.setError("Vui lòng nhập mã mời");
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void joinServer(String serverIdToJoin) {
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        String userName = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null && 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : "New Member";
+        if (uid == null) return;
+        
+        com.google.firebase.firestore.FirebaseFirestore dbInstance = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        dbInstance.collection("servers").document(serverIdToJoin).get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                java.util.List<String> members = (java.util.List<String>) doc.get("members");
+                if (members != null && members.contains(uid)) {
+                    android.widget.Toast.makeText(this, "Bạn đã ở trong server này rồi!", android.widget.Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                dbInstance.collection("servers").document(serverIdToJoin).update("members", com.google.firebase.firestore.FieldValue.arrayUnion(uid));
+                
+                com.example.se114_callingsystem.core.model.ServerMember newMember = new com.example.se114_callingsystem.core.model.ServerMember(uid, userName, "member");
+                dbInstance.collection("servers").document(serverIdToJoin).collection("members").document(uid).set(newMember);
+                
+                if (!currentServerOrder.contains(serverIdToJoin)) {
+                    currentServerOrder.add(serverIdToJoin);
+                    dbInstance.collection("users").document(uid).update("serverOrder", currentServerOrder);
+                }
+                
+                android.widget.Toast.makeText(this, "Tham gia server thành công!", android.widget.Toast.LENGTH_SHORT).show();
+                
+                NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+                if (navHostFragment != null) {
+                    NavController navController = navHostFragment.getNavController();
+                    androidx.fragment.app.Fragment currentFragment = navHostFragment.getChildFragmentManager().getPrimaryNavigationFragment();
+                    if (currentFragment instanceof ServerFragment) {
+                        ((ServerFragment) currentFragment).switchServer(serverIdToJoin, doc.getString("serverName"));
+                    } else {
+                        Bundle args = new Bundle();
+                        args.putString("SERVER_ID", serverIdToJoin);
+                        args.putString("SERVER_NAME", doc.getString("serverName"));
+                        navController.navigate(R.id.nav_server, args);
+                    }
+                }
+            } else {
+                android.widget.Toast.makeText(this, "Mã mời không hợp lệ hoặc Server không tồn tại.", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateBottomPadding(androidx.navigation.NavDestination destination) {
+        if (destination == null || binding == null) return;
+        int id = destination.getId();
+        if (id == R.id.nav_home || id == R.id.nav_notifications || id == R.id.nav_profile || id == R.id.nav_server) {
+            binding.mainContainer.setPadding(binding.mainContainer.getPaddingLeft(), binding.mainContainer.getPaddingTop(), binding.mainContainer.getPaddingRight(), 0);
+        } else {
+            binding.mainContainer.setPadding(binding.mainContainer.getPaddingLeft(), binding.mainContainer.getPaddingTop(), binding.mainContainer.getPaddingRight(), systemBarsBottom);
+        }
+    }
+
+    private void updateBottomNavPadding(int destinationId) {
+        if (binding == null) return;
+        int paddingStart = 0;
+        if (destinationId == R.id.nav_home || destinationId == R.id.nav_server) {
+            float density = getResources().getDisplayMetrics().density;
+            paddingStart = (int) (72 * density);
+        }
+        binding.bottomNav.setPadding(paddingStart, 0, 0, systemBarsBottom);
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        removeNotificationBadgeListener();
+        removeSidebarListeners();
         binding = null;
     }
 }

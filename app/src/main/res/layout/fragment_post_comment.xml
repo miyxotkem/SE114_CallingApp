@@ -5,25 +5,34 @@
     android:layout_height="match_parent"
     android:background="@color/bg_primary">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Premium App Bar / Toolbar Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/toolbarCard"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/bg_secondary"
-        app:elevation="4dp">
+        android:layout_height="64dp"
+        app:cardBackgroundColor="@color/discord_dark_deep"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/discord_divider"
+        android:layout_alignParentTop="true">
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:paddingHorizontal="16dp">
 
             <ImageView
                 android:id="@+id/btnBack"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_centerVertical="true"
+                android:padding="12dp"
+                android:scaleType="centerInside"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_back"
-                app:tint="@color/text_primary" />
+                app:tint="@color/text_primary"
+                android:contentDescription="Back" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -35,16 +44,17 @@
                 android:textStyle="bold"
                 android:fontFamily="@font/inter"/>
         </RelativeLayout>
-    </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvComments"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/cardMentionSuggestions"
-        android:layout_below="@id/toolbar"
+        android:layout_below="@id/toolbarCard"
         android:paddingBottom="16dp" />
 
+    <!-- Mentions Suggestion Pop-up -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardMentionSuggestions"
         android:layout_width="match_parent"
@@ -55,8 +65,8 @@
         app:cardBackgroundColor="@color/bg_secondary"
         app:cardCornerRadius="12dp"
         app:cardElevation="8dp"
-        app:strokeColor="#5865F2"
-        app:strokeWidth="2dp"
+        app:strokeColor="@color/discord_blurple"
+        app:strokeWidth="1.5dp"
         android:visibility="gone">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -104,40 +114,57 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:src="@drawable/ic_close"
                 app:tint="@color/text_secondary"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:contentDescription="Cancel Reply" />
         </LinearLayout>
 
-        <!-- Input Box Row -->
+        <!-- Capsule Message Input Box Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp">
 
-            <EditText
-                android:id="@+id/etComment"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@null"
-                android:hint="Nhập bình luận..."
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="16sp"
-                android:fontFamily="@font/inter"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_chat_input"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp">
+
+                <EditText
+                    android:id="@+id/etComment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:hint="Nhập bình luận..."
+                    android:maxLines="4"
+                    android:inputType="textMultiLine"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter"/>
+            </LinearLayout>
 
             <ImageView
                 android:id="@+id/btnSendComment"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="8dp"
+                android:padding="12dp"
+                android:scaleType="centerInside"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_send"
-                app:tint="#5865F2" />
+                android:src="@drawable/ic_send"
+                app:tint="@color/discord_blurple"
+                android:contentDescription="Send" />
         </LinearLayout>
     </LinearLayout>
 

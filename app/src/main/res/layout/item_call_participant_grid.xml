@@ -41,7 +41,7 @@
             android:layout_height="20dp"
             android:layout_gravity="top|end"
             android:layout_margin="8dp"
-            android:src="@android:drawable/ic_menu_share"
+            android:src="@drawable/ic_share"
             android:visibility="gone"
             app:tint="#4CAF50" />
     </FrameLayout>

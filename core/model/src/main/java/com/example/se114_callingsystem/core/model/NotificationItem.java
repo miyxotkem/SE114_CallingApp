@@ -1,5 +1,7 @@
 package com.example.se114_callingsystem.core.model;
 
+import com.google.firebase.firestore.PropertyName;
+
 public class NotificationItem {
     private String notificationId;
     private String title;
@@ -9,6 +11,7 @@ public class NotificationItem {
     private String senderName;
     private String targetId; // CHAT_ID or other target
     private long timestamp;
+    @PropertyName("isRead")
     private boolean isRead;
 
     public NotificationItem() {
@@ -51,6 +54,8 @@ public class NotificationItem {
     public long getTimestamp() { return timestamp; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 
+    @PropertyName("isRead")
     public boolean isRead() { return isRead; }
+    @PropertyName("isRead")
     public void setRead(boolean read) { isRead = read; }
 }

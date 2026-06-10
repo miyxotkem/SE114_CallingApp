@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.dagger.hilt)
 }
 
 android {
@@ -31,8 +32,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     packaging {
@@ -74,6 +75,14 @@ dependencies {
     implementation("io.agora.rtc:full-sdk:4.6.3")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Hilt Dependency Injection
+    implementation(libs.hilt.android)
+    annotationProcessor(libs.hilt.compiler)
+
+    // Jetpack Lifecycle (ViewModel & LiveData)
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.lifecycle.livedata)
 }
 
 tasks.withType<JavaCompile> {

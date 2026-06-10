@@ -20,7 +20,7 @@
         android:foreground="?attr/selectableItemBackgroundBorderless"
         android:padding="10dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_back_modern"
+        android:src="@drawable/ic_back"
         android:elevation="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

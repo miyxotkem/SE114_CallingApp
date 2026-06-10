@@ -12,8 +12,9 @@
         android:layout_height="64dp"
         app:cardBackgroundColor="@color/discord_dark_deep"
         app:cardCornerRadius="0dp"
-        app:cardElevation="4dp"
-        app:strokeWidth="0dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/discord_divider"
         app:layout_constraintTop_toTopOf="parent">
 
         <RelativeLayout
@@ -23,13 +24,15 @@
 
             <ImageView
                 android:id="@+id/btnBack"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_centerVertical="true"
-                android:padding="6dp"
+                android:padding="12dp"
+                android:scaleType="centerInside"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_back"
-                app:tint="@color/discord_text_primary" />
+                app:tint="@color/discord_text_primary"
+                android:contentDescription="Back" />
 
             <TextView
                 android:id="@+id/tvChannelName"
@@ -37,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_toEndOf="@id/btnBack"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="8dp"
                 android:text="📰 Kênh Bài Viết"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="18sp"
@@ -57,17 +60,84 @@
         app:layout_constraintTop_toBottomOf="@id/toolbarCard"
         app:layout_constraintBottom_toBottomOf="parent" />
 
+    <!-- Empty State Layout -->
+    <LinearLayout
+        android:id="@+id/layoutEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbarCard"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Circular Icon Holder -->
+        <FrameLayout
+            android:id="@+id/emptyIconContainer"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:background="@drawable/bg_circle"
+            android:backgroundTint="#1A5865F2"
+            android:layout_marginBottom="24dp">
+            
+            <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_gallery"
+                app:tint="@color/discord_blurple" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chưa có bài viết nào"
+            android:textColor="@color/discord_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/inter"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hãy là người đầu tiên chia sẻ thông tin hoặc hình ảnh thú vị trong kênh bài viết này nhé!"
+            android:textColor="@color/discord_text_secondary"
+            android:textSize="14sp"
+            android:textAlignment="center"
+            android:fontFamily="@font/inter"
+            android:layout_marginBottom="32dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEmptyCreatePost"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="Tạo bài viết mới"
+            android:textColor="@color/white"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            android:fontFamily="@font/inter"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"
+            app:backgroundTint="@color/discord_blurple"
+            app:icon="@drawable/ic_add"
+            app:iconTint="@color/white"
+            app:iconPadding="8dp" />
+    </LinearLayout>
+
     <!-- Create Post FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabCreatePost"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="24dp"
-        android:src="@drawable/ic_add_black"
+        android:src="@drawable/ic_add"
         app:backgroundTint="@color/discord_blurple"
         app:tint="@color/white"
         app:elevation="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="Create Post" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -44,7 +44,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_back_modern"
+                    android:src="@drawable/ic_back"
                     app:tint="@color/white" />
             </com.google.android.material.card.MaterialCardView>
 
@@ -233,7 +233,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@android:drawable/ic_menu_myplaces"
+                            android:src="@drawable/ic_user"
                             app:tint="@color/discord_text_secondary" />
 
                         <LinearLayout
@@ -349,7 +349,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@android:drawable/ic_menu_day"
+                            android:src="@drawable/ic_alarm"
                             app:tint="@color/discord_text_secondary" />
 
                         <LinearLayout
@@ -560,7 +560,7 @@
                         <ImageView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:src="@android:drawable/ic_menu_day"
+                            android:src="@drawable/ic_alarm"
                             app:tint="@color/discord_text_secondary" />
 
                         <TextView
