@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+    implementation(libs.lottie)
     implementation("com.cloudinary:cloudinary-android:2.5.0")
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
 

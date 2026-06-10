@@ -261,10 +261,16 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
             holder.cardAvatar.setStrokeWidth(0); // Luôn bỏ viền xung quanh avatar
         }
         
-        if (participant.isSpeaking && !participant.isMuted) {
+        if (participant.isSpeaking && !participant.isMuted && participant.isVideoOff) {
+            if (holder.lottieAudioWave != null) {
+                holder.lottieAudioWave.setVisibility(View.VISIBLE);
+            }
             holder.cardView.setStrokeColor(Color.parseColor("#4CAF50")); // Màu xanh lá sáng
             holder.cardView.setStrokeWidth(dpToPx(4)); // Viền dầy hơn để nổi bật xung quanh ô vuông
         } else {
+            if (holder.lottieAudioWave != null) {
+                holder.lottieAudioWave.setVisibility(View.GONE);
+            }
             holder.cardView.setStrokeColor(Color.parseColor("#2D2D4A")); // Màu xám mặc định
             holder.cardView.setStrokeWidth(dpToPx(1));
         }
@@ -293,6 +299,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         TextView tvUserName;
         ImageView ivMuteStatus;
         MaterialCardView cardAvatar;
+        com.airbnb.lottie.LottieAnimationView lottieAudioWave;
 
         public CallViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -302,6 +309,7 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
             tvUserName = itemView.findViewById(R.id.tvUserName);
             ivMuteStatus = itemView.findViewById(R.id.ivMuteStatus);
             cardAvatar = itemView.findViewById(R.id.cardAvatar);
+            lottieAudioWave = itemView.findViewById(R.id.lottieAudioWave);
         }
     }
 }

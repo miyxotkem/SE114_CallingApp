@@ -78,7 +78,6 @@ public class ChatFragment extends Fragment {
     private Runnable typingStopRunnable = () -> setTypingStatus(false);
     private boolean isTyping = false;
     private ValueEventListener typingListener;
-    private List<android.animation.ObjectAnimator> dotAnimators = new ArrayList<>();
 
 
 
@@ -105,6 +104,8 @@ public class ChatFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+
 
         // Retrieve Arguments passed via navigation bundle
         if (getArguments() != null) {
@@ -577,7 +578,6 @@ public class ChatFragment extends Fragment {
             typingLayout.setTranslationY(50f);
             typingLayout.setAlpha(0f);
             typingLayout.animate().translationY(0f).alpha(1f).setDuration(300).start();
-            startDotsAnimation();
         }
         
         if (typingUsers.size() == 1) {
@@ -605,37 +605,11 @@ public class ChatFragment extends Fragment {
         if (typingLayout.getVisibility() == View.VISIBLE) {
             typingLayout.animate().translationY(50f).alpha(0f).setDuration(200).withEndAction(() -> {
                 typingLayout.setVisibility(View.GONE);
-                stopDotsAnimation();
             }).start();
         }
     }
 
-    private void startDotsAnimation() {
-        if (!dotAnimators.isEmpty()) return;
-        View dot1 = binding.getRoot().findViewById(R.id.dot1);
-        View dot2 = binding.getRoot().findViewById(R.id.dot2);
-        View dot3 = binding.getRoot().findViewById(R.id.dot3);
-        
-        dotAnimators.add(animateDot(dot1, 0));
-        dotAnimators.add(animateDot(dot2, 150));
-        dotAnimators.add(animateDot(dot3, 300));
-    }
 
-    private android.animation.ObjectAnimator animateDot(View dot, int delay) {
-        android.animation.ObjectAnimator animator = android.animation.ObjectAnimator.ofFloat(dot, "translationY", 0f, -8f, 0f);
-        animator.setDuration(600);
-        animator.setStartDelay(delay);
-        animator.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-        animator.start();
-        return animator;
-    }
-
-    private void stopDotsAnimation() {
-        for (android.animation.ObjectAnimator anim : dotAnimators) {
-            anim.cancel();
-        }
-        dotAnimators.clear();
-    }
 
     private void insertMention(ServerMember member) {
         if (binding == null) return;
@@ -935,7 +909,6 @@ public class ChatFragment extends Fragment {
         if (typingListener != null && groupId != null) {
             com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chat_typing").child(groupId).removeEventListener(typingListener);
         }
-        stopDotsAnimation();
         activeChatId = null;
         binding = null;
         if (membersListener != null) {

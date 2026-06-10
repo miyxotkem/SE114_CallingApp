@@ -107,6 +107,12 @@ public class VoiceCallFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            binding.bgImageView.setRenderEffect(
+                android.graphics.RenderEffect.createBlurEffect(30f, 30f, android.graphics.Shader.TileMode.CLAMP)
+            );
+        }
+
         // Fetch Bundle arguments
         if (getArguments() != null) {
             serverColor = getArguments().getString("SERVER_COLOR", "#5865F2");
@@ -291,7 +297,16 @@ public class VoiceCallFragment extends Fragment {
 
     private void updateParticipantCount() {
         if (binding != null) {
-            binding.tvParticipantCount.setText(participantList.size() + " người tham gia");
+            int count = participantList.size();
+            binding.tvParticipantCount.setText(count + " người tham gia");
+            
+            if (count <= 1) {
+                binding.layoutWaiting.setVisibility(View.VISIBLE);
+                binding.rvParticipants.setVisibility(View.GONE);
+            } else {
+                binding.layoutWaiting.setVisibility(View.GONE);
+                binding.rvParticipants.setVisibility(View.VISIBLE);
+            }
         }
     }
 

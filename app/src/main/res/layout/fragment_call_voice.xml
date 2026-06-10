@@ -3,8 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/discord_dark_floating"
+    android:background="@android:color/transparent"
     android:animateLayoutChanges="true">
+
+    <!-- Background Wallpaper -->
+    <ImageView
+        android:id="@+id/bgImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_app_wallpaper" />
 
     <!-- Top Action bar / Header -->
     <LinearLayout
@@ -55,16 +63,48 @@
         app:layout_constraintTop_toBottomOf="@id/callHeader"
         app:layout_constraintBottom_toTopOf="@id/controlPanel" />
 
-    <!-- Control Floating bar -->
+    <!-- Waiting Overlay for Voice Call (Single Participant Waiting) -->
+    <LinearLayout
+        android:id="@+id/layoutWaiting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:visibility="gone">
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieRinging"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            app:lottie_rawRes="@raw/lottie_ringing"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đang chờ người khác tham gia..."
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:fontFamily="@font/inter"
+            android:layout_marginTop="16dp" />
+    </LinearLayout>
+
+    <!-- Control Floating bar (Glassmorphism layout) -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/controlPanel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
-        app:cardBackgroundColor="@color/discord_dark_elevated"
+        app:cardBackgroundColor="#59131622"
         app:cardCornerRadius="36dp"
         app:cardElevation="10dp"
-        app:strokeWidth="0dp"
+        app:strokeColor="#26FFFFFF"
+        app:strokeWidth="1dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
