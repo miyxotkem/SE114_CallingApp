@@ -316,9 +316,9 @@ public class ServerFragment extends Fragment {
     private void initViews() {
         if (binding == null) return;
 
-        binding.btnAddChannel.setOnClickListener(v -> showAddChannelDialog("chat"));
-        binding.btnAddCallChannel.setOnClickListener(v -> showAddChannelDialog("call"));
-        binding.btnAddPostChannel.setOnClickListener(v -> showAddChannelDialog("post"));
+        binding.btnAddChannel.setOnClickListener(v -> handleAddChannelClick("chat"));
+        binding.btnAddCallChannel.setOnClickListener(v -> handleAddChannelClick("call"));
+        binding.btnAddPostChannel.setOnClickListener(v -> handleAddChannelClick("post"));
 
         binding.btnServerSettings.setOnClickListener(v -> showServerSettingsDialog());
 
@@ -340,6 +340,30 @@ public class ServerFragment extends Fragment {
         binding.expandChatZone.setRotation(90f);
         binding.expandCallZone.setRotation(90f);
         binding.expandPostZone.setRotation(90f);
+    }
+    
+    private void handleAddChannelClick(String type) {
+        if (getContext() == null || binding == null) return;
+        int currentCount = "chat".equals(type) ? chatList.size() : ("call".equals(type) ? callList.size() : postList.size());
+
+        android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+        String currentPlan = prefs.getString("current_plan", "Basic");
+        int limit = 2;
+        if ("Standard".equals(currentPlan)) limit = 5;
+        else if ("Pro".equals(currentPlan)) limit = 10;
+
+        if (currentCount >= limit) {
+            new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Plan Limit Reached")
+                .setMessage("The number of channels is limited to " + limit + " on your " + currentPlan + " plan. You should upgrade to a higher plan to create more.")
+                .setPositiveButton("Upgrade", (dialog, which) -> {
+                    Navigation.findNavController(binding.getRoot()).navigate(R.id.nav_upgrade_plan);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+        } else {
+            showAddChannelDialog(type);
+        }
     }
     
     private void checkDataLoaded() {

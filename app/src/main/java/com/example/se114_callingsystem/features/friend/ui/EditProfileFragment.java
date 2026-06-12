@@ -162,6 +162,22 @@ public class EditProfileFragment extends Fragment {
     }
 
     private void pickImage(boolean isAvatar) {
+        if (!isAvatar) {
+            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+            String currentPlan = prefs.getString("current_plan", "Basic");
+            if ("Basic".equals(currentPlan)) {
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Premium Feature")
+                    .setMessage("Changing your cover photo requires the Standard plan. Upgrade now to unlock this feature!")
+                    .setPositiveButton("Upgrade", (dialog, which) -> {
+                        Navigation.findNavController(binding.getRoot()).navigate(R.id.action_edit_profile_to_upgrade_plan);
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+                return;
+            }
+        }
+        
         isPickingAvatar = isAvatar;
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");

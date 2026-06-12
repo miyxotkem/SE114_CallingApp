@@ -121,13 +121,28 @@
             app:exitAnim="@anim/anim_exit"
             app:popEnterAnim="@anim/anim_pop_enter"
             app:popExitAnim="@anim/anim_pop_exit"/>
+        <action
+            android:id="@+id/action_profile_to_upgrade_plan"
+            app:destination="@id/nav_upgrade_plan" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment
         android:id="@+id/nav_edit_profile"
         android:name="com.example.se114_callingsystem.features.friend.ui.EditProfileFragment"
         android:label="Edit Profile"
-        tools:layout="@layout/fragment_friend_edit_profile" />
+        tools:layout="@layout/fragment_friend_edit_profile">
+        <action
+            android:id="@+id/action_edit_profile_to_upgrade_plan"
+            app:destination="@id/nav_upgrade_plan" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
+    </fragment>
 
     <fragment
         android:id="@+id/nav_chat_detail"
@@ -300,6 +315,13 @@
             app:exitAnim="@anim/anim_exit"
             app:popEnterAnim="@anim/anim_pop_enter"
             app:popExitAnim="@anim/anim_pop_exit"/>
+        <action
+            android:id="@+id/action_friend_manage_to_upgrade_plan"
+            app:destination="@id/nav_upgrade_plan" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <!-- 4. Tìm kiếm tin nhắn chat -->
@@ -357,5 +379,12 @@
         tools:layout="@layout/fragment_core_image_viewer">
         <argument android:name="IMAGE_URL" app:argType="string" />
     </fragment>
+
+    <!-- 9. Upgrade Plan -->
+    <fragment
+        android:id="@+id/nav_upgrade_plan"
+        android:name="com.example.se114_callingsystem.features.friend.ui.UpgradePlanFragment"
+        android:label="Upgrade Plan"
+        tools:layout="@layout/fragment_upgrade_plan" />
 
 </navigation>

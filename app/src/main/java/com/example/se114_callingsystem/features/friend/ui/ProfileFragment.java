@@ -99,6 +99,12 @@ public class ProfileFragment extends Fragment {
             binding.tvFriendActionsHeader.setVisibility(View.GONE);
             binding.cardSendMessage.setVisibility(View.GONE);
 
+            binding.tvSubscriptionHeader.setVisibility(View.VISIBLE);
+            binding.cardUpgradePlan.setVisibility(View.VISIBLE);
+            binding.btnUpgradePlan.setOnClickListener(v -> {
+                Navigation.findNavController(v).navigate(R.id.action_profile_to_upgrade_plan);
+            });
+
             binding.tvUserSettingsHeader.setVisibility(View.VISIBLE);
             binding.cardEditProfile.setVisibility(View.VISIBLE);
             binding.tvAccountActionsHeader.setVisibility(View.VISIBLE);
@@ -125,6 +131,9 @@ public class ProfileFragment extends Fragment {
                 viewModel.signOut();
             });
         } else {
+            binding.tvSubscriptionHeader.setVisibility(View.GONE);
+            binding.cardUpgradePlan.setVisibility(View.GONE);
+
             binding.tvUserSettingsHeader.setVisibility(View.GONE);
             binding.cardEditProfile.setVisibility(View.GONE);
             binding.tvAccountActionsHeader.setVisibility(View.GONE);
@@ -271,6 +280,11 @@ public class ProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadUserProfile(); // Reload data in case it was edited
+        if (isOwnProfile && binding != null && getContext() != null) {
+            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+            String currentPlan = prefs.getString("current_plan", "Basic");
+            binding.tvCurrentPlan.setText("Current: " + currentPlan + " Plan");
+        }
     }
 
     private void loadUserProfile() {

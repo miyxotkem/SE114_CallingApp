@@ -150,6 +150,24 @@ public class ManageFriendsFragment extends Fragment {
             @Override
             public void onAccept(User user) {
                 if (user.getUserId() != null) {
+                    android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+                    String currentPlan = prefs.getString("current_plan", "Basic");
+                    int limit = 25;
+                    if ("Standard".equals(currentPlan)) limit = 100;
+                    else if ("Pro".equals(currentPlan)) limit = Integer.MAX_VALUE;
+
+                    int currentFriends = friendList.size();
+                    if (currentFriends >= limit) {
+                        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Plan Limit Reached")
+                            .setMessage("You reached the limit of " + (limit == Integer.MAX_VALUE ? "unlimited" : limit) + " friends on your " + currentPlan + " plan. Upgrade your plan to accept this request.")
+                            .setPositiveButton("Upgrade", (dialog, which) -> {
+                                Navigation.findNavController(getView()).navigate(R.id.action_friend_manage_to_upgrade_plan);
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                        return;
+                    }
                     viewModel.acceptRequest(user.getUserId());
                 }
             }
