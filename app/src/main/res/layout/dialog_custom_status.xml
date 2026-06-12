@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet"
+    android:backgroundTint="@color/discord_dark_floating"
+    android:orientation="vertical"
+    android:layout_margin="16dp"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter"
+            android:text="Set a Custom Status"
+            android:textColor="@color/discord_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PRO"
+            android:textColor="#000000"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/inter"
+            android:background="@drawable/bg_pill_dark"
+            android:backgroundTint="#FFD700"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="@font/inter"
+        android:text="What's on your mind?"
+        android:textColor="@color/discord_text_secondary"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/edtCustomStatus"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_edittext"
+        android:fontFamily="@font/inter"
+        android:hint="Support emojis too 🍕"
+        android:paddingHorizontal="16dp"
+        android:textColor="@color/discord_text_primary"
+        android:textColorHint="@color/discord_text_muted"
+        android:textSize="16sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginEnd="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center"
+            android:paddingHorizontal="24dp"
+            android:text="Cancel"
+            android:textColor="@color/discord_text_primary"
+            android:textStyle="bold" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnSave"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_button_primary"
+            android:fontFamily="@font/inter"
+            android:paddingHorizontal="24dp"
+            android:text="Save"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

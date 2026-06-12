@@ -22,6 +22,8 @@ import com.google.firebase.auth.FirebaseUser;
 import dagger.hilt.android.AndroidEntryPoint;
 import java.util.HashMap;
 import java.util.Map;
+import android.app.DatePickerDialog;
+import java.util.Calendar;
 
 @AndroidEntryPoint
 public class EditProfileFragment extends Fragment {
@@ -38,14 +40,39 @@ public class EditProfileFragment extends Fragment {
     private String currentCoverUrl = "";
     private boolean isPickingAvatar = false;
     private android.app.ProgressDialog progressDialog;
+    private String selectedGifUrl = null;
 
     private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null && binding != null) {
                     Uri selectedImageUri = result.getData().getData();
+                    
+                    if (selectedImageUri != null) {
+                        String mimeType = requireContext().getContentResolver().getType(selectedImageUri);
+                        String path = selectedImageUri.getPath();
+                        boolean isGif = (mimeType != null && mimeType.contains("gif")) || (path != null && path.toLowerCase().endsWith(".gif"));
+                        
+                        if (isGif && isPickingAvatar) {
+                            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+                            String currentPlan = prefs.getString("current_plan", "Basic");
+                            if ("Basic".equals(currentPlan)) {
+                                new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                                    .setTitle("Premium Feature")
+                                    .setMessage("Animated avatars (GIFs) require the Standard or Pro plan. Upgrade now to unlock this feature!")
+                                    .setPositiveButton("Upgrade", (dialog, which) -> {
+                                        Navigation.findNavController(binding.getRoot()).navigate(R.id.action_edit_profile_to_upgrade_plan);
+                                    })
+                                    .setNegativeButton("Cancel", null)
+                                    .show();
+                                return;
+                            }
+                        }
+                    }
+
                     if (isPickingAvatar) {
                         avatarUri = selectedImageUri;
+                        selectedGifUrl = null;
                         Glide.with(this).load(avatarUri).into(binding.ivEditAvatar);
                     } else {
                         coverUri = selectedImageUri;
@@ -78,14 +105,156 @@ public class EditProfileFragment extends Fragment {
             Navigation.findNavController(v).popBackStack();
         });
 
-        binding.ivEditAvatar.setOnClickListener(v -> pickImage(true));
+        binding.ivEditAvatar.setOnClickListener(v -> showAvatarOptionsDialog());
         binding.ivEditCoverPhoto.setOnClickListener(v -> pickImage(false));
+
+        binding.etDob.setOnClickListener(v -> showDatePicker());
 
         binding.btnSaveProfile.setOnClickListener(v -> saveProfile());
 
         setupProgressDialog();
         setupObservers();
         loadCurrentData();
+    }
+    
+    private void showAvatarOptionsDialog() {
+        if (getContext() == null) return;
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_avatar_options, null);
+        dialog.setContentView(view);
+        
+        View parent = (View) view.getParent();
+        if (parent != null) {
+            parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        }
+
+        view.findViewById(R.id.btnGallery).setOnClickListener(v -> {
+            dialog.dismiss();
+            pickImage(true);
+        });
+
+        view.findViewById(R.id.btnGif).setOnClickListener(v -> {
+            dialog.dismiss();
+            checkAndOpenGifPicker();
+        });
+
+        dialog.show();
+    }
+    
+    private void checkAndOpenGifPicker() {
+        android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+        String currentPlan = prefs.getString("current_plan", "Basic");
+        if ("Basic".equals(currentPlan)) {
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Premium Feature")
+                .setMessage("Animated avatars (GIFs) require the Standard or Pro plan. Upgrade now to unlock this feature!")
+                .setPositiveButton("Upgrade", (d, which) -> {
+                    Navigation.findNavController(binding.getRoot()).navigate(R.id.action_edit_profile_to_upgrade_plan);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+            return;
+        }
+
+        showGifPickerBottomSheet();
+    }
+    
+    private void showGifPickerBottomSheet() {
+        if (getContext() == null) return;
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.bottom_sheet_gif_picker, null);
+        dialog.setContentView(view);
+        
+        View parent = (View) view.getParent();
+        if (parent != null) {
+            parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        }
+
+        androidx.recyclerview.widget.RecyclerView rvGifs = view.findViewById(R.id.rvGifs);
+        rvGifs.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(getContext(), 3));
+        
+        java.util.List<String> gifUrls = java.util.Arrays.asList(
+            "https://media.tenor.com/7sH2Z4NOf4cAAAAC/discord-discord-logo.gif",
+            "https://media.tenor.com/QeNhy2UoZ5cAAAAC/cat-jam.gif",
+            "https://media.tenor.com/41I-iMCSlqsAAAAC/pepe-dance.gif",
+            "https://media.tenor.com/P4zB0eLgBkkAAAAC/anime-dance.gif",
+            "https://media.tenor.com/s5Eee1sXkU8AAAAC/nyan-cat.gif",
+            "https://media.tenor.com/aKFaZBrZFAkAAAAC/rick-roll-rick-astley.gif",
+            "https://media.tenor.com/uR1dD518-eQAAAAC/doge-dance.gif",
+            "https://media.tenor.com/XqWU8Q64OgcAAAAC/hacker-typing.gif",
+            "https://media.tenor.com/5u0vj2_0z-cAAAAC/pikachu-dance.gif"
+        );
+
+        rvGifs.setAdapter(new androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+            @NonNull
+            @Override
+            public androidx.recyclerview.widget.RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                android.widget.ImageView iv = new android.widget.ImageView(parent.getContext());
+                int size = (parent.getResources().getDisplayMetrics().widthPixels - 64) / 3;
+                androidx.recyclerview.widget.RecyclerView.LayoutParams params = new androidx.recyclerview.widget.RecyclerView.LayoutParams(size, size);
+                params.setMargins(8, 8, 8, 8);
+                
+                com.google.android.material.card.MaterialCardView card = new com.google.android.material.card.MaterialCardView(parent.getContext());
+                card.setLayoutParams(params);
+                card.setRadius(24f);
+                card.setCardElevation(0);
+                card.setStrokeWidth(0);
+                card.setCardBackgroundColor(android.graphics.Color.TRANSPARENT);
+                
+                iv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                iv.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+                card.addView(iv);
+                
+                return new androidx.recyclerview.widget.RecyclerView.ViewHolder(card) {};
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder holder, int position) {
+                String url = gifUrls.get(position);
+                android.widget.ImageView iv = (android.widget.ImageView) ((ViewGroup) holder.itemView).getChildAt(0);
+                Glide.with(requireContext()).load(url).into(iv);
+                holder.itemView.setOnClickListener(v -> {
+                    selectedGifUrl = url;
+                    avatarUri = null; // Clear local uri
+                    Glide.with(EditProfileFragment.this).load(url).into(binding.ivEditAvatar);
+                    dialog.dismiss();
+                });
+            }
+
+            @Override
+            public int getItemCount() { return gifUrls.size(); }
+        });
+
+        dialog.show();
+    }
+
+    private void showDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+        String currentDob = binding.etDob.getText() != null ? binding.etDob.getText().toString() : "";
+        if (!currentDob.isEmpty()) {
+            try {
+                String[] parts = currentDob.split("/");
+                if (parts.length == 3) {
+                    int day = Integer.parseInt(parts[0]);
+                    int month = Integer.parseInt(parts[1]) - 1;
+                    int year = Integer.parseInt(parts[2]);
+                    calendar.set(year, month, day);
+                }
+            } catch (Exception e) {
+                // Use default date
+            }
+        }
+        
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(), 
+            (view, selectedYear, selectedMonth, selectedDay) -> {
+                String date = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear);
+                binding.etDob.setText(date);
+            }, year, month, day);
+        datePickerDialog.show();
     }
 
     private void setupProgressDialog() {
@@ -122,6 +291,45 @@ public class EditProfileFragment extends Fragment {
             currentAvatarUrl = user.getProfilePic() != null ? user.getProfilePic() : "";
             currentCoverUrl = user.getCoverPic() != null ? user.getCoverPic() : "";
             
+            String plan = user.getPlan();
+            if (plan == null) plan = "Basic";
+            if (binding.ivEditAvatar instanceof com.google.android.material.imageview.ShapeableImageView) {
+                com.google.android.material.imageview.ShapeableImageView siv = (com.google.android.material.imageview.ShapeableImageView) binding.ivEditAvatar;
+                float density = getResources().getDisplayMetrics().density;
+                if ("Pro".equals(plan)) {
+                    siv.setStrokeWidth(3f * density);
+                    siv.setStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFD700")));
+                    int padding = (int)(3 * density);
+                    siv.setPadding(padding, padding, padding, padding);
+                } else {
+                    siv.setStrokeWidth(4f * density);
+                    siv.setStrokeColor(android.content.res.ColorStateList.valueOf(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.discord_dark_deep)));
+                    int padding = (int)(2 * density);
+                    siv.setPadding(padding, padding, padding, padding);
+                }
+            }
+            
+            if ("Pro".equals(plan)) {
+                if (binding.tvAvatarBadge != null) {
+                    binding.tvAvatarBadge.setText("✨");
+                    binding.tvAvatarBadge.setVisibility(View.VISIBLE);
+                }
+                if (binding.viewBadgeRing != null) {
+                    binding.viewBadgeRing.setVisibility(View.VISIBLE);
+                }
+            } else if ("Standard".equals(plan)) {
+                if (binding.tvAvatarBadge != null) {
+                    binding.tvAvatarBadge.setText("⭐");
+                    binding.tvAvatarBadge.setVisibility(View.VISIBLE);
+                }
+                if (binding.viewBadgeRing != null) {
+                    binding.viewBadgeRing.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (binding.tvAvatarBadge != null) binding.tvAvatarBadge.setVisibility(View.GONE);
+                if (binding.viewBadgeRing != null) binding.viewBadgeRing.setVisibility(View.GONE);
+            }
+
             if (!currentAvatarUrl.isEmpty()) {
                 Glide.with(this).load(currentAvatarUrl).placeholder(R.mipmap.ic_launcher).into(binding.ivEditAvatar);
             } else {
@@ -205,6 +413,10 @@ public class EditProfileFragment extends Fragment {
         updates.put("workplace", binding.etWorkplace.getText().toString().trim());
         updates.put("hobbies", binding.etHobbies.getText().toString().trim());
         updates.put("dob", binding.etDob.getText().toString().trim());
+        
+        if (selectedGifUrl != null) {
+            updates.put("profilePic", selectedGifUrl);
+        }
 
         if (!com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(requireContext())) {
             viewModel.saveProfileOfflineOnly(currentUser.getUid(), updates);

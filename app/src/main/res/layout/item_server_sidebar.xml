@@ -28,7 +28,7 @@
             android:id="@+id/cardServerContainer"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_gravity="top|start"
+            android:layout_gravity="center"
             app:cardCornerRadius="24dp"
             app:cardElevation="0dp"
             app:strokeWidth="0dp"

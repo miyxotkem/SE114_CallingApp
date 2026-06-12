@@ -64,4 +64,8 @@ public class User {
 
     public java.util.List<String> getServerOrder() { return serverOrder; }
     public void setServerOrder(java.util.List<String> serverOrder) { this.serverOrder = serverOrder; }
+
+    private String plan = "Basic";
+    public String getPlan() { return plan; }
+    public void setPlan(String plan) { this.plan = plan; }
 }

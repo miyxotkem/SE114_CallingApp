@@ -172,7 +172,41 @@ public class ProfileFragment extends Fragment {
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), user -> {
             if (user == null || binding == null || getContext() == null) return;
 
-            binding.tvUsername.setText(user.getUsername() != null && !user.getUsername().isEmpty() ? user.getUsername() : "User");
+            String displayName = user.getUsername() != null && !user.getUsername().isEmpty() ? user.getUsername() : "User";
+            String plan = user.getPlan();
+            if (plan == null) plan = "Basic";
+
+            binding.tvUsername.setText(displayName);
+
+            if ("Pro".equals(plan)) {
+                binding.tvAvatarBadge.setText("✨");
+                binding.tvAvatarBadge.setVisibility(View.VISIBLE);
+                binding.viewBadgeRing.setVisibility(View.VISIBLE);
+            } else if ("Standard".equals(plan)) {
+                binding.tvAvatarBadge.setText("⭐");
+                binding.tvAvatarBadge.setVisibility(View.VISIBLE);
+                binding.viewBadgeRing.setVisibility(View.VISIBLE);
+            } else {
+                binding.tvAvatarBadge.setVisibility(View.GONE);
+                binding.viewBadgeRing.setVisibility(View.GONE);
+            }
+            
+            // Apply gold border to ivAvatar
+            if (binding.ivAvatar instanceof com.google.android.material.imageview.ShapeableImageView) {
+                com.google.android.material.imageview.ShapeableImageView siv = (com.google.android.material.imageview.ShapeableImageView) binding.ivAvatar;
+                float density = getResources().getDisplayMetrics().density;
+                if ("Pro".equals(plan)) {
+                    siv.setStrokeWidth(3f * density);
+                    siv.setStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFD700")));
+                    int padding = (int)(3 * density);
+                    siv.setPadding(padding, padding, padding, padding);
+                } else {
+                    siv.setStrokeWidth(6f * density);
+                    siv.setStrokeColor(android.content.res.ColorStateList.valueOf(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.discord_dark_deep)));
+                    int padding = (int)(2 * density);
+                    siv.setPadding(padding, padding, padding, padding);
+                }
+            }
             
             // Set online/offline status text & indicator color
             String status = user.getStatus();

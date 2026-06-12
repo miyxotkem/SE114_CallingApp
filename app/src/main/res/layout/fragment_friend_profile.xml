@@ -92,6 +92,31 @@
                     android:background="@drawable/bg_circle"
                     android:backgroundTint="@color/discord_green" />
 
+                <!-- Avatar Badge Outer Ring -->
+                <View
+                    android:id="@+id/viewBadgeRing"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_circle"
+                    android:backgroundTint="@color/discord_dark_deep"
+                    android:visibility="gone" />
+
+                <!-- Avatar Badge Core -->
+                <TextView
+                    android:id="@+id/tvAvatarBadge"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:gravity="center"
+                    android:text=""
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
             </FrameLayout>
 
         </FrameLayout>
@@ -137,11 +162,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ABOUT ME"
-                android:textColor="@color/discord_text_muted"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter" android:textStyle="bold"
-                android:letterSpacing="0.05"
+                android:text="About Me"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp" />
 
@@ -159,12 +184,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingVertical="6dp">
+                    android:paddingVertical="4dp">
 
                     <!-- Profile Bio details -->
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="64dp"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
@@ -173,8 +198,8 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_chat_bubble"
                             app:tint="@color/discord_text_secondary" />
 
@@ -183,7 +208,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="12dp"
                             android:layout_marginEnd="8dp">
 
                             <TextView
@@ -191,7 +216,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Bio"
                                 android:textColor="@color/discord_text_primary"
-                                android:textSize="15sp"
+                                android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
 
                             <TextView
@@ -205,24 +230,18 @@
                                 android:ellipsize="end"
                                 android:fontFamily="@font/inter"/>
                         </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/discord_text_muted" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="@color/discord_divider"
-                        android:layout_marginHorizontal="16dp" />
+                        android:layout_marginHorizontal="48dp" />
 
                     <!-- Workplace Detail row -->
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="64dp"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
@@ -231,9 +250,9 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:src="@drawable/ic_user"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_server"
                             app:tint="@color/discord_text_secondary" />
 
                         <LinearLayout
@@ -241,7 +260,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="12dp"
                             android:layout_marginEnd="8dp">
 
                             <TextView
@@ -249,7 +268,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Work / Education"
                                 android:textColor="@color/discord_text_primary"
-                                android:textSize="15sp"
+                                android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
 
                             <TextView
@@ -263,24 +282,18 @@
                                 android:ellipsize="end"
                                 android:fontFamily="@font/inter"/>
                         </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/discord_text_muted" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="@color/discord_divider"
-                        android:layout_marginHorizontal="16dp" />
+                        android:layout_marginHorizontal="48dp" />
 
                     <!-- Hobbies Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="64dp"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
@@ -289,8 +302,8 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_palette"
                             app:tint="@color/discord_text_secondary" />
 
@@ -299,7 +312,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="12dp"
                             android:layout_marginEnd="8dp">
 
                             <TextView
@@ -307,7 +320,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Hobbies"
                                 android:textColor="@color/discord_text_primary"
-                                android:textSize="15sp"
+                                android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
 
                             <TextView
@@ -321,24 +334,18 @@
                                 android:ellipsize="end"
                                 android:fontFamily="@font/inter"/>
                         </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/discord_text_muted" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="@color/discord_divider"
-                        android:layout_marginHorizontal="16dp" />
+                        android:layout_marginHorizontal="48dp" />
 
                     <!-- DOB Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="64dp"
+                        android:layout_height="56dp"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:paddingHorizontal="16dp"
@@ -347,9 +354,9 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:src="@drawable/ic_alarm"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_user"
                             app:tint="@color/discord_text_secondary" />
 
                         <LinearLayout
@@ -357,7 +364,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="12dp"
                             android:layout_marginEnd="8dp">
 
                             <TextView
@@ -365,7 +372,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Date of Birth"
                                 android:textColor="@color/discord_text_primary"
-                                android:textSize="15sp"
+                                android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
 
                             <TextView
@@ -377,12 +384,6 @@
                                 android:textSize="13sp"
                                 android:fontFamily="@font/inter"/>
                         </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/discord_text_muted" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -393,11 +394,11 @@
                 android:id="@+id/tvFriendActionsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="FRIEND ACTIONS"
-                android:textColor="@color/discord_text_muted"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter" android:textStyle="bold"
-                android:letterSpacing="0.05"
+                android:text="Friend Actions"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp"
                 android:visibility="gone" />
@@ -407,7 +408,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/discord_dark_alt"
+                app:cardBackgroundColor="@color/discord_blurple"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 app:strokeWidth="0dp"
@@ -416,50 +417,29 @@
                 <LinearLayout
                     android:id="@+id/btnSendMessage"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
+                    android:layout_height="52dp"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
+                    android:gravity="center"
                     android:paddingHorizontal="16dp"
                     android:background="?android:attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true">
 
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:src="@drawable/ic_chat_bubble"
-                        app:tint="@color/discord_blurple" />
+                        app:tint="@color/white" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginEnd="8dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Send Message"
-                            android:textColor="@color/discord_blurple"
-                            android:textSize="15sp"
-                            android:fontFamily="@font/inter" android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Start a direct conversation with this friend"
-                            android:textColor="@color/discord_text_muted"
-                            android:textSize="13sp"
-                            android:fontFamily="@font/inter"/>
-                    </LinearLayout>
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:src="@drawable/ic_chevron_right"
-                        app:tint="@color/discord_blurple" />
+                        android:layout_marginStart="8dp"
+                        android:text="Send Message"
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/inter"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -468,11 +448,11 @@
                 android:id="@+id/tvSubscriptionHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SUBSCRIPTION"
-                android:textColor="@color/discord_text_muted"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter" android:textStyle="bold"
-                android:letterSpacing="0.05"
+                android:text="Subscription"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp" />
 
@@ -491,7 +471,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingVertical="6dp">
+                    android:paddingVertical="4dp">
 
                     <LinearLayout
                         android:id="@+id/btnUpgradePlan"
@@ -505,8 +485,8 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_server"
                             app:tint="#FFD700" />
 
@@ -515,7 +495,7 @@
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="12dp"
                             android:layout_marginEnd="8dp">
 
                             <TextView
@@ -523,7 +503,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="Upgrade Plan"
                                 android:textColor="#FFD700"
-                                android:textSize="15sp"
+                                android:textSize="14sp"
                                 android:fontFamily="@font/inter" android:textStyle="bold" />
 
                             <TextView
@@ -550,11 +530,11 @@
                 android:id="@+id/tvUserSettingsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="USER SETTINGS"
-                android:textColor="@color/discord_text_muted"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter" android:textStyle="bold"
-                android:letterSpacing="0.05"
+                android:text="User Settings"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp" />
 
@@ -573,7 +553,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingVertical="6dp">
+                    android:paddingVertical="4dp">
 
                     <!-- Edit Profile Action Button -->
                     <LinearLayout
@@ -588,26 +568,26 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_edit"
-                            app:tint="@color/discord_blurple" />
+                            app:tint="@color/discord_text_secondary" />
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="12dp"
                             android:layout_marginEnd="8dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Edit User Profile"
-                                android:textColor="@color/discord_blurple"
-                                android:textSize="15sp"
-                                android:fontFamily="@font/inter" android:textStyle="bold" />
+                                android:textColor="@color/discord_text_primary"
+                                android:textSize="14sp"
+                                android:fontFamily="@font/inter" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -622,14 +602,14 @@
                             android:layout_width="18dp"
                             android:layout_height="18dp"
                             android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/discord_blurple" />
+                            app:tint="@color/discord_text_muted" />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="@color/discord_divider"
-                        android:layout_marginHorizontal="16dp" />
+                        android:layout_marginHorizontal="48dp" />
 
                     <!-- Dark Mode Toggle -->
                     <LinearLayout
@@ -640,20 +620,20 @@
                         android:paddingHorizontal="16dp">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:src="@drawable/ic_alarm"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_dark_mode"
                             app:tint="@color/discord_text_secondary" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:layout_marginStart="16dp"
+                            android:layout_marginStart="12dp"
                             android:text="Dark Mode"
                             android:textColor="@color/discord_text_primary"
                             android:fontFamily="@font/inter"
-                            android:textSize="15sp" />
+                            android:textSize="14sp" />
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switchDarkModeProfile"
@@ -671,11 +651,11 @@
                 android:id="@+id/tvAccountActionsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ACCOUNT ACTIONS"
-                android:textColor="@color/discord_text_muted"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter" android:textStyle="bold"
-                android:letterSpacing="0.05"
+                android:text="Account Actions"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp" />
 
@@ -694,7 +674,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingVertical="6dp">
+                    android:paddingVertical="4dp">
 
                     <!-- Log Out Action Button -->
                     <LinearLayout
@@ -709,41 +689,22 @@
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/ic_logout"
                             app:tint="@color/discord_red" />
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginEnd="8dp">
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="8dp"
+                            android:text="Log Out"
+                            android:textColor="@color/discord_red"
+                            android:textSize="14sp"
+                            android:fontFamily="@font/inter" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Log Out"
-                                android:textColor="@color/discord_red"
-                                android:textSize="15sp"
-                                android:fontFamily="@font/inter" android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Sign out of your active account"
-                                android:textColor="@color/discord_text_muted"
-                                android:textSize="13sp"
-                                android:fontFamily="@font/inter"/>
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/discord_red" />
                     </LinearLayout>
 
                 </LinearLayout>

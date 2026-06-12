@@ -6,29 +6,67 @@
     android:background="@drawable/bg_bottom_sheet"
     android:backgroundTint="@color/discord_dark_floating"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="24dp">
 
     <!-- Handle indicator -->
     <View
-        android:layout_width="40dp"
+        android:layout_width="48dp"
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="24dp"
-        android:background="@color/discord_divider" />
+        android:background="@drawable/bg_circle"
+        android:backgroundTint="@color/discord_divider" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="20dp"
         android:fontFamily="@font/inter"
         android:text="Set Status"
         android:textColor="@color/discord_text_primary"
-        android:textSize="20sp"
+        android:textSize="22sp"
         android:textStyle="bold" />
 
-    <!-- Status Option: Automatic -->
+    <!-- Custom Status Button (Prominent) -->
     <LinearLayout
-        android:id="@+id/btnStatusAuto"
+        android:id="@+id/btnStatusCustom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_status_custom"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="14dp"
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/ic_edit"
+            app:tint="@color/discord_text_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter"
+            android:text="Set a custom status"
+            android:textColor="@color/discord_text_primary"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="12dp"
+        android:background="@color/discord_divider" />
+
+    <!-- Online -->
+    <LinearLayout
+        android:id="@+id/btnStatusOnline"
         android:layout_width="match_parent"
         android:layout_height="52dp"
         android:background="?android:attr/selectableItemBackground"
@@ -48,12 +86,39 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter"
-            android:text="Automatic (Online/Idle/Offline)"
+            android:text="Online"
             android:textColor="@color/discord_text_primary"
             android:textSize="16sp" />
     </LinearLayout>
 
-    <!-- Status Option: Do Not Disturb -->
+    <!-- Idle -->
+    <LinearLayout
+        android:id="@+id/btnStatusIdle"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_circle"
+            android:backgroundTint="@color/discord_yellow" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/inter"
+            android:text="Idle"
+            android:textColor="@color/discord_text_primary"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Do Not Disturb -->
     <LinearLayout
         android:id="@+id/btnStatusDnd"
         android:layout_width="match_parent"
@@ -80,17 +145,9 @@
             android:textSize="16sp" />
     </LinearLayout>
 
-
-    
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginVertical="8dp"
-        android:background="@color/discord_divider" />
-
-    <!-- Status Option: Sleeping -->
+    <!-- Invisible -->
     <LinearLayout
-        android:id="@+id/btnStatusSleeping"
+        android:id="@+id/btnStatusInvisible"
         android:layout_width="match_parent"
         android:layout_height="52dp"
         android:background="?android:attr/selectableItemBackground"
@@ -99,78 +156,18 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <View
+            android:layout_width="14dp"
+            android:layout_height="14dp"
             android:layout_marginEnd="16dp"
-            android:text="💤"
-            android:textSize="16sp" />
+            android:background="@drawable/bg_circle_transparent"
+            android:backgroundTint="@color/discord_text_muted" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter"
-            android:text="Sleeping"
-            android:textColor="@color/discord_text_primary"
-            android:textSize="16sp" />
-    </LinearLayout>
-    
-    <!-- Status Option: Eating -->
-    <LinearLayout
-        android:id="@+id/btnStatusEating"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:text="🍕"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/inter"
-            android:text="Eating"
-            android:textColor="@color/discord_text_primary"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginVertical="8dp"
-        android:background="@color/discord_divider" />
-
-    <!-- Status Option: Custom Status -->
-    <LinearLayout
-        android:id="@+id/btnStatusCustom"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="16dp"
-            android:src="@drawable/ic_edit"
-            app:tint="@color/discord_text_muted" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/inter"
-            android:text="Set a custom status"
+            android:text="Invisible"
             android:textColor="@color/discord_text_primary"
             android:textSize="16sp" />
     </LinearLayout>

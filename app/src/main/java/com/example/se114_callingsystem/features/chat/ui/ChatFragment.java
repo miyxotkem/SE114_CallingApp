@@ -315,16 +315,43 @@ public class ChatFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            String[] options = {"📷 Send Image", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Upload Media & Options")
-                    .setItems(options, (dialog, which) -> {
-                        if (which == 0) imagePickerLauncher.launch("image/*");
-                        else if (which == 1) filePickerLauncher.launch("*/*");
-                        else if (which == 2) showGifSearchDialog();
-                        else showReminderDialog(null, null);
-                    })
-                    .show();
+            View popupView = getLayoutInflater().inflate(R.layout.layout_chat_attachment_popup, null);
+            android.widget.PopupWindow popupWindow = new android.widget.PopupWindow(
+                    popupView,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                    true
+            );
+            
+            popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            popupWindow.setElevation(10f);
+
+            popupView.findViewById(R.id.btnUploadImage).setOnClickListener(view -> {
+                popupWindow.dismiss();
+                imagePickerLauncher.launch("image/*");
+            });
+
+            popupView.findViewById(R.id.btnUploadFile).setOnClickListener(view -> {
+                popupWindow.dismiss();
+                filePickerLauncher.launch("*/*");
+            });
+
+            popupView.findViewById(R.id.btnSendGif).setOnClickListener(view -> {
+                popupWindow.dismiss();
+                showGifSearchDialog();
+            });
+
+            popupView.findViewById(R.id.btnSetReminder).setOnClickListener(view -> {
+                popupWindow.dismiss();
+                showReminderDialog(null, null);
+            });
+
+            popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            int popupHeight = popupView.getMeasuredHeight();
+            int btnHeight = v.getHeight();
+            
+            // Show above the + button
+            popupWindow.showAsDropDown(v, 16, -popupHeight - btnHeight - 8);
         });
 
         binding.btnBack.setOnClickListener(v -> {
@@ -833,20 +860,36 @@ public class ChatFragment extends Fragment {
     private void showReminderDialog(@Nullable Message messageToEdit, @Nullable String defaultContent) {
         if (getContext() == null) return;
         
-        View view = getLayoutInflater().inflate(R.layout.dialog_chat_add_reminder, null);
-        com.google.android.material.textfield.TextInputEditText etReminderContent = view.findViewById(R.id.etReminderContent);
-        TextView tvReminderDateTime = view.findViewById(R.id.tvReminderDateTime);
-        Button btnPickDate = view.findViewById(R.id.btnPickDate);
+        android.app.Dialog dialog = new android.app.Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_chat_add_reminder);
+        
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+        
+        TextView tvDialogTitle = dialog.findViewById(R.id.tvDialogTitle);
+        com.google.android.material.textfield.TextInputEditText etReminderContent = dialog.findViewById(R.id.etReminderContent);
+        TextView tvReminderDateTime = dialog.findViewById(R.id.tvReminderDateTime);
+        TextView btnPickDate = dialog.findViewById(R.id.btnPickDate);
+        TextView btnSave = dialog.findViewById(R.id.btnSave);
+        TextView btnCancel = dialog.findViewById(R.id.btnCancel);
         
         final java.util.Calendar calendar = java.util.Calendar.getInstance();
         
         if (messageToEdit != null) {
+            tvDialogTitle.setText("Sửa lời nhắc");
+            btnSave.setText("Lưu");
             etReminderContent.setText(messageToEdit.getContent());
             calendar.setTimeInMillis(messageToEdit.getReminderTime());
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
             tvReminderDateTime.setText("Thời gian: " + sdf.format(new Date(messageToEdit.getReminderTime())));
-        } else if (defaultContent != null) {
-            etReminderContent.setText(defaultContent);
+        } else {
+            tvDialogTitle.setText("Tạo lời nhắc");
+            btnSave.setText("Tạo");
+            if (defaultContent != null) {
+                etReminderContent.setText(defaultContent);
+            }
         }
         
         final boolean[] isTimeSelected = {messageToEdit != null};
@@ -882,41 +925,38 @@ public class ChatFragment extends Fragment {
             }, year, month, day).show();
         });
         
-        String title = (messageToEdit == null) ? "Tạo lời nhắc" : "Sửa lời nhắc";
-        String positiveText = (messageToEdit == null) ? "Tạo" : "Lưu";
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
         
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle(title)
-                .setView(view)
-                .setPositiveButton(positiveText, (dialog, which) -> {
-                    String content = etReminderContent.getText().toString().trim();
-                    if (content.isEmpty()) {
-                        Toast.makeText(getContext(), "Nội dung lời nhắc không được để trống!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (!isTimeSelected[0]) {
-                        Toast.makeText(getContext(), "Vui lòng chọn thời gian nhắc nhở!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    
-                    if (messageToEdit == null) {
-                        if (viewModel != null) {
-                            Message reminder = new Message(senderId, groupId, content, System.currentTimeMillis());
-                            reminder.setType("reminder");
-                            reminder.setReminderTime(calendar.getTimeInMillis());
-                            viewModel.sendMessage(reminder, null);
-                        }
-                    } else {
-                        if (viewModel != null && messageToEdit.getMessageId() != null) {
-                            Map<String, Object> updates = new HashMap<>();
-                            updates.put("content", content);
-                            updates.put("reminderTime", calendar.getTimeInMillis());
-                            viewModel.updateMessage(messageToEdit.getMessageId(), updates);
-                        }
-                    }
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
+        btnSave.setOnClickListener(v -> {
+            String content = etReminderContent.getText().toString().trim();
+            if (content.isEmpty()) {
+                Toast.makeText(getContext(), "Nội dung lời nhắc không được để trống!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!isTimeSelected[0]) {
+                Toast.makeText(getContext(), "Vui lòng chọn thời gian nhắc nhở!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            if (messageToEdit == null) {
+                if (viewModel != null) {
+                    Message reminder = new Message(senderId, groupId, content, System.currentTimeMillis());
+                    reminder.setType("reminder");
+                    reminder.setReminderTime(calendar.getTimeInMillis());
+                    viewModel.sendMessage(reminder, null);
+                }
+            } else {
+                if (viewModel != null && messageToEdit.getMessageId() != null) {
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("content", content);
+                    updates.put("reminderTime", calendar.getTimeInMillis());
+                    viewModel.updateMessage(messageToEdit.getMessageId(), updates);
+                }
+            }
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 
     private void checkAndTriggerMentions(Message message) {

@@ -44,11 +44,32 @@
         android:maxLines="1"
         android:ellipsize="end" />
 
+    <ImageView
+        android:id="@+id/ivPinIcon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginEnd="4dp"
+        android:src="@drawable/ic_pin"
+        app:tint="@color/discord_text_muted"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/ivMoreOptions"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="8dp"
+        android:padding="4dp"
+        android:src="@drawable/ic_more_vert"
+        app:tint="@color/discord_text_muted"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true" />
+
     <TextView
         android:id="@+id/tvUnreadBadge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="4dp"
         android:paddingHorizontal="6dp"
         android:paddingVertical="2dp"
         android:background="@drawable/bg_circle"

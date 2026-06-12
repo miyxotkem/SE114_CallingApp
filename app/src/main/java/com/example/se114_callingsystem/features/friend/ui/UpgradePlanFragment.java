@@ -30,6 +30,7 @@ public class UpgradePlanFragment extends Fragment {
     private MaterialCardView cardBasicPlan, cardStandardPlan, cardProPlan;
     private MaterialButton btnSubscribe;
     private TextView tvRenewedDay;
+    private TextView tvPlanDescription;
     private ImageView btnBack;
 
     private String selectedPlan = "Basic";
@@ -54,6 +55,7 @@ public class UpgradePlanFragment extends Fragment {
         cardProPlan = view.findViewById(R.id.cardProPlan);
         btnSubscribe = view.findViewById(R.id.btnSubscribe);
         tvRenewedDay = view.findViewById(R.id.tvRenewedDay);
+        tvPlanDescription = view.findViewById(R.id.tvPlanDescription);
         btnBack = view.findViewById(R.id.btnBack);
 
         btnBack.setOnClickListener(v -> Navigation.findNavController(v).popBackStack());
@@ -109,12 +111,21 @@ public class UpgradePlanFragment extends Fragment {
         switch (selectedPlan) {
             case "Basic":
                 cardBasicPlan.setStrokeColor(highlightColor);
+                if (tvPlanDescription != null) {
+                    tvPlanDescription.setText("• Up to 2 channels per category (call, chat, post)\n• Text-only custom status (max 30 chars)\n• Basic static profile avatar");
+                }
                 break;
             case "Standard":
                 cardStandardPlan.setStrokeColor(highlightColor);
+                if (tvPlanDescription != null) {
+                    tvPlanDescription.setText("• Up to 5 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Exclusive ⭐ Profile Badge");
+                }
                 break;
             case "Pro":
                 cardProPlan.setStrokeColor(highlightColor);
+                if (tvPlanDescription != null) {
+                    tvPlanDescription.setText("• Up to 10 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Premium ✨ Profile Badge\n• Exclusive Gold Avatar Border");
+                }
                 break;
         }
     }
@@ -182,9 +193,10 @@ public class UpgradePlanFragment extends Fragment {
         android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
         prefs.edit().putString("current_plan", selectedPlan).apply();
         
-        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
-        com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                .collection("users").document(uid).update("plan", selectedPlan);
+        String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getUid();
+        if (uid != null) {
+            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).update("plan", selectedPlan);
+        }
 
         android.widget.Toast.makeText(getContext(), "Plan upgraded to " + selectedPlan + "!", android.widget.Toast.LENGTH_SHORT).show();
         

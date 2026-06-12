@@ -392,9 +392,9 @@ public class ServerFragment extends Fragment {
         EditText etServerNameSettings = view.findViewById(R.id.etServerNameSettings);
         EditText etServerDescriptionSettings = view.findViewById(R.id.etServerDescriptionSettings);
         MaterialButton btnSave = view.findViewById(R.id.btnSaveServerDetails);
-        MaterialButton btnDelete = view.findViewById(R.id.btnDeleteServer);
-        MaterialButton btnManageMembers = view.findViewById(R.id.btnManageMembers);
-        MaterialButton btnChangeColor = view.findViewById(R.id.btnChangeColor);
+        View btnDelete = view.findViewById(R.id.btnDeleteServer);
+        View btnManageMembers = view.findViewById(R.id.btnManageMembers);
+        View btnChangeColor = view.findViewById(R.id.btnChangeColor);
 
         dialogAvatarView = view.findViewById(R.id.ivServerAvatarSettings);
         dialogAvatarLetter = view.findViewById(R.id.tvAvatarLetterSettings);
@@ -439,20 +439,12 @@ public class ServerFragment extends Fragment {
         try {
             int color = Color.parseColor(currentAccentColor);
             if (btnSave != null) btnSave.setBackgroundTintList(ColorStateList.valueOf(color));
-            if (btnManageMembers != null) {
-                btnManageMembers.setTextColor(color);
-                btnManageMembers.setIconTint(ColorStateList.valueOf(color));
-            }
-            if (btnChangeColor != null) {
-                btnChangeColor.setTextColor(color);
-                btnChangeColor.setIconTint(ColorStateList.valueOf(color));
-            }
             if (dialogAvatarLetter != null) dialogAvatarLetter.setTextColor(color);
             com.google.android.material.card.MaterialCardView cardAvatar = view.findViewById(R.id.cardServerAvatarSettings);
             if (cardAvatar != null) cardAvatar.setStrokeColor(color);
         } catch (Exception e) {}
 
-        MaterialButton btnLeave = view.findViewById(R.id.btnLeaveServer);
+        View btnLeave = view.findViewById(R.id.btnLeaveServer);
         if (btnLeave != null) {
             btnLeave.setOnClickListener(v -> {
                 String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;

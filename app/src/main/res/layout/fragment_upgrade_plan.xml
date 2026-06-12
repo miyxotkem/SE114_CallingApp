@@ -107,15 +107,6 @@
                         android:textSize="14sp"
                         android:fontFamily="@font/inter"
                         android:layout_marginTop="4dp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="• Up to 2 channels per category (call, chat, post)"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:fontFamily="@font/inter"
-                        android:layout_marginTop="12dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -155,15 +146,6 @@
                         android:textSize="14sp"
                         android:fontFamily="@font/inter"
                         android:layout_marginTop="4dp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="• Up to 5 channels per category (call, chat, post)"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:fontFamily="@font/inter"
-                        android:layout_marginTop="12dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -203,17 +185,36 @@
                         android:textSize="14sp"
                         android:fontFamily="@font/inter"
                         android:layout_marginTop="4dp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="• Up to 10 channels per category (call, chat, post)"
-                        android:textColor="@color/white"
-                        android:textSize="14sp"
-                        android:fontFamily="@font/inter"
-                        android:layout_marginTop="12dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Plan Features Description -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="24dp"
+                android:paddingHorizontal="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Plan Features"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/tvPlanDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/discord_text_secondary"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:lineSpacingExtra="6dp"/>
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSubscribe"

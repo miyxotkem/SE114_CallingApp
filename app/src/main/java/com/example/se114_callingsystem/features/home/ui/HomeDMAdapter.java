@@ -14,19 +14,23 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.User;
+import com.example.se114_callingsystem.features.home.viewmodel.HomeViewModel;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import java.util.List;
 
 public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHolder> {
 
     private List<User> friendList;
     private OnFriendClickListener listener;
+    private HomeViewModel viewModel;
 
     public interface OnFriendClickListener {
         void onFriendClick(User friend, View itemView);
     }
 
-    public HomeDMAdapter(List<User> friendList, OnFriendClickListener listener) {
+    public HomeDMAdapter(List<User> friendList, HomeViewModel viewModel, OnFriendClickListener listener) {
         this.friendList = friendList;
+        this.viewModel = viewModel;
         this.listener = listener;
     }
 
@@ -47,6 +51,9 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
             displayName = friend.getEmail();
         }
         holder.tvUserName.setText(displayName);
+
+        boolean isPinned = viewModel != null && viewModel.isUserPinned(friend.getUserId());
+        holder.ivPinIcon.setVisibility(isPinned ? View.VISIBLE : View.GONE);
 
         // Load profile picture
         if (friend.getProfilePic() != null && !friend.getProfilePic().isEmpty()) {
@@ -123,6 +130,51 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
                 listener.onFriendClick(friend, holder.itemView);
             }
         });
+        
+        holder.ivMoreOptions.setOnClickListener(v -> {
+            if (viewModel != null) {
+                showDMOptionsBottomSheet(context, friend, isPinned);
+            }
+        });
+    }
+    
+    private void showDMOptionsBottomSheet(Context context, User friend, boolean isPinned) {
+        BottomSheetDialog dialog = new BottomSheetDialog(context);
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setPadding(0, 32, 0, 32);
+        layout.setBackgroundResource(R.drawable.bg_bottom_sheet);
+        layout.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, R.color.discord_dark_alt)));
+        
+        android.widget.TextView tvTitle = new android.widget.TextView(context);
+        tvTitle.setText(friend.getUsername() != null ? friend.getUsername() : "Options");
+        tvTitle.setTextColor(ContextCompat.getColor(context, R.color.discord_text_primary));
+        tvTitle.setTextSize(18);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitle.setPadding(48, 16, 48, 32);
+        layout.addView(tvTitle);
+        
+        android.widget.TextView btnPin = new android.widget.TextView(context);
+        btnPin.setText(isPinned ? "Unpin DM" : "Pin to Top");
+        btnPin.setTextColor(ContextCompat.getColor(context, R.color.discord_text_primary));
+        btnPin.setTextSize(16);
+        btnPin.setGravity(android.view.Gravity.START | android.view.Gravity.CENTER_VERTICAL);
+        btnPin.setPadding(48, 48, 48, 48);
+        
+        android.util.TypedValue outValue = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+        btnPin.setBackgroundResource(outValue.resourceId);
+        btnPin.setClickable(true);
+        btnPin.setFocusable(true);
+        layout.addView(btnPin);
+        
+        btnPin.setOnClickListener(v -> {
+            viewModel.togglePin(friend.getUserId());
+            dialog.dismiss();
+        });
+        
+        dialog.setContentView(layout);
+        dialog.show();
     }
 
     @Override
@@ -141,6 +193,8 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
 
     public static class DMViewHolder extends RecyclerView.ViewHolder {
         ImageView ivAvatar;
+        ImageView ivPinIcon;
+        ImageView ivMoreOptions;
         View viewStatusIndicator;
         TextView tvUserName;
         TextView tvUnreadBadge;
@@ -149,6 +203,8 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
         public DMViewHolder(@NonNull View itemView) {
             super(itemView);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
+            ivPinIcon = itemView.findViewById(R.id.ivPinIcon);
+            ivMoreOptions = itemView.findViewById(R.id.ivMoreOptions);
             viewStatusIndicator = itemView.findViewById(R.id.viewStatusIndicator);
             tvUserName = itemView.findViewById(R.id.tvUserName);
             tvUnreadBadge = itemView.findViewById(R.id.tvUnreadBadge);

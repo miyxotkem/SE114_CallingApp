@@ -80,8 +80,9 @@ public class HomeFragment extends Fragment {
 
         // Setup Direct Messages list
         binding.rvDirectMessages.setLayoutManager(new LinearLayoutManager(getContext()));
-        dmAdapter = new HomeDMAdapter(friendList, this::onFriendClick);
+        dmAdapter = new HomeDMAdapter(friendList, viewModel, this::onFriendClick);
         binding.rvDirectMessages.setAdapter(dmAdapter);
+        setupDMDrapAndDrop();
 
         setupObservers();
         viewModel.initHome();
@@ -168,6 +169,52 @@ public class HomeFragment extends Fragment {
             viewModel.resetStatus();
         });
     }
+
+    private void setupDMDrapAndDrop() {
+        androidx.recyclerview.widget.ItemTouchHelper touchHelper = new androidx.recyclerview.widget.ItemTouchHelper(new androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(
+                androidx.recyclerview.widget.ItemTouchHelper.UP | androidx.recyclerview.widget.ItemTouchHelper.DOWN, 0) {
+            
+            @Override
+            public int getMovementFlags(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView, @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder) {
+                int position = viewHolder.getAdapterPosition();
+                if (position >= 0 && position < friendList.size()) {
+                    User user = friendList.get(position);
+                    if (viewModel.isUserPinned(user.getUserId())) {
+                        return makeMovementFlags(androidx.recyclerview.widget.ItemTouchHelper.UP | androidx.recyclerview.widget.ItemTouchHelper.DOWN, 0);
+                    }
+                }
+                return makeMovementFlags(0, 0);
+            }
+
+            @Override
+            public boolean onMove(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView, @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder target) {
+                int fromPosition = viewHolder.getAdapterPosition();
+                int toPosition = target.getAdapterPosition();
+                
+                if (toPosition >= 0 && toPosition < friendList.size()) {
+                    User targetUser = friendList.get(toPosition);
+                    // Only allow moving within pinned items
+                    if (!viewModel.isUserPinned(targetUser.getUserId())) {
+                        return false;
+                    }
+                }
+
+                java.util.Collections.swap(friendList, fromPosition, toPosition);
+                dmAdapter.notifyItemMoved(fromPosition, toPosition);
+                return true;
+            }
+
+            @Override
+            public void clearView(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView, @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                viewModel.updatePinnedOrder(friendList);
+            }
+
+            @Override
+            public void onSwiped(@NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, int direction) {}
+        });
+        touchHelper.attachToRecyclerView(binding.rvDirectMessages);
+    }
     
     private void showJoinServerDialog() {
         if (getContext() == null) return;
@@ -207,9 +254,14 @@ public class HomeFragment extends Fragment {
             parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         }
 
-        view.findViewById(R.id.btnStatusAuto).setOnClickListener(v -> {
-            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "auto").apply();
+        view.findViewById(R.id.btnStatusOnline).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "online").apply();
             viewModel.updateUserStatus("online");
+            bottomSheetDialog.dismiss();
+        });
+        view.findViewById(R.id.btnStatusIdle).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "idle").apply();
+            viewModel.updateUserStatus("idle");
             bottomSheetDialog.dismiss();
         });
         view.findViewById(R.id.btnStatusDnd).setOnClickListener(v -> {
@@ -217,14 +269,9 @@ public class HomeFragment extends Fragment {
             viewModel.updateUserStatus("dnd");
             bottomSheetDialog.dismiss();
         });
-        view.findViewById(R.id.btnStatusSleeping).setOnClickListener(v -> {
-            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "sleeping").apply();
-            viewModel.updateUserStatus("sleeping");
-            bottomSheetDialog.dismiss();
-        });
-        view.findViewById(R.id.btnStatusEating).setOnClickListener(v -> {
-            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "eating").apply();
-            viewModel.updateUserStatus("eating");
+        view.findViewById(R.id.btnStatusInvisible).setOnClickListener(v -> {
+            requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", "invisible").apply();
+            viewModel.updateUserStatus("invisible");
             bottomSheetDialog.dismiss();
         });
         view.findViewById(R.id.btnStatusCustom).setOnClickListener(v -> {
@@ -237,21 +284,37 @@ public class HomeFragment extends Fragment {
 
     private void showCustomStatusDialog() {
         if (getContext() == null) return;
-        android.widget.EditText input = new android.widget.EditText(requireContext());
-        input.setHint("Enter custom status (e.g. Coding 💻)");
+        android.app.Dialog dialog = new android.app.Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_custom_status);
+        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-        builder.setTitle("Custom Status")
-            .setView(input)
-            .setPositiveButton("Set", (d, w) -> {
-                String s = input.getText().toString().trim();
-                if (!s.isEmpty()) {
-                    requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", s).apply();
-                    viewModel.updateUserStatus(s);
-                }
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+        android.widget.EditText edtStatus = dialog.findViewById(R.id.edtCustomStatus);
+        android.view.View btnCancel = dialog.findViewById(R.id.btnCancel);
+        android.view.View btnSave = dialog.findViewById(R.id.btnSave);
+        
+        android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+        String currentPlan = prefs.getString("current_plan", "Basic");
+        
+        if ("Basic".equals(currentPlan)) {
+            edtStatus.setFilters(new android.text.InputFilter[] { new android.text.InputFilter.LengthFilter(30) });
+            edtStatus.setHint("What's on your mind? (Max 30 chars)");
+        } else {
+            edtStatus.setHint("What's on your mind? (Unlimited & Emojis supported!)");
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        
+        btnSave.setOnClickListener(v -> {
+            String s = edtStatus.getText().toString().trim();
+            if (!s.isEmpty()) {
+                requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", s).apply();
+                viewModel.updateUserStatus(s);
+            }
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
     private void checkNotificationPermission() {

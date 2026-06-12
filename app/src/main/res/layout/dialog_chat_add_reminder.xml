@@ -1,48 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="24dp">
 
-    <com.google.android.material.textfield.TextInputLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Nội dung lời nhắc"
-        android:fontFamily="@font/inter">
+        app:cardBackgroundColor="@color/discord_dark_alt"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/discord_divider">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etReminderContent"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textMultiLine"
-            android:maxLines="3"
-            android:fontFamily="@font/inter"/>
-    </com.google.android.material.textfield.TextInputLayout>
+            android:orientation="vertical"
+            android:padding="20dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+            <TextView
+                android:id="@+id/tvDialogTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tạo lời nhắc"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="20sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"/>
 
-        <TextView
-            android:id="@+id/tvReminderDateTime"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Thời gian: Chưa chọn"
-            android:textSize="16sp"
-            android:fontFamily="@font/inter"/>
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:hintEnabled="false"
+                app:boxBackgroundMode="none"
+                android:fontFamily="@font/inter">
 
-        <Button
-            android:id="@+id/btnPickDate"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Chọn thời gian"
-            android:fontFamily="@font/inter"/>
-    </LinearLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etReminderContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_chat_input"
+                    android:padding="16dp"
+                    android:hint="Nội dung lời nhắc..."
+                    android:textColorHint="@color/discord_text_muted"
+                    android:textColor="@color/discord_text_primary"
+                    android:inputType="textMultiLine"
+                    android:maxLines="4"
+                    android:minLines="2"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-</LinearLayout>
+            <!-- Time Picker Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_chat_input"
+                android:padding="12dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_alarm"
+                    app:tint="@color/discord_text_muted" />
+
+                <TextView
+                    android:id="@+id/tvReminderDateTime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:text="Chưa chọn thời gian"
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"/>
+
+                <TextView
+                    android:id="@+id/btnPickDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thay đổi"
+                    android:textColor="@color/discord_blurple"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </LinearLayout>
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnCancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hủy"
+                    android:textColor="@color/discord_text_muted"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="10dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/btnSave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Lưu"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="24dp"
+                    android:paddingVertical="10dp"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_button_primary"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>
