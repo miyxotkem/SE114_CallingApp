@@ -12,8 +12,13 @@ firebaseDatabase = "22.0.1"
 firebaseStorage = "22.0.1"
 navigation = "2.7.6"
 monitor = "1.8.0"
+lottie = "6.0.0"
+hilt = "2.59.2"
+lifecycle = "2.8.1"
+markwon = "4.6.2"
 
 [libraries]
+markwon = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -26,10 +31,17 @@ firebase-storage = { group = "com.google.firebase", name = "firebase-storage", v
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation" }
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigation" }
 monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
+lottie = { group = "com.airbnb.android", name = "lottie", version.ref = "lottie" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "lifecycle" }
+lifecycle-livedata = { group = "androidx.lifecycle", name = "lifecycle-livedata", version.ref = "lifecycle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+google-dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+
 
 
