@@ -29,6 +29,46 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     private RtcEngine rtcEngine;
     private List<ServerMember> serverMembers = new java.util.ArrayList<>();
     private java.util.Map<String, String> avatarCache = new java.util.HashMap<>();
+    private boolean isInPiPMode = false;
+    private int localUid = 0;
+
+    public void setInPiPMode(boolean isInPiPMode) {
+        this.isInPiPMode = isInPiPMode;
+    }
+
+    public void setLocalUid(int localUid) {
+        this.localUid = localUid;
+    }
+
+    private Participant getPiPParticipant() {
+        if (participantList == null || participantList.isEmpty()) {
+            return null;
+        }
+        int myScreenUid = localUid + 1000;
+        // 1. Ưu tiên người đang chia sẻ màn hình (loại trừ màn hình của chính mình để tránh vòng lặp vô hạn)
+        for (Participant p : participantList) {
+            if ((p.isSharingScreen || p.name.contains("Màn hình")) && p.uid != myScreenUid && !p.name.equals("Màn hình của tôi")) {
+                return p;
+            }
+        }
+        // 2. Ưu tiên người đang nói (Active Speaker) và không phải chính mình (nếu có người khác)
+        for (Participant p : participantList) {
+            if (p.isSpeaking && !p.isMuted && p.uid != localUid && p.uid != myScreenUid) {
+                return p;
+            }
+        }
+        // 3. Fallback về người dùng khác trước (không phải chính mình và không phải màn hình của mình)
+        for (Participant p : participantList) {
+            if (p.uid != localUid && p.uid != myScreenUid) {
+                return p;
+            }
+        }
+        // 4. Nếu chỉ có một mình mình
+        if (participantList.get(0).uid == myScreenUid && participantList.size() > 1) {
+            return participantList.get(1);
+        }
+        return participantList.get(0);
+    }
 
     public void setServerMembers(List<ServerMember> serverMembers) {
         this.serverMembers = serverMembers != null ? serverMembers : new java.util.ArrayList<>();
@@ -53,12 +93,12 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         return new CallViewHolder(view);
     }
 
-    // --- 1. Hàm hỗ trợ cập nhật nhanh khi click nút (Payload) ---
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position, @NonNull List<Object> payloads) {
         if (!payloads.isEmpty()) {
             String payload = payloads.get(0).toString();
-            Participant participant = participantList.get(position);
+            Participant participant = isInPiPMode ? getPiPParticipant() : participantList.get(position);
+            if (participant == null) return;
 
             if (payload.equals("border_update")) {
                 updateSpeakingBorder(holder, participant);
@@ -72,51 +112,59 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     // --- 2. Hàm Bind đầy đủ ---
     @Override
     public void onBindViewHolder(@NonNull CallViewHolder holder, int position) {
-        Participant participant = participantList.get(position);
+        Participant participant = isInPiPMode ? getPiPParticipant() : participantList.get(position);
+        if (participant == null) return;
 
-        // 0. Tính toán chiều cao động cho khung hình dựa trên camera trạng thái
-        int parentHeight = mParentHeight;
-        if (parentHeight == 0 && holder.itemView.getParent() instanceof ViewGroup) {
+        // 0. Tính toán chiều cao động cho khung hình dựa trên kích thước thực tế của parent
+        int parentHeight = 0;
+        if (holder.itemView.getParent() instanceof ViewGroup) {
             parentHeight = ((ViewGroup) holder.itemView.getParent()).getHeight();
+        }
+        if (parentHeight == 0) {
+            parentHeight = mParentHeight;
+        } else {
+            mParentHeight = parentHeight; // Cập nhật cache chiều cao mới nhất
         }
 
         int itemHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
-        if (parentHeight > 0) {
-            int videoCount = 0;
-            for (Participant p : participantList) {
-                if (!p.isVideoOff) {
-                    videoCount++;
-                }
-            }
-            int voiceCount = participantList.size() - videoCount;
-
-            if (videoCount == 0) {
-                int rows = getRowsCount(voiceCount);
-                itemHeight = parentHeight / rows;
-            } else {
-                int videoRows = (videoCount <= 2) ? videoCount : (videoCount + 1) / 2;
-                int voiceRows = (voiceCount + 1) / 2;
-                int voiceHeight = dpToPx(80); // Compact audio height in grid
-                int totalVoiceHeight = voiceRows * voiceHeight;
-
-                // Limit total voice height to max 40% of parent screen height
-                if (totalVoiceHeight > parentHeight * 0.4) {
-                    totalVoiceHeight = (int) (parentHeight * 0.4);
-                    if (voiceRows > 0) {
-                        voiceHeight = totalVoiceHeight / voiceRows;
+        if (isInPiPMode) {
+            itemHeight = ViewGroup.LayoutParams.MATCH_PARENT; // Chiếm trọn chiều cao PiP
+        } else if (parentHeight > 0) {
+                int videoCount = 0;
+                for (Participant p : participantList) {
+                    if (!p.isVideoOff) {
+                        videoCount++;
                     }
                 }
+                int voiceCount = participantList.size() - videoCount;
 
-                if (participant.isVideoOff) {
-                    itemHeight = voiceHeight;
+                if (videoCount == 0) {
+                    int rows = getRowsCount(voiceCount);
+                    itemHeight = parentHeight / rows;
                 } else {
-                    itemHeight = (parentHeight - totalVoiceHeight) / videoRows;
-                    if (itemHeight < dpToPx(160)) {
-                        itemHeight = dpToPx(160); // Minimum video height
+                    int videoRows = (videoCount <= 2) ? videoCount : (videoCount + 1) / 2;
+                    int voiceRows = (voiceCount + 1) / 2;
+                    int voiceHeight = dpToPx(80); // Compact audio height in grid
+                    int totalVoiceHeight = voiceRows * voiceHeight;
+
+                    // Limit total voice height to max 40% of parent screen height
+                    if (totalVoiceHeight > parentHeight * 0.4) {
+                        totalVoiceHeight = (int) (parentHeight * 0.4);
+                        if (voiceRows > 0) {
+                            voiceHeight = totalVoiceHeight / voiceRows;
+                        }
+                    }
+
+                    if (participant.isVideoOff) {
+                        itemHeight = voiceHeight;
+                    } else {
+                        itemHeight = (parentHeight - totalVoiceHeight) / videoRows;
+                        if (itemHeight < dpToPx(160)) {
+                            itemHeight = dpToPx(160); // Minimum video height
+                        }
                     }
                 }
             }
-        }
 
         ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
         if (lp != null && lp.height != itemHeight) {
@@ -164,7 +212,26 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         if (holder.cardAvatar != null) {
             holder.cardAvatar.setVisibility(participant.isVideoOff ? View.VISIBLE : View.GONE);
         }
-        holder.ivMuteStatus.setVisibility(participant.isMuted ? View.VISIBLE : View.GONE);
+        holder.ivMuteStatus.setVisibility((isInPiPMode || !participant.isMuted) ? View.GONE : View.VISIBLE);
+        holder.tvUserName.setVisibility(isInPiPMode ? View.GONE : View.VISIBLE);
+
+        // PiP style overrides
+        ViewGroup.MarginLayoutParams marginLp = (ViewGroup.MarginLayoutParams) holder.cardView.getLayoutParams();
+        if (marginLp != null) {
+            if (isInPiPMode) {
+                marginLp.setMargins(0, 0, 0, 0);
+                holder.cardView.setRadius(0);
+                holder.cardView.setStrokeWidth(0);
+            } else {
+                int marginPx = dpToPx(4);
+                marginLp.setMargins(marginPx, marginPx, marginPx, marginPx);
+                holder.cardView.setRadius(dpToPx(16));
+                holder.cardView.setStrokeColor(Color.parseColor("#2D2D4A"));
+                holder.cardView.setStrokeWidth(dpToPx(1));
+            }
+            holder.cardView.setLayoutParams(marginLp);
+        }
+
         bindAvatar(holder, participant);
 
         updateSpeakingBorder(holder, participant);
@@ -225,7 +292,8 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
                             if (profilePic == null) profilePic = "";
                             avatarCache.put(finalUserId, profilePic);
                             if (holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
-                                Participant currentPart = participantList.get(holder.getAdapterPosition());
+                                Participant currentPart = isInPiPMode ? getPiPParticipant() : participantList.get(holder.getAdapterPosition());
+                                if (currentPart == null) return;
                                 int currentTarget = currentPart.uid;
                                 if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) + 1000 == currentTarget) {
                                     currentTarget = currentMyUid.hashCode() & 0x7FFFFFFF;
@@ -256,6 +324,17 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
     }
 
     private void updateSpeakingBorder(CallViewHolder holder, Participant participant) {
+        if (isInPiPMode) {
+            if (holder.lottieAudioWave != null) {
+                holder.lottieAudioWave.setVisibility(View.GONE);
+            }
+            if (holder.cardAvatar != null) {
+                holder.cardAvatar.setStrokeWidth(0);
+            }
+            holder.cardView.setStrokeWidth(0);
+            return;
+        }
+
         if (participant.isSpeaking && !participant.isMuted) {
             if (participant.isVideoOff) {
                 // Speaking with video off: Green border around center avatar & show audio wave Lottie
@@ -298,6 +377,9 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
 
     @Override
     public int getItemCount() {
+        if (isInPiPMode) {
+            return (participantList == null || participantList.isEmpty()) ? 0 : 1;
+        }
         return participantList.size();
     }
 

@@ -148,13 +148,7 @@
             android:name="SERVER_COLOR"
             app:argType="string"
             android:defaultValue="#5865F2" />
-        <action
-            android:id="@+id/action_chat_to_voice_call"
-            app:destination="@id/nav_voice_call" 
-            app:enterAnim="@anim/anim_enter"
-            app:exitAnim="@anim/anim_exit"
-            app:popEnterAnim="@anim/anim_pop_enter"
-            app:popExitAnim="@anim/anim_pop_exit"/>
+
         <action
             android:id="@+id/action_chat_to_chat_info"
             app:destination="@id/nav_chat_info" 
@@ -171,24 +165,7 @@
             app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
-    <fragment
-        android:id="@+id/nav_voice_call"
-        android:name="com.example.se114_callingsystem.features.call.ui.VoiceCallFragment"
-        android:label="Voice Call"
-        tools:layout="@layout/fragment_call_voice">
-        <argument
-            android:name="CALL_CHANNEL_NAME"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="SERVER_ID"
-            app:argType="string"
-            app:nullable="true" />
-        <argument
-            android:name="SERVER_COLOR"
-            app:argType="string"
-            android:defaultValue="#5865F2" />
-    </fragment>
+
 
     <fragment
         android:id="@+id/nav_server"
@@ -215,13 +192,7 @@
             app:exitAnim="@anim/anim_exit"
             app:popEnterAnim="@anim/anim_pop_enter"
             app:popExitAnim="@anim/anim_pop_exit"/>
-        <action
-            android:id="@+id/action_server_to_voice_call"
-            app:destination="@id/nav_voice_call" 
-            app:enterAnim="@anim/anim_enter"
-            app:exitAnim="@anim/anim_exit"
-            app:popEnterAnim="@anim/anim_pop_enter"
-            app:popExitAnim="@anim/anim_pop_exit"/>
+
         <action
             android:id="@+id/action_server_to_change_color"
             app:destination="@id/nav_server_change_color" 

@@ -3,6 +3,7 @@ package com.example.se114_callingsystem.features.call.ui;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.projection.MediaProjectionManager;
@@ -88,6 +89,25 @@ public class VoiceCallFragment extends Fragment {
         leaveAndExit();
     };
 
+    private final android.content.BroadcastReceiver serviceReceiver = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null || intent.getAction() == null || binding == null) return;
+            String action = intent.getAction();
+            if (action.equals(com.example.se114_callingsystem.features.call.data.CallForegroundService.BROADCAST_HANGUP)) {
+                leaveAndExit();
+            } else if (action.equals(com.example.se114_callingsystem.features.call.data.CallForegroundService.BROADCAST_MUTE_TOGGLE)) {
+                boolean isMuted = intent.getBooleanExtra("IS_MUTED", false);
+                binding.btnMute.setSelected(isMuted);
+                updateMuteButtonUI(isMuted);
+                if (!participantList.isEmpty()) {
+                    participantList.get(0).isMuted = isMuted;
+                    if (adapter != null) adapter.notifyItemChanged(0, "state_update");
+                }
+            }
+        }
+    };
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,34 +131,6 @@ public class VoiceCallFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (isMinimized) {
-            mRtcEngine = sRtcEngine;
-            participantList.clear();
-            participantList.addAll(sParticipantList);
-            channelName = sChannelName;
-            uid = sUid;
-            serverColor = sServerColor;
-            serverId = sServerId;
-            isMinimized = false;
-            minimizedCallEvent.setValue(false);
-            
-            if (mRtcEngine != null) {
-                mRtcEngine.addHandler(mRtcEventHandler);
-            }
-            
-            binding.tvCallChannelName.setText(channelName);
-            setupRecyclerView();
-            setupControls();
-            updateParticipantCount();
-            
-            if (adapter != null) {
-                adapter.notifyDataSetChanged();
-            }
-            
-            viewModel.loadServerMembers(serverId);
-            return;
-        }
-
         // Fetch Bundle arguments
         if (getArguments() != null) {
             serverColor = getArguments().getString("SERVER_COLOR", "#5865F2");
@@ -154,18 +146,30 @@ public class VoiceCallFragment extends Fragment {
         setupTapToHide();
 
         binding.btnMinimize.setOnClickListener(v -> {
-            isMinimized = true;
-            sRtcEngine = mRtcEngine;
-            sParticipantList.clear();
-            sParticipantList.addAll(participantList);
-            sChannelName = channelName;
-            sUid = uid;
-            sServerColor = serverColor;
-            sServerId = serverId;
-            minimizedCallEvent.setValue(true);
-
-            Navigation.findNavController(v).popBackStack();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    android.app.PictureInPictureParams params = new android.app.PictureInPictureParams.Builder()
+                            .setAspectRatio(new android.util.Rational(3, 4))
+                            .build();
+                    requireActivity().enterPictureInPictureMode(params);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error entering PiP mode: " + e.getMessage());
+                    requireActivity().moveTaskToBack(true);
+                }
+            } else {
+                requireActivity().moveTaskToBack(true);
+            }
         });
+
+        // Đăng ký BroadcastReceiver để đồng bộ từ Service
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(com.example.se114_callingsystem.features.call.data.CallForegroundService.BROADCAST_HANGUP);
+        filter.addAction(com.example.se114_callingsystem.features.call.data.CallForegroundService.BROADCAST_MUTE_TOGGLE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(serviceReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            requireContext().registerReceiver(serviceReceiver, filter);
+        }
 
         if (checkPermissions()) {
             initAgoraAndJoinChannel();
@@ -285,6 +289,7 @@ public class VoiceCallFragment extends Fragment {
     private void setupRecyclerView() {
         if (getContext() == null || binding == null) return;
         adapter = new ParticipantAdapter(requireContext(), participantList, mRtcEngine);
+        adapter.setLocalUid(uid);
         adapter.setServerMembers(serverMembers);
         binding.rvParticipants.setAdapter(adapter);
         updateGridLayout();
@@ -292,6 +297,10 @@ public class VoiceCallFragment extends Fragment {
 
     private void updateGridLayout() {
         if (binding == null) return;
+        if (getActivity() != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && getActivity().isInPictureInPictureMode()) {
+            binding.rvParticipants.setLayoutManager(new GridLayoutManager(getContext(), 1));
+            return;
+        }
         int count = participantList.size();
         
         // Count video and voice users
@@ -341,7 +350,7 @@ public class VoiceCallFragment extends Fragment {
             int count = participantList.size();
             binding.tvParticipantCount.setText(count + " người tham gia");
             
-            if (count <= 1) {
+            if (count == 0) {
                 binding.layoutWaiting.setVisibility(View.VISIBLE);
                 binding.rvParticipants.setVisibility(View.GONE);
             } else {
@@ -372,6 +381,7 @@ public class VoiceCallFragment extends Fragment {
                 updateGridLayout();
                 if (adapter != null) adapter.notifyDataSetChanged();
                 updateParticipantCount();
+                updatePiPParams();
             });
         }
 
@@ -392,6 +402,23 @@ public class VoiceCallFragment extends Fragment {
                     updateGridLayout();
                     if (adapter != null) adapter.notifyDataSetChanged();
                     updateParticipantCount();
+                }
+
+                sRtcEngine = mRtcEngine;
+                sParticipantList = participantList;
+                sChannelName = channelName;
+
+                // Khởi động Foreground Service khi kết nối thành công
+                if (getContext() != null) {
+                    Intent serviceIntent = new Intent(getContext(), com.example.se114_callingsystem.features.call.data.CallForegroundService.class);
+                    serviceIntent.setAction(com.example.se114_callingsystem.features.call.data.CallForegroundService.ACTION_START);
+                    serviceIntent.putExtra("CHANNEL_NAME", channelName);
+                    serviceIntent.putExtra("IS_MUTED", binding.btnMute.isSelected());
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        requireContext().startForegroundService(serviceIntent);
+                    } else {
+                        requireContext().startService(serviceIntent);
+                    }
                 }
 
                 // Update current user's voice channel in Firestore
@@ -415,6 +442,7 @@ public class VoiceCallFragment extends Fragment {
                         updateGridLayout();
                         if (adapter != null) adapter.notifyDataSetChanged();
                         updateParticipantCount();
+                        updatePiPParams();
                         break;
                     }
                 }
@@ -432,6 +460,7 @@ public class VoiceCallFragment extends Fragment {
                     }
                 }
 
+                boolean speakerChanged = false;
                 for (int i = 0; i < participantList.size(); i++) {
                     Participant p = participantList.get(i);
                     boolean isNowSpeaking;
@@ -443,8 +472,15 @@ public class VoiceCallFragment extends Fragment {
 
                     if (p.isSpeaking != isNowSpeaking) {
                         p.isSpeaking = isNowSpeaking;
-                        if (adapter != null) adapter.notifyItemChanged(i, "border_update");
+                        speakerChanged = true;
+                        if (adapter != null && !getActivity().isInPictureInPictureMode()) {
+                            adapter.notifyItemChanged(i, "border_update");
+                        }
                     }
+                }
+
+                if (speakerChanged && adapter != null && getActivity() != null && getActivity().isInPictureInPictureMode()) {
+                    adapter.notifyDataSetChanged();
                 }
             });
         }
@@ -473,6 +509,7 @@ public class VoiceCallFragment extends Fragment {
                         sortParticipantList();
                         updateGridLayout();
                         if (adapter != null) adapter.notifyDataSetChanged();
+                        updatePiPParams();
                         break;
                     }
                 }
@@ -491,6 +528,7 @@ public class VoiceCallFragment extends Fragment {
                             sortParticipantList();
                             updateGridLayout();
                             if (adapter != null) adapter.notifyDataSetChanged();
+                            updatePiPParams();
                         }
                         break;
                     }
@@ -563,6 +601,7 @@ public class VoiceCallFragment extends Fragment {
         updateGridLayout();
         if (adapter != null) adapter.notifyDataSetChanged();
         updateParticipantCount();
+        updatePiPParams();
     }
 
     private void stopScreenShare() {
@@ -595,6 +634,7 @@ public class VoiceCallFragment extends Fragment {
 
         isSharingScreen = false;
         updateShareButtonUI();
+        updatePiPParams();
     }
 
     private int getControlBgColor() {
@@ -686,7 +726,7 @@ public class VoiceCallFragment extends Fragment {
         });
 
         binding.btnEndCall.setOnClickListener(v -> {
-            Navigation.findNavController(v).popBackStack();
+            leaveAndExit();
         });
 
         binding.btnShareScreen.setOnClickListener(v -> {
@@ -737,12 +777,11 @@ public class VoiceCallFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        if (isMinimized) {
-            if (mRtcEngine != null) {
-                mRtcEngine.removeHandler(mRtcEventHandler);
-            }
-            super.onDestroy();
-            return;
+        // Dừng Foreground Service
+        if (getContext() != null) {
+            Intent serviceIntent = new Intent(getContext(), com.example.se114_callingsystem.features.call.data.CallForegroundService.class);
+            serviceIntent.setAction(com.example.se114_callingsystem.features.call.data.CallForegroundService.ACTION_STOP);
+            getContext().startService(serviceIntent);
         }
 
         if (isSharingScreen) {
@@ -758,9 +797,20 @@ public class VoiceCallFragment extends Fragment {
         }
 
         sRtcEngine = null;
-        sParticipantList.clear();
+        if (sParticipantList != null) {
+            sParticipantList.clear();
+        }
         isMinimized = false;
         minimizedCallEvent.setValue(false);
+
+        // Huỷ đăng ký BroadcastReceiver
+        if (getContext() != null) {
+            try {
+                getContext().unregisterReceiver(serviceReceiver);
+            } catch (Exception e) {
+                Log.e(TAG, "Receiver unregister error: " + e.getMessage());
+            }
+        }
 
         // Clear user's active call channel in Firestore
         viewModel.clearVoiceChannel();
@@ -932,15 +982,65 @@ public class VoiceCallFragment extends Fragment {
     }
 
     private void leaveAndExit() {
-        if (getActivity() == null || getView() == null) return;
+        if (getActivity() == null) return;
         getActivity().runOnUiThread(() -> {
-            try {
-                androidx.navigation.Navigation.findNavController(requireView()).popBackStack();
-            } catch (Exception e) {
-                if (getActivity() != null) {
-                    getActivity().onBackPressed();
-                }
+            if (getActivity() != null) {
+                getActivity().finish();
             }
         });
+    }
+
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+        if (binding == null) return;
+        if (isInPictureInPictureMode) {
+            // Ẩn tiêu đề và thanh công cụ
+            binding.callHeader.setVisibility(View.GONE);
+            binding.controlPanel.setVisibility(View.GONE);
+            
+            // Xoá padding RecyclerView
+            binding.rvParticipants.setPadding(0, 0, 0, 0);
+            
+            // Đặt LayoutManager thành 1 cột để item chiếm trọn màn hình PiP
+            binding.rvParticipants.setLayoutManager(new GridLayoutManager(getContext(), 1));
+
+            // Cấu hình adapter ở chế độ PiP
+            if (adapter != null) {
+                adapter.setInPiPMode(true);
+                adapter.notifyDataSetChanged();
+            }
+
+            // Đồng bộ Aspect Ratio của PiP dựa trên Screen Share hiện tại
+            updatePiPParams();
+        } else {
+            // Hiện lại tiêu đề và thanh công cụ
+            binding.callHeader.setVisibility(View.VISIBLE);
+            binding.controlPanel.setVisibility(View.VISIBLE);
+            
+            // Khôi phục padding RecyclerView
+            int paddingPx = (int) (8 * getResources().getDisplayMetrics().density);
+            binding.rvParticipants.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+            
+            // Khôi phục LayoutManager bình thường
+            updateGridLayout();
+
+            // Cấu hình adapter về chế độ bình thường
+            if (adapter != null) {
+                adapter.setInPiPMode(false);
+                adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    public void updatePiPParams() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && getActivity() != null) {
+            try {
+                android.app.PictureInPictureParams.Builder builder = new android.app.PictureInPictureParams.Builder();
+                // Luôn giữ tỉ lệ đứng dọc (3:4) cho ứng dụng di động theo thiết kế mobile
+                builder.setAspectRatio(new android.util.Rational(3, 4));
+                getActivity().setPictureInPictureParams(builder.build());
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating PiP params: " + e.getMessage());
+            }
+        }
     }
 }
