@@ -122,6 +122,21 @@
                 app:tint="@color/discord_text_secondary"
                 android:contentDescription="Toggle video" />
 
+            <!-- Switch Camera Toggle -->
+            <ImageButton
+                android:id="@+id/btnSwitchCamera"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="@color/call_control_bg"
+                android:src="@drawable/ic_switch_camera"
+                android:scaleType="centerInside"
+                android:padding="14dp"
+                app:tint="@color/discord_text_secondary"
+                android:contentDescription="Switch Camera"
+                android:visibility="gone" />
+
             <!-- Mic Toggle -->
             <ImageButton
                 android:id="@+id/btnMute"

@@ -685,9 +685,13 @@ public class VoiceCallFragment extends Fragment {
 
     private void setupControls() {
         updateVideoButtonUI(true);
-        updateMuteButtonUI(false);
-        binding.btnMute.setSelected(false);
+        updateMuteButtonUI(true);
+        binding.btnMute.setSelected(true); // Mic ban đầu tắt
         binding.btnToggleVideo.setSelected(true); // Video ban đầu tắt nên set selected = true để click lần đầu bật lên
+
+        if (mRtcEngine != null) {
+            mRtcEngine.muteLocalAudioStream(true);
+        }
 
         binding.btnToggleVideo.setOnLongClickListener(v -> {
             showVirtualBgDialog();
@@ -711,10 +715,12 @@ public class VoiceCallFragment extends Fragment {
             mRtcEngine.muteLocalVideoStream(isVideoOff);
             if (!isVideoOff) {
                 mRtcEngine.startPreview();
+                binding.btnSwitchCamera.setVisibility(View.VISIBLE);
             } else {
                 if (!isSharingScreen) {
                     mRtcEngine.stopPreview();
                 }
+                binding.btnSwitchCamera.setVisibility(View.GONE);
             }
             updateVideoButtonUI(isVideoOff);
             if (!participantList.isEmpty()) {
@@ -722,6 +728,12 @@ public class VoiceCallFragment extends Fragment {
                 sortParticipantList();
                 updateGridLayout();
                 if (adapter != null) adapter.notifyDataSetChanged();
+            }
+        });
+
+        binding.btnSwitchCamera.setOnClickListener(v -> {
+            if (mRtcEngine != null) {
+                mRtcEngine.switchCamera();
             }
         });
 
