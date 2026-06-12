@@ -21,8 +21,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <application
-        android:name=".core.di.CallingApplication"
+        android:name=".CallingApplication"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -48,17 +50,30 @@
             tools:node="merge"
             android:exported="false">
         </service>
+        <service
+            android:name=".features.call.data.CallForegroundService"
+            android:foregroundServiceType="microphone|camera"
+            android:exported="false" />
         <receiver android:name=".core.service.ReminderReceiver" android:exported="false" />
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.SE114_CallingSystem">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".features.call.ui.CallActivity"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.SE114_CallingSystem"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_bottom_sheet"
+    android:padding="24dp">
+
+    <!-- Header -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Payment Method"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Method Toggles -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp"
+        android:weightSum="2">
+
+        <!-- QR Option -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardQrMethod"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            app:cardBackgroundColor="@color/discord_dark_alt"
+            app:cardCornerRadius="12dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/discord_blurple"
+            android:clickable="true"
+            android:focusable="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/ivQrIcon"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_qr_code"
+                    app:tint="@color/white" />
+                <TextView
+                    android:id="@+id/tvQrText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="QR Code"
+                    android:textColor="@color/white"
+                    android:fontFamily="@font/inter"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Card Option -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardCreditMethod"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            app:cardBackgroundColor="@color/discord_dark_alt"
+            app:cardCornerRadius="12dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@android:color/transparent"
+            android:clickable="true"
+            android:focusable="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/ivCardIcon"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_credit_card"
+                    app:tint="@color/discord_text_muted" />
+                <TextView
+                    android:id="@+id/tvCardText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Credit Card"
+                    android:textColor="@color/discord_text_muted"
+                    android:fontFamily="@font/inter"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+
+    <ViewSwitcher
+        android:id="@+id/viewSwitcherPayment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp">
+
+        <!-- QR Code View -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white">
+                <ImageView
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_qr_code"
+                    app:tint="@color/discord_dark_deep" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scan using any banking app"
+                android:textColor="@color/discord_text_muted"
+                android:textSize="14sp"
+                android:fontFamily="@font/inter"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+
+        <!-- Credit Card View -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Card Number"
+                android:textColor="@color/discord_text_muted"
+                android:textSize="12sp"
+                android:fontFamily="@font/inter"
+                android:layout_marginBottom="8dp" />
+            
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_edittext"
+                android:textColor="@color/white"
+                android:hint="0000 0000 0000 0000"
+                android:textColorHint="@color/discord_text_muted"
+                android:inputType="number"
+                android:paddingHorizontal="16dp"
+                android:fontFamily="@font/inter"
+                android:layout_marginBottom="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+                
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Expiry (MM/YY)"
+                        android:textColor="@color/discord_text_muted"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter"
+                        android:layout_marginBottom="8dp" />
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_edittext"
+                        android:textColor="@color/white"
+                        android:hint="MM/YY"
+                        android:textColorHint="@color/discord_text_muted"
+                        android:inputType="number"
+                        android:paddingHorizontal="16dp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CVV"
+                        android:textColor="@color/discord_text_muted"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/inter"
+                        android:layout_marginBottom="8dp" />
+                    <EditText
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_edittext"
+                        android:textColor="@color/white"
+                        android:hint="123"
+                        android:textColorHint="@color/discord_text_muted"
+                        android:inputType="numberPassword"
+                        android:paddingHorizontal="16dp"
+                        android:fontFamily="@font/inter" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ViewSwitcher>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnConfirmPayment"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Complete Upgrade"
+        app:cornerRadius="8dp"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        app:backgroundTint="@color/discord_blurple" />
+
+</LinearLayout>

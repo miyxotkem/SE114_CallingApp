@@ -13,7 +13,7 @@ firebaseStorage = "22.0.1"
 navigation = "2.7.6"
 monitor = "1.8.0"
 lottie = "6.0.0"
-hilt = "2.59.2"
+hilt = "2.51.1"
 lifecycle = "2.8.1"
 markwon = "4.6.2"
 

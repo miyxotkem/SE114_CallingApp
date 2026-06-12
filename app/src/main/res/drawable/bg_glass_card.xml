@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <!-- Nền mờ kính tối bán trong suốt -->
+    <solid android:color="#59131622" />
+    <!-- Bo góc mặc định, có thể ghi đè bằng card view hoặc dùng trực tiếp -->
+    <corners android:radius="16dp" />
+    <!-- Viền trắng mờ tinh tế bao quanh -->
+    <stroke
+        android:width="1dp"
+        android:color="#26FFFFFF" />
+</shape>
