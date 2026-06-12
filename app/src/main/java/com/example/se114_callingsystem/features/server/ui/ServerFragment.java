@@ -536,11 +536,11 @@ public class ServerFragment extends Fragment {
                     Toast.makeText(getContext(), "Không có kết nối mạng. Không thể tham gia cuộc gọi.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Bundle args = new Bundle();
-                args.putString("CALL_CHANNEL_NAME", channel.getCallName());
-                args.putString("SERVER_ID", channel.getServerId());
-                args.putString("SERVER_COLOR", currentAccentColor);
-                Navigation.findNavController(requireView()).navigate(R.id.action_server_to_voice_call, args);
+                Intent intent = new Intent(requireContext(), com.example.se114_callingsystem.features.call.ui.CallActivity.class);
+                intent.putExtra("CALL_CHANNEL_NAME", channel.getCallName());
+                intent.putExtra("SERVER_ID", channel.getServerId());
+                intent.putExtra("SERVER_COLOR", currentAccentColor);
+                startActivity(intent);
             }
         });
         CallChannelAdapter.setAdmin(isAdminOrOwner);

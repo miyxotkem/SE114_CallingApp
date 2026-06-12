@@ -172,76 +172,7 @@ public class MainActivity extends AppCompatActivity {
         networkMonitor = new com.example.se114_callingsystem.core.util.NetworkMonitor(this);
         networkMonitor.getIsConnected().observe(this, this::handleNetworkChange);
 
-        // Lắng nghe sự kiện thu nhỏ cuộc gọi từ VoiceCallFragment
-        com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.minimizedCallEvent.observe(this, isMinimized -> {
-            if (binding == null) return;
-            if (isMinimized != null && isMinimized) {
-                binding.layoutMinimizedCall.setVisibility(View.VISIBLE);
-                binding.tvMinimizedCallChannel.setText(com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sChannelName);
-                
-                boolean isCurrentlyMuted = false;
-                if (!com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sParticipantList.isEmpty()) {
-                    isCurrentlyMuted = com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sParticipantList.get(0).isMuted;
-                }
-                binding.btnMinimizeMute.setSelected(isCurrentlyMuted);
-                updateMinimizeMuteButtonUI(isCurrentlyMuted);
-            } else {
-                binding.layoutMinimizedCall.setVisibility(View.GONE);
-            }
-        });
 
-        // Nhấn vào thanh cuộc gọi nổi để quay lại màn hình cuộc gọi full screen
-        binding.layoutMinimizedCall.setOnClickListener(v -> {
-            NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-            if (nhf != null) {
-                androidx.navigation.NavController navController = nhf.getNavController();
-                Bundle args = new Bundle();
-                args.putString("CALL_CHANNEL_NAME", com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sChannelName);
-                args.putString("SERVER_ID", com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sServerId);
-                args.putString("SERVER_COLOR", com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sServerColor);
-                
-                navController.navigate(R.id.nav_voice_call, args);
-            }
-        });
-
-        // Bật/tắt mic nhanh từ thanh cuộc gọi nổi
-        binding.btnMinimizeMute.setOnClickListener(v -> {
-            if (com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sRtcEngine != null) {
-                boolean isMuted = !v.isSelected();
-                v.setSelected(isMuted);
-                com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sRtcEngine.muteLocalAudioStream(isMuted);
-                updateMinimizeMuteButtonUI(isMuted);
-                
-                if (!com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sParticipantList.isEmpty()) {
-                    com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sParticipantList.get(0).isMuted = isMuted;
-                }
-            }
-        });
-
-        // Kết thúc cuộc gọi nhanh từ thanh cuộc gọi nổi
-        binding.btnMinimizeEndCall.setOnClickListener(v -> {
-            if (com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sRtcEngine != null) {
-                try {
-                    com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sRtcEngine.stopPreview();
-                    com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sRtcEngine.leaveChannel();
-                    io.agora.rtc2.RtcEngine.destroy();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sRtcEngine = null;
-            }
-            
-            com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.sParticipantList.clear();
-            com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.isMinimized = false;
-            com.example.se114_callingsystem.features.call.ui.VoiceCallFragment.minimizedCallEvent.setValue(false);
-            
-            String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
-                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
-            if (myUid != null) {
-                com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(myUid)
-                    .update("activeCallChannel", null);
-            }
-        });
     }
 
     @Override
@@ -642,18 +573,7 @@ public class MainActivity extends AppCompatActivity {
         binding.bottomNav.setPadding(paddingStart, 0, 0, systemBarsBottom);
     }
 
-    private void updateMinimizeMuteButtonUI(boolean isMuted) {
-        if (binding == null) return;
-        if (isMuted) {
-            binding.btnMinimizeMute.setImageResource(R.drawable.ic_mic_off);
-            binding.btnMinimizeMute.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#2F3136")));
-            binding.btnMinimizeMute.setColorFilter(android.graphics.Color.parseColor("#B5BAC1"));
-        } else {
-            binding.btnMinimizeMute.setImageResource(R.drawable.ic_mic_on);
-            binding.btnMinimizeMute.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#5865F2")));
-            binding.btnMinimizeMute.setColorFilter(android.graphics.Color.WHITE);
-        }
-    }
+
 
     @Override
     protected void onDestroy() {
