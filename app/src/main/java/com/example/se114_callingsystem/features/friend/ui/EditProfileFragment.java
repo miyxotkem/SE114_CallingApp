@@ -102,7 +102,25 @@ public class EditProfileFragment extends Fragment {
         currentUser = viewModel.getCurrentUser();
 
         binding.btnBack.setOnClickListener(v -> {
-            Navigation.findNavController(v).popBackStack();
+            boolean hasChanges = (avatarUri != null || coverUri != null) ||
+                    (!binding.etUsername.getText().toString().trim().equals(viewModel.getUserProfile().getValue() != null ? viewModel.getUserProfile().getValue().getUsername() : "")) ||
+                    (!binding.etBio.getText().toString().trim().equals(viewModel.getUserProfile().getValue() != null ? viewModel.getUserProfile().getValue().getBio() : "")) ||
+                    (!binding.etWorkplace.getText().toString().trim().equals(viewModel.getUserProfile().getValue() != null ? viewModel.getUserProfile().getValue().getWorkplace() : "")) ||
+                    (!binding.etHobbies.getText().toString().trim().equals(viewModel.getUserProfile().getValue() != null ? viewModel.getUserProfile().getValue().getHobbies() : "")) ||
+                    (!binding.etDob.getText().toString().trim().equals(viewModel.getUserProfile().getValue() != null ? viewModel.getUserProfile().getValue().getDob() : ""));
+            
+            if (hasChanges) {
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Chưa lưu thay đổi",
+                        "Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn thoát không?",
+                        "Thoát",
+                        "#F23F42",
+                        () -> Navigation.findNavController(v).popBackStack()
+                );
+            } else {
+                Navigation.findNavController(v).popBackStack();
+            }
         });
 
         binding.ivEditAvatar.setOnClickListener(v -> showAvatarOptionsDialog());
@@ -374,14 +392,14 @@ public class EditProfileFragment extends Fragment {
             android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
             String currentPlan = prefs.getString("current_plan", "Basic");
             if ("Basic".equals(currentPlan)) {
-                new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Premium Feature")
-                    .setMessage("Changing your cover photo requires the Standard plan. Upgrade now to unlock this feature!")
-                    .setPositiveButton("Upgrade", (dialog, which) -> {
-                        Navigation.findNavController(binding.getRoot()).navigate(R.id.action_edit_profile_to_upgrade_plan);
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Premium Feature",
+                        "Changing your cover photo requires the Standard plan. Upgrade now to unlock this feature!",
+                        "Upgrade",
+                        "#5865F2",
+                        () -> Navigation.findNavController(binding.getRoot()).navigate(R.id.action_edit_profile_to_upgrade_plan)
+                );
                 return;
             }
         }

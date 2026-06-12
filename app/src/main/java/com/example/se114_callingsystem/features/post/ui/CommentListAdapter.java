@@ -206,29 +206,31 @@ public class CommentListAdapter extends RecyclerView.Adapter<CommentListAdapter.
         holder.itemView.setOnLongClickListener(v -> {
             boolean canDelete = currentUid != null && (currentUid.equals(comment.getAuthorId()) || currentUid.equals(postAuthorId));
             
-            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context);
             List<String> options = new java.util.ArrayList<>();
             options.add("Sao chép văn bản");
             if (canDelete) {
                 options.add("Xóa bình luận");
             }
             
-            builder.setItems(options.toArray(new String[0]), (dialog, which) -> {
-                String selectedOption = options.get(which);
-                if (selectedOption.equals("Sao chép văn bản")) {
-                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    android.content.ClipData clip = android.content.ClipData.newPlainText("Comment", comment.getContent());
-                    if (clipboard != null) {
-                        clipboard.setPrimaryClip(clip);
-                        android.widget.Toast.makeText(context, "Đã sao chép bình luận", android.widget.Toast.LENGTH_SHORT).show();
+            com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
+                    context,
+                    null,
+                    options.toArray(new String[0]),
+                    (index, option) -> {
+                        if (option.equals("Sao chép văn bản")) {
+                            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                            android.content.ClipData clip = android.content.ClipData.newPlainText("Comment", comment.getContent());
+                            if (clipboard != null) {
+                                clipboard.setPrimaryClip(clip);
+                                android.widget.Toast.makeText(context, "Đã sao chép bình luận", android.widget.Toast.LENGTH_SHORT).show();
+                            }
+                        } else if (option.equals("Xóa bình luận")) {
+                            if (listener != null) {
+                                listener.onDeleteClick(comment);
+                            }
+                        }
                     }
-                } else if (selectedOption.equals("Xóa bình luận")) {
-                    if (listener != null) {
-                        listener.onDeleteClick(comment);
-                    }
-                }
-            });
-            builder.show();
+            );
             return true;
         });
     }

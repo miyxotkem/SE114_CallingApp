@@ -315,43 +315,18 @@ public class ChatFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            View popupView = getLayoutInflater().inflate(R.layout.layout_chat_attachment_popup, null);
-            android.widget.PopupWindow popupWindow = new android.widget.PopupWindow(
-                    popupView,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-                    true
+            String[] options = {"📷 Send Image", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
+            com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
+                    requireContext(),
+                    "Upload Media & Options",
+                    options,
+                    (index, option) -> {
+                        if (index == 0) imagePickerLauncher.launch("image/*");
+                        else if (index == 1) filePickerLauncher.launch("*/*");
+                        else if (index == 2) showGifSearchDialog();
+                        else showReminderDialog(null, null);
+                    }
             );
-            
-            popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
-            popupWindow.setElevation(10f);
-
-            popupView.findViewById(R.id.btnUploadImage).setOnClickListener(view -> {
-                popupWindow.dismiss();
-                imagePickerLauncher.launch("image/*");
-            });
-
-            popupView.findViewById(R.id.btnUploadFile).setOnClickListener(view -> {
-                popupWindow.dismiss();
-                filePickerLauncher.launch("*/*");
-            });
-
-            popupView.findViewById(R.id.btnSendGif).setOnClickListener(view -> {
-                popupWindow.dismiss();
-                showGifSearchDialog();
-            });
-
-            popupView.findViewById(R.id.btnSetReminder).setOnClickListener(view -> {
-                popupWindow.dismiss();
-                showReminderDialog(null, null);
-            });
-
-            popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-            int popupHeight = popupView.getMeasuredHeight();
-            int btnHeight = v.getHeight();
-            
-            // Show above the + button
-            popupWindow.showAsDropDown(v, 16, -popupHeight - btnHeight - 8);
         });
 
         binding.btnBack.setOnClickListener(v -> {

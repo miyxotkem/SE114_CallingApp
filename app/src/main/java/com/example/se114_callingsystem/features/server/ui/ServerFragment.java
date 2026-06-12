@@ -353,14 +353,16 @@ public class ServerFragment extends Fragment {
         else if ("Pro".equals(currentPlan)) limit = 10;
 
         if (currentCount >= limit) {
-            new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Plan Limit Reached")
-                .setMessage("The number of channels is limited to " + limit + " on your " + currentPlan + " plan. You should upgrade to a higher plan to create more.")
-                .setPositiveButton("Upgrade", (dialog, which) -> {
+            com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                requireContext(),
+                "Plan Limit Reached",
+                "The number of channels is limited to " + limit + " on your " + currentPlan + " plan. You should upgrade to a higher plan to create more.",
+                "Upgrade",
+                "#5865F2", // Blurple for upgrade
+                () -> {
                     Navigation.findNavController(binding.getRoot()).navigate(R.id.nav_upgrade_plan);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                }
+            );
         } else {
             showAddChannelDialog(type);
         }
@@ -450,15 +452,17 @@ public class ServerFragment extends Fragment {
                 String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
                 if (uid == null) return;
                 
-                new android.app.AlertDialog.Builder(getContext())
-                    .setTitle("Rời Server")
-                    .setMessage("Bạn có chắc chắn muốn rời khỏi Server này?")
-                    .setPositiveButton("Rời đi", (dialogInterface, i) -> {
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                    getContext(),
+                    "Rời Server",
+                    "Bạn có chắc chắn muốn rời khỏi Server này?",
+                    "Rời đi",
+                    "#F23F42",
+                    () -> {
                         settingsDialog.dismiss();
                         viewModel.leaveServer(serverId, uid);
-                    })
-                    .setNegativeButton("Huỷ", null)
-                    .show();
+                    }
+                );
             });
         }
 
@@ -519,14 +523,16 @@ public class ServerFragment extends Fragment {
 
     private void showServerDeleteConfirm() {
         if (getContext() == null) return;
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Delete Server")
-                .setMessage("Are you sure you want to delete this server? This action cannot be undone.")
-                .setPositiveButton("Delete", (d, w) -> {
+        com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                requireContext(),
+                "Delete Server",
+                "Are you sure you want to delete this server? This action cannot be undone.",
+                "Delete",
+                "#F23F42",
+                () -> {
                     viewModel.deleteServer(serverId);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                }
+        );
     }
 
     private void setupChatRecyclerView() {

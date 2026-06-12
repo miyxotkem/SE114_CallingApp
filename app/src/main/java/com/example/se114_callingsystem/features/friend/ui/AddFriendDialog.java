@@ -60,15 +60,17 @@ public class AddFriendDialog extends DialogFragment {
             }
 
             if (currentFriends >= limit) {
-                new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Plan Limit Reached")
-                    .setMessage("You reached the limit of " + (limit == Integer.MAX_VALUE ? "unlimited" : limit) + " friends on your " + currentPlan + " plan. Upgrade your plan to add more friends.")
-                    .setPositiveButton("Upgrade", (dialog, which) -> {
-                        androidx.navigation.Navigation.findNavController(requireParentFragment().requireView()).navigate(R.id.action_friend_manage_to_upgrade_plan);
-                        dismiss();
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Plan Limit Reached",
+                        "You reached the limit of " + (limit == Integer.MAX_VALUE ? "unlimited" : limit) + " friends on your " + currentPlan + " plan. Upgrade your plan to add more friends.",
+                        "Upgrade",
+                        "#5865F2",
+                        () -> {
+                            androidx.navigation.Navigation.findNavController(requireParentFragment().requireView()).navigate(R.id.action_friend_manage_to_upgrade_plan);
+                            dismiss();
+                        }
+                );
                 return;
             }
 

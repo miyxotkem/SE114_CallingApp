@@ -158,14 +158,16 @@ public class ManageFriendsFragment extends Fragment {
 
                     int currentFriends = friendList.size();
                     if (currentFriends >= limit) {
-                        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Plan Limit Reached")
-                            .setMessage("You reached the limit of " + (limit == Integer.MAX_VALUE ? "unlimited" : limit) + " friends on your " + currentPlan + " plan. Upgrade your plan to accept this request.")
-                            .setPositiveButton("Upgrade", (dialog, which) -> {
-                                Navigation.findNavController(getView()).navigate(R.id.action_friend_manage_to_upgrade_plan);
-                            })
-                            .setNegativeButton("Cancel", null)
-                            .show();
+                        com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                                requireContext(),
+                                "Plan Limit Reached",
+                                "You reached the limit of " + (limit == Integer.MAX_VALUE ? "unlimited" : limit) + " friends on your " + currentPlan + " plan. Upgrade your plan to accept this request.",
+                                "Upgrade",
+                                "#5865F2",
+                                () -> {
+                                    Navigation.findNavController(getView()).navigate(R.id.action_friend_manage_to_upgrade_plan);
+                                }
+                        );
                         return;
                     }
                     viewModel.acceptRequest(user.getUserId());
@@ -197,7 +199,16 @@ public class ManageFriendsFragment extends Fragment {
             @Override
             public void onRemove(User user) {
                 if (user.getUserId() != null) {
-                    viewModel.removeFriend(user.getUserId());
+                    com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                            requireContext(),
+                            "Hủy kết bạn",
+                            "Bạn có chắc chắn muốn hủy kết bạn với " + (user.getUsername() != null ? user.getUsername() : user.getEmail()) + " không?",
+                            "Xóa",
+                            "#F23F42",
+                            () -> {
+                                viewModel.removeFriend(user.getUserId());
+                            }
+                    );
                 }
             }
 
