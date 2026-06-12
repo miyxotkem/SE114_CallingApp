@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.SeekBar;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
@@ -220,9 +221,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public static class SentMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText, textReaction, textRepliedTo, textTime, tvFileName, tvReplyHeader;
-        ImageView ivMessageImage, ivRepliedImage;
-        LinearLayout layoutFile, layoutPinnedIndicator;
+        TextView messageText, textReaction, textRepliedTo, textTime, tvFileName, tvReplyHeader, tvAudioTime;
+        ImageView ivMessageImage, ivRepliedImage, btnPlayPause;
+        LinearLayout layoutWaveform;
+        LinearLayout layoutFile, layoutPinnedIndicator, layoutAudio;
         View cardBubble, layoutRepliedContainer;
 
         public SentMessageViewHolder(@NonNull View itemView) {
@@ -239,10 +241,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layoutPinnedIndicator = itemView.findViewById(R.id.layoutPinnedIndicator);
             layoutRepliedContainer = itemView.findViewById(R.id.layoutRepliedContainer);
             tvReplyHeader = itemView.findViewById(R.id.tvReplyHeader);
+            layoutAudio = itemView.findViewById(R.id.layoutAudio);
+            btnPlayPause = itemView.findViewById(R.id.btnPlayPause);
+            layoutWaveform = itemView.findViewById(R.id.layoutWaveform);
+            tvAudioTime = itemView.findViewById(R.id.tvAudioTime);
         }
 
         void bind(Message message, List<Message> messages, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, layoutAudio, btnPlayPause, layoutWaveform, tvAudioTime, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -255,9 +261,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageText, senderName, textTime, textReaction, textRepliedTo, tvFileName, tvReplyHeader;
-        ImageView avatarImg, ivMessageImage, ivRepliedImage;
-        LinearLayout layoutFile, layoutPinnedIndicator;
+        TextView messageText, senderName, textTime, textReaction, textRepliedTo, tvFileName, tvReplyHeader, tvAudioTime;
+        ImageView avatarImg, ivMessageImage, ivRepliedImage, btnPlayPause;
+        LinearLayout layoutWaveform;
+        LinearLayout layoutFile, layoutPinnedIndicator, layoutAudio;
         View cardBubble, layoutRepliedContainer;
 
         public ReceivedMessageViewHolder(@NonNull View itemView) {
@@ -276,10 +283,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             layoutPinnedIndicator = itemView.findViewById(R.id.layoutPinnedIndicator);
             layoutRepliedContainer = itemView.findViewById(R.id.layoutRepliedContainer);
             tvReplyHeader = itemView.findViewById(R.id.tvReplyHeader);
+            layoutAudio = itemView.findViewById(R.id.layoutAudio);
+            btnPlayPause = itemView.findViewById(R.id.btnPlayPause);
+            layoutWaveform = itemView.findViewById(R.id.layoutWaveform);
+            tvAudioTime = itemView.findViewById(R.id.tvAudioTime);
         }
 
         void bind(Message message, List<Message> messages, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, layoutAudio, btnPlayPause, layoutWaveform, tvAudioTime, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
             
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
@@ -376,34 +387,49 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, TextView textReaction, View layoutRepliedContainer, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, TextView tvReplyHeader, List<Message> messages, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
+    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, LinearLayout layoutAudio, ImageView btnPlayPause, LinearLayout layoutWaveform, TextView tvAudioTime, TextView textReaction, View layoutRepliedContainer, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, TextView tvReplyHeader, List<Message> messages, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
         Context ctx = textMessage.getContext();
         Typeface interTypeface = androidx.core.content.res.ResourcesCompat.getFont(ctx, R.font.inter);
         boolean isSentByMe = msg.getSenderId() != null && msg.getSenderId().equals(currentUserId);
         boolean isHighlighted = msg.getMessageId() != null && msg.getMessageId().equals(highlightMessageId);
         boolean hasReply = msg.getRepliedToContent() != null && !msg.getRepliedToContent().isEmpty() && !msg.isDeleted();
 
+        float density = ctx.getResources().getDisplayMetrics().density;
+        int defaultPaddingH = (int) (16 * density);
+        int defaultPaddingV = (int) (12 * density);
+
         // Dynamic background shape based on reply status to connect bubbles visually
         if (isSentByMe && cardBubble instanceof androidx.cardview.widget.CardView) {
             View innerLayout = ((androidx.cardview.widget.CardView) cardBubble).getChildAt(0);
             if (innerLayout != null) {
-                if (hasReply) {
-                    innerLayout.setBackgroundResource(R.drawable.border_chat_reply_sent);
+                if ("audio".equals(msg.getType())) {
+                    innerLayout.setBackgroundResource(R.drawable.bg_audio_bubble_sent);
+                    innerLayout.setPadding(0, 0, 0, 0);
                 } else {
-                    innerLayout.setBackgroundResource(R.drawable.border_chat);
+                    innerLayout.setPadding(defaultPaddingH, defaultPaddingV, defaultPaddingH, defaultPaddingV);
+                    if (hasReply) {
+                        innerLayout.setBackgroundResource(R.drawable.border_chat_reply_sent);
+                    } else {
+                        innerLayout.setBackgroundResource(R.drawable.border_chat);
+                    }
                 }
             }
         } else if (!isSentByMe) {
-            if (hasReply) {
-                cardBubble.setBackgroundResource(R.drawable.bg_chat_left_reply_received);
+            if ("audio".equals(msg.getType())) {
+                cardBubble.setBackgroundResource(R.drawable.bg_audio_bubble_received);
+                cardBubble.setPadding(0, 0, 0, 0);
             } else {
-                cardBubble.setBackgroundResource(R.drawable.bg_chat_left);
+                cardBubble.setPadding(defaultPaddingH, defaultPaddingV, defaultPaddingH, defaultPaddingV);
+                if (hasReply) {
+                    cardBubble.setBackgroundResource(R.drawable.bg_chat_left_reply_received);
+                } else {
+                    cardBubble.setBackgroundResource(R.drawable.bg_chat_left);
+                }
             }
         }
 
         // Apply overlapping negative margin when reply bubble is present to superimpose bubbles
         if (cardBubble.getLayoutParams() instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
-            float density = ctx.getResources().getDisplayMetrics().density;
             androidx.constraintlayout.widget.ConstraintLayout.LayoutParams lp = 
                 (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) cardBubble.getLayoutParams();
             if (hasReply) {
@@ -472,6 +498,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
             if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
             if (layoutFile != null) layoutFile.setVisibility(View.GONE);
+            if (layoutAudio != null) layoutAudio.setVisibility(View.GONE);
             if (textReaction != null) textReaction.setVisibility(View.GONE);
             if (textRepliedTo != null) textRepliedTo.setVisibility(View.GONE);
             if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
@@ -485,6 +512,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if ("image".equals(msg.getType())) {
                 textMessage.setVisibility(View.GONE);
                 if (layoutFile != null) layoutFile.setVisibility(View.GONE);
+                if (layoutAudio != null) layoutAudio.setVisibility(View.GONE);
 
                 if (ivMessageImage != null) {
                     ivMessageImage.setVisibility(View.VISIBLE);
@@ -531,6 +559,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else if ("file".equals(msg.getType())) {
                 textMessage.setVisibility(View.GONE);
                 if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
+                if (layoutAudio != null) layoutAudio.setVisibility(View.GONE);
 
                 if (layoutFile != null) {
                     layoutFile.setVisibility(View.VISIBLE);
@@ -590,6 +619,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 textMessage.setTypeface(interTypeface, Typeface.BOLD_ITALIC);
                 if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
                 if (layoutFile != null) layoutFile.setVisibility(View.GONE);
+                if (layoutAudio != null) layoutAudio.setVisibility(View.GONE);
                 
                 cardBubble.setOnClickListener(v -> {
                     String postId = msg.getContent();
@@ -614,40 +644,134 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else if ("audio".equals(msg.getType())) {
                 textMessage.setVisibility(View.GONE);
                 if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
+                if (layoutFile != null) layoutFile.setVisibility(View.GONE);
 
-                if (layoutFile != null) {
-                    layoutFile.setVisibility(View.VISIBLE);
-                    ImageView iconView = (ImageView) layoutFile.getChildAt(0);
+                if (layoutAudio != null) {
+                    layoutAudio.setVisibility(View.VISIBLE);
                     final String audioUrl = msg.getContent();
 
-                    boolean isPlaying = com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl);
-                    if (isPlaying) {
-                        if (iconView != null) {
-                            iconView.setImageResource(android.R.drawable.ic_media_pause);
-                            try {
-                                iconView.setImageTintList(android.content.res.ColorStateList.valueOf(
-                                    Color.parseColor(isSentByMe ? "#FFFFFF" : "#B9BBBE")
-                                ));
-                            } catch (Exception ignored) {}
-                        }
-                        if (tvFileName != null) {
-                            tvFileName.setText("Đang phát tin nhắn thoại...");
-                        }
-                    } else {
-                        if (iconView != null) {
-                            iconView.setImageResource(android.R.drawable.ic_media_play);
-                            try {
-                                iconView.setImageTintList(android.content.res.ColorStateList.valueOf(
-                                    Color.parseColor(isSentByMe ? "#FFFFFF" : "#B9BBBE")
-                                ));
-                            } catch (Exception ignored) {}
-                        }
-                        if (tvFileName != null) {
-                            tvFileName.setText("Tin nhắn thoại (Nhấn để phát)");
+                    final int activeColor = isSentByMe ? Color.WHITE : Color.parseColor(serverColor);
+                    final int inactiveColor = isSentByMe ? Color.parseColor("#40FFFFFF") : Color.parseColor("#B9BBBE");
+
+                    if (layoutWaveform != null) {
+                        int[] heights = {8, 12, 16, 24, 18, 12, 8, 10, 16, 22, 28, 20, 14, 12, 18, 24, 16, 10, 8, 12, 18, 14, 8, 6, 4};
+                        if (layoutWaveform.getChildCount() == 0) {
+                            for (int h : heights) {
+                                View bar = new View(ctx);
+                                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                                    (int) (2.5f * density), // width
+                                    (int) (h * density)     // height
+                                );
+                                lp.setMargins((int) (1.5f * density), 0, (int) (1.5f * density), 0);
+                                bar.setLayoutParams(lp);
+                                android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                                gd.setCornerRadius(100);
+                                bar.setBackground(gd);
+                                layoutWaveform.addView(bar);
+                            }
                         }
                     }
 
-                    layoutFile.setOnClickListener(v -> {
+                    boolean isPlaying = com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl);
+                    if (isPlaying) {
+                        if (btnPlayPause != null) {
+                            btnPlayPause.setImageResource(R.drawable.ic_pause);
+                        }
+                        if (layoutWaveform != null && tvAudioTime != null) {
+                            Runnable oldRunnable = (Runnable) layoutWaveform.getTag();
+                            if (oldRunnable != null) {
+                                layoutWaveform.removeCallbacks(oldRunnable);
+                            }
+                            Runnable updateProgressRunnable = new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl)) {
+                                        int current = com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentPosition();
+                                        int duration = com.example.se114_callingsystem.core.util.AudioPlayerManager.getDuration();
+                                        
+                                        float percent = 0f;
+                                        if (duration > 0) {
+                                            percent = (float) current / duration;
+                                            tvAudioTime.setText(formatTime(current));
+                                        } else {
+                                            tvAudioTime.setText("00:00");
+                                        }
+
+                                        int barCount = layoutWaveform.getChildCount();
+                                        int activeCount = (int) (percent * barCount);
+                                        for (int i = 0; i < barCount; i++) {
+                                            View bar = layoutWaveform.getChildAt(i);
+                                            android.graphics.drawable.Drawable bg = bar.getBackground();
+                                            if (bg instanceof android.graphics.drawable.GradientDrawable) {
+                                                ((android.graphics.drawable.GradientDrawable) bg).setColor(
+                                                    i < activeCount ? activeColor : inactiveColor
+                                                );
+                                            }
+                                        }
+
+                                        layoutWaveform.postDelayed(this, 100);
+                                    } else {
+                                        if (btnPlayPause != null) {
+                                            btnPlayPause.setImageResource(R.drawable.ic_play);
+                                        }
+                                        int barCount = layoutWaveform.getChildCount();
+                                        for (int i = 0; i < barCount; i++) {
+                                            View bar = layoutWaveform.getChildAt(i);
+                                            android.graphics.drawable.Drawable bg = bar.getBackground();
+                                            if (bg instanceof android.graphics.drawable.GradientDrawable) {
+                                                ((android.graphics.drawable.GradientDrawable) bg).setColor(inactiveColor);
+                                            }
+                                        }
+                                        tvAudioTime.setText("00:00");
+                                    }
+                                }
+                            };
+                            layoutWaveform.setTag(updateProgressRunnable);
+                            layoutWaveform.post(updateProgressRunnable);
+                        }
+                    } else {
+                        if (btnPlayPause != null) {
+                            btnPlayPause.setImageResource(R.drawable.ic_play);
+                        }
+                        if (layoutWaveform != null) {
+                            Runnable oldRunnable = (Runnable) layoutWaveform.getTag();
+                            if (oldRunnable != null) {
+                                layoutWaveform.removeCallbacks(oldRunnable);
+                                layoutWaveform.setTag(null);
+                            }
+                            int barCount = layoutWaveform.getChildCount();
+                            for (int i = 0; i < barCount; i++) {
+                                View bar = layoutWaveform.getChildAt(i);
+                                android.graphics.drawable.Drawable bg = bar.getBackground();
+                                if (bg instanceof android.graphics.drawable.GradientDrawable) {
+                                    ((android.graphics.drawable.GradientDrawable) bg).setColor(inactiveColor);
+                                }
+                            }
+                        }
+                        if (tvAudioTime != null) {
+                            tvAudioTime.setText("00:00");
+                        }
+                    }
+
+                    if (layoutWaveform != null) {
+                        layoutWaveform.setOnTouchListener((v, event) -> {
+                            if (com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl)) {
+                                if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+                                    float width = v.getWidth();
+                                    float x = event.getX();
+                                    float percent = Math.max(0f, Math.min(1f, x / width));
+                                    int duration = com.example.se114_callingsystem.core.util.AudioPlayerManager.getDuration();
+                                    if (duration > 0) {
+                                        com.example.se114_callingsystem.core.util.AudioPlayerManager.seekTo((int) (percent * duration));
+                                    }
+                                }
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+
+                    View.OnClickListener playPauseClick = v -> {
                         if (isPlaying) {
                             com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
                             adapter.notifyDataSetChanged();
@@ -675,9 +799,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 }
                             });
                         }
-                    });
+                    };
 
-                    layoutFile.setOnLongClickListener(v -> {
+                    if (btnPlayPause != null) {
+                        btnPlayPause.setOnClickListener(playPauseClick);
+                    }
+                    layoutAudio.setOnClickListener(playPauseClick);
+                    layoutAudio.setOnLongClickListener(v -> {
                         cardBubble.performLongClick();
                         return true;
                     });
@@ -711,6 +839,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
                 if (layoutFile != null) {
                     layoutFile.setVisibility(View.GONE);
+                }
+                if (layoutAudio != null) {
+                    layoutAudio.setVisibility(View.GONE);
                 }
             }
 
@@ -949,5 +1080,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         tvReplyHeader.setText(otherName + " đã trả lời");
         tvReplyHeader.setVisibility(View.VISIBLE);
+    }
+
+    private static String formatTime(int milliseconds) {
+        int seconds = (milliseconds / 1000) % 60;
+        int minutes = (milliseconds / (1000 * 60)) % 60;
+        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
     }
 }

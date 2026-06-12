@@ -81,6 +81,32 @@ public class AudioPlayerManager {
         return mediaPlayer != null && mediaPlayer.isPlaying() && url.equals(currentAudioUrl);
     }
 
+    public static synchronized int getCurrentPosition() {
+        if (mediaPlayer != null) {
+            try {
+                return mediaPlayer.getCurrentPosition();
+            } catch (Exception e) {}
+        }
+        return 0;
+    }
+
+    public static synchronized int getDuration() {
+        if (mediaPlayer != null) {
+            try {
+                return mediaPlayer.getDuration();
+            } catch (Exception e) {}
+        }
+        return 0;
+    }
+
+    public static synchronized void seekTo(int msec) {
+        if (mediaPlayer != null) {
+            try {
+                mediaPlayer.seekTo(msec);
+            } catch (Exception e) {}
+        }
+    }
+
     public static synchronized String getCurrentAudioUrl() {
         return currentAudioUrl;
     }

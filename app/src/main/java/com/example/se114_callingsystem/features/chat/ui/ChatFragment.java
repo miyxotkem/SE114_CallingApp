@@ -949,7 +949,7 @@ public class ChatFragment extends Fragment {
             
             com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
             
-            mediaRecorder = new android.media.MediaRecorder();
+            mediaRecorder = new android.media.MediaRecorder(requireContext());
             mediaRecorder.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
             mediaRecorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4);
             mediaRecorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
@@ -969,13 +969,17 @@ public class ChatFragment extends Fragment {
     private void stopRecording() {
         if (mediaRecorder == null) return;
         
+        boolean success = false;
         try {
             mediaRecorder.stop();
-            mediaRecorder.release();
-            mediaRecorder = null;
+            success = true;
         } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                mediaRecorder.release();
+            } catch (Exception ignored) {}
             mediaRecorder = null;
-            return;
         }
 
         binding.edtMessage.setEnabled(true);
@@ -987,14 +991,21 @@ public class ChatFragment extends Fragment {
             binding.edtMessage.setHint("Message #" + channelName.toLowerCase());
         }
 
-        long duration = System.currentTimeMillis() - recordStartTime;
-        if (duration < 1000) {
-            Toast.makeText(getContext(), "Tin nhắn quá ngắn", Toast.LENGTH_SHORT).show();
+        if (success) {
+            long duration = System.currentTimeMillis() - recordStartTime;
+            if (duration < 1000) {
+                Toast.makeText(getContext(), "Tin nhắn quá ngắn", Toast.LENGTH_SHORT).show();
+                try {
+                    new java.io.File(audioFilePath).delete();
+                } catch (Exception ignored) {}
+            } else {
+                uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)));
+            }
+        } else {
+            Toast.makeText(getContext(), "Ghi âm thất bại", Toast.LENGTH_SHORT).show();
             try {
                 new java.io.File(audioFilePath).delete();
             } catch (Exception ignored) {}
-        } else {
-            uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)));
         }
     }
 
@@ -1099,10 +1110,10 @@ public class ChatFragment extends Fragment {
 
         Runnable searchGif = () -> {
             String query = etSearch.getText().toString().trim();
-            String urlStr = "https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=25";
+            String urlStr = "https://api.giphy.com/v1/gifs/trending?api_key=T7ziYgAkCNMJhQXUhjjc4siv7Tamvcb7&limit=25";
             if (!query.isEmpty()) {
                 try {
-                    urlStr = "https://api.giphy.com/v1/gifs/search?api_key=dc6zaTOxFJmzC&limit=25&q=" + java.net.URLEncoder.encode(query, "UTF-8");
+                    urlStr = "https://api.giphy.com/v1/gifs/search?api_key=T7ziYgAkCNMJhQXUhjjc4siv7Tamvcb7&limit=25&q=" + java.net.URLEncoder.encode(query, "UTF-8");
                 } catch (Exception ignored) {}
             }
             final String requestUrl = urlStr;
