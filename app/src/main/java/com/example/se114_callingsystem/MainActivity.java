@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                     .setTitle("Plan Limit Reached")
                     .setMessage("You reached the limit of " + limit + " servers on your " + currentPlan + " plan. Upgrade your plan to create more servers.")
                     .setPositiveButton("Upgrade", (dialog, which) -> {
-                        NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+                        androidx.navigation.fragment.NavHostFragment nhf = (androidx.navigation.fragment.NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
                         if (nhf != null) {
                             nhf.getNavController().navigate(R.id.nav_upgrade_plan);
                         }

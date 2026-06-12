@@ -121,14 +121,23 @@ public class ProfileFragment extends Fragment {
             });
             
             binding.btnLogout.setOnClickListener(v -> {
-                if (getContext() != null) {
-                    requireContext().stopService(new Intent(getContext(), MessageNotificationService.class));
-                }
-                if (getActivity() != null) {
-                    com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(requireActivity(), 
-                        com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
-                }
-                viewModel.signOut();
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Đăng xuất",
+                        "Bạn có chắc chắn muốn đăng xuất không?",
+                        "Đăng xuất",
+                        "#F23F42",
+                        () -> {
+                            if (getContext() != null) {
+                                requireContext().stopService(new Intent(getContext(), MessageNotificationService.class));
+                            }
+                            if (getActivity() != null) {
+                                com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(requireActivity(), 
+                                    com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
+                            }
+                            viewModel.signOut();
+                        }
+                );
             });
         } else {
             binding.tvSubscriptionHeader.setVisibility(View.GONE);

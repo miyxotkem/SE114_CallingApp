@@ -237,21 +237,21 @@ public class HomeFragment extends Fragment {
 
     private void showCustomStatusDialog() {
         if (getContext() == null) return;
-        android.widget.EditText input = new android.widget.EditText(requireContext());
-        input.setHint("Enter custom status (e.g. Coding 💻)");
-        
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-        builder.setTitle("Custom Status")
-            .setView(input)
-            .setPositiveButton("Set", (d, w) -> {
-                String s = input.getText().toString().trim();
-                if (!s.isEmpty()) {
-                    requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", s).apply();
-                    viewModel.updateUserStatus(s);
+        com.example.se114_callingsystem.core.util.BottomSheetUtils.showInputDialog(
+                requireContext(),
+                "Custom Status",
+                "Enter custom status (e.g. Coding 💻)",
+                "",
+                "Set",
+                "#5865F2",
+                (input) -> {
+                    String s = input.trim();
+                    if (!s.isEmpty()) {
+                        requireContext().getSharedPreferences("UserPrefs", android.content.Context.MODE_PRIVATE).edit().putString("manual_status", s).apply();
+                        viewModel.updateUserStatus(s);
+                    }
                 }
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+        );
     }
 
     private void checkNotificationPermission() {

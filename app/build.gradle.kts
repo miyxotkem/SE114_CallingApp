@@ -75,6 +75,7 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
     implementation("io.agora.rtc:full-sdk:4.6.3")
+    implementation("io.agora.rtc:full-virtual-background:4.6.3") // Extension xóa phông
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 

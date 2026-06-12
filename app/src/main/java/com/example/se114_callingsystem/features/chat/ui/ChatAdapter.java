@@ -199,16 +199,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         return true;
                     }
                     String[] options = {"✏️ Sửa lời nhắc", "🗑️ Xóa lời nhắc"};
-                    new com.google.android.material.dialog.MaterialAlertDialogBuilder(v.getContext())
-                            .setTitle("Tùy chọn lời nhắc")
-                            .setItems(options, (dialog, which) -> {
-                                if (which == 0) {
+                    com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
+                            v.getContext(),
+                            "Tùy chọn lời nhắc",
+                            options,
+                            (index, option) -> {
+                                if (index == 0) {
                                     listener.onEditReminder(message);
                                 } else {
                                     listener.onDelete(message);
                                 }
-                            })
-                            .show();
+                            }
+                    );
                     return true;
                 });
             }

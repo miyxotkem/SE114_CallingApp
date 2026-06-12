@@ -270,12 +270,14 @@ public class PostCommentFragment extends Fragment {
     }
 
     private void showDeleteConfirmationDialog(Comment comment) {
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Xóa bình luận")
-            .setMessage("Bạn có chắc chắn muốn xóa bình luận này không?")
-            .setPositiveButton("Xóa", (dialog, which) -> deleteComment(comment))
-            .setNegativeButton("Hủy", null)
-            .show();
+        com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+            requireContext(),
+            "Xóa bình luận",
+            "Bạn có chắc chắn muốn xóa bình luận này không?",
+            "Xóa",
+            "#F23F42",
+            () -> deleteComment(comment)
+        );
     }
 
     private void deleteComment(Comment comment) {

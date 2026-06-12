@@ -316,15 +316,17 @@ public class ChatFragment extends Fragment {
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
             String[] options = {"📷 Send Image", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Upload Media & Options")
-                    .setItems(options, (dialog, which) -> {
-                        if (which == 0) imagePickerLauncher.launch("image/*");
-                        else if (which == 1) filePickerLauncher.launch("*/*");
-                        else if (which == 2) showGifSearchDialog();
+            com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
+                    requireContext(),
+                    "Upload Media & Options",
+                    options,
+                    (index, option) -> {
+                        if (index == 0) imagePickerLauncher.launch("image/*");
+                        else if (index == 1) filePickerLauncher.launch("*/*");
+                        else if (index == 2) showGifSearchDialog();
                         else showReminderDialog(null, null);
-                    })
-                    .show();
+                    }
+            );
         });
 
         binding.btnBack.setOnClickListener(v -> {
