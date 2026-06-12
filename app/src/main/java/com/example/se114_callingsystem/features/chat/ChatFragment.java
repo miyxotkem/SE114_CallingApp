@@ -132,17 +132,19 @@ public class ChatFragment extends Fragment {
 
         activeChatId = groupId;
 
-        if (groupId != null) {
-            groupChatRef = Firebase.getDatabase().getReference("chats").child(groupId);
-            listenForMessages(groupId);
-            markNotificationsAsRead(groupId);
-        }
-
+        // QUAN TRỌNG: setupRecyclerView() phải được gọi TRƯỚC listenForMessages()
+        // để adapter không bị null khi Firebase fire onDataChange từ cache
         setupRecyclerView();
         setupClickListeners();
         setupMentionSuggestions();
         setupServerMembersListener();
         setupTypingIndicator();
+
+        if (groupId != null) {
+            groupChatRef = Firebase.getDatabase().getReference("chats").child(groupId);
+            listenForMessages(groupId);
+            markNotificationsAsRead(groupId);
+        }
     }
 
 
@@ -194,7 +196,9 @@ public class ChatFragment extends Fragment {
             }
         });
 
-        binding.chatRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        layoutManager.setStackFromEnd(true); // Chat style: stack messages from bottom
+        binding.chatRecyclerView.setLayoutManager(layoutManager);
         binding.chatRecyclerView.setAdapter(adapter);
         setupSwipeToReply();
     }
@@ -282,40 +286,57 @@ public class ChatFragment extends Fragment {
 
     private void sendMessage() {
         if (binding == null) return;
-        
+
         String msg = binding.edtMessage.getText().toString().trim();
-        if (!msg.isEmpty() && groupChatRef != null) {
-            Message messageModel = new Message(senderId, groupId, msg, System.currentTimeMillis());
-            if (messageToReply != null) {
-                messageModel.setRepliedToContent(messageToReply.getContent());
-                messageModel.setRepliedToType(messageToReply.getType());
-                messageModel.setRepliedToMessageId(messageToReply.getMessageId());
-                messageToReply = null;
-                binding.tvReplyingToLayout.setVisibility(View.GONE);
-            }
-            
-            DatabaseReference newMsgRef = groupChatRef.push();
-            final String messageId = newMsgRef.getKey();
-            messageModel.setMessageId(messageId);
-            
-            if (getContext() != null && !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
-                pendingMessageIds.add(messageId);
-                messageModel.setPending(true);
-            }
-            
-            newMsgRef.setValue(messageModel).addOnCompleteListener(task -> {
-                if (task.isSuccessful() && messageId != null) {
-                    pendingMessageIds.remove(messageId);
-                    if (adapter != null) {
-                        adapter.notifyDataSetChanged();
-                    }
-                    checkAndTriggerMentions(messageModel);
-                }
+
+        // DEBUG: log các giá trị quan trọng
+        android.util.Log.d(TAG, "sendMessage: msg='" + msg + "', groupId=" + groupId
+                + ", groupChatRef=" + groupChatRef + ", senderId=" + senderId);
+
+        if (msg.isEmpty()) {
+            android.util.Log.w(TAG, "sendMessage: message is empty, skip");
+            return;
+        }
+        if (groupChatRef == null) {
+            android.util.Log.e(TAG, "sendMessage: groupChatRef is NULL! groupId=" + groupId);
+            if (getContext() != null)
+                Toast.makeText(getContext(), "Lỗi: Không tìm thấy phòng chat (groupChatRef null)", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Message messageModel = new Message(senderId, groupId, msg, System.currentTimeMillis());
+        if (messageToReply != null) {
+            messageModel.setRepliedToContent(messageToReply.getContent());
+            messageModel.setRepliedToType(messageToReply.getType());
+            messageModel.setRepliedToMessageId(messageToReply.getMessageId());
+            messageToReply = null;
+            binding.tvReplyingToLayout.setVisibility(View.GONE);
+        }
+
+        DatabaseReference newMsgRef = groupChatRef.push();
+        final String messageId = newMsgRef.getKey();
+        messageModel.setMessageId(messageId);
+
+        if (getContext() != null && !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
+            pendingMessageIds.add(messageId);
+            messageModel.setPending(true);
+        }
+
+        newMsgRef.setValue(messageModel)
+            .addOnSuccessListener(aVoid -> {
+                android.util.Log.d(TAG, "sendMessage: SUCCESS, messageId=" + messageId);
+                pendingMessageIds.remove(messageId);
+                if (adapter != null) adapter.notifyDataSetChanged();
+                checkAndTriggerMentions(messageModel);
+            })
+            .addOnFailureListener(e -> {
+                android.util.Log.e(TAG, "sendMessage: FAILED - " + e.getMessage(), e);
+                if (getContext() != null)
+                    Toast.makeText(getContext(), "Gửi thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show();
             });
 
-            if (binding != null) binding.edtMessage.setText("");
-            setTypingStatus(false);
-        }
+        if (binding != null) binding.edtMessage.setText("");
+        setTypingStatus(false);
     }
 
     private void uploadToCloudinary(Uri fileUri, String type) {
@@ -365,12 +386,17 @@ public class ChatFragment extends Fragment {
         });
     }
 
+    private ValueEventListener messagesListener;
+
     private void listenForMessages(String chatRoomID) {
-        groupChatRef.addValueEventListener(new ValueEventListener() {
+        messagesListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (binding == null) return;
-                
+                if (binding == null || adapter == null) {
+                    android.util.Log.w(TAG, "onDataChange: binding or adapter is null, skipping");
+                    return;
+                }
+
                 messageList.clear();
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Message model = data.getValue(Message.class);
@@ -382,23 +408,33 @@ public class ChatFragment extends Fragment {
                         messageList.add(model);
                     }
                 }
+                android.util.Log.d(TAG, "onDataChange: loaded " + messageList.size() + " messages");
                 adapter.notifyDataSetChanged();
 
                 updatePinnedMessageHeader();
-                
+
                 if (!messageList.isEmpty()) {
                     Message lastMsg = messageList.get(messageList.size() - 1);
                     String lastMsgId = lastMsg.getMessageId();
                     if (lastMessageId == null || !lastMsgId.equals(lastMessageId)) {
-                        binding.chatRecyclerView.scrollToPosition(messageList.size() - 1);
                         lastMessageId = lastMsgId;
+                        // Dùng post() để scroll SAU khi RecyclerView layout xong
+                        binding.chatRecyclerView.post(() -> {
+                            if (binding != null) {
+                                binding.chatRecyclerView.scrollToPosition(messageList.size() - 1);
+                            }
+                        });
                     }
                 } else {
                     lastMessageId = null;
                 }
             }
-            @Override public void onCancelled(@NonNull DatabaseError error) {}
-        });
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                android.util.Log.e(TAG, "listenForMessages cancelled: " + error.getMessage());
+            }
+        };
+        groupChatRef.addValueEventListener(messagesListener);
     }
 
     private void showReplyUI(Message message) {
@@ -1003,6 +1039,10 @@ public class ChatFragment extends Fragment {
         setTypingStatus(false);
         if (typingListener != null && groupId != null) {
             com.google.firebase.database.FirebaseDatabase.getInstance().getReference("chat_typing").child(groupId).removeEventListener(typingListener);
+        }
+        // Remove messages listener để tránh memory leak
+        if (messagesListener != null && groupChatRef != null) {
+            groupChatRef.removeEventListener(messagesListener);
         }
         stopDotsAnimation();
         activeChatId = null;
