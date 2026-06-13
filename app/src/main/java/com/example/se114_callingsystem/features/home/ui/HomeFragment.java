@@ -30,6 +30,8 @@ public class HomeFragment extends Fragment {
     private HomeViewModel viewModel;
     private HomeDMAdapter dmAdapter;
     private final List<User> friendList = new ArrayList<>();
+    private final List<User> originalFriendList = new ArrayList<>();
+    private String currentSearchQuery = "";
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -84,6 +86,23 @@ public class HomeFragment extends Fragment {
         binding.rvDirectMessages.setAdapter(dmAdapter);
         setupDMDrapAndDrop();
 
+        binding.etSearchDMs.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                performFilter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {}
+        });
+
+        binding.btnClearSearch.setOnClickListener(v -> {
+            binding.etSearchDMs.setText("");
+        });
+
         setupObservers();
         viewModel.initHome();
     }
@@ -91,17 +110,9 @@ public class HomeFragment extends Fragment {
     private void setupObservers() {
         viewModel.getFriendList().observe(getViewLifecycleOwner(), list -> {
             if (binding == null || list == null) return;
-            friendList.clear();
-            friendList.addAll(list);
-            dmAdapter.notifyDataSetChanged();
-
-            if (friendList.isEmpty()) {
-                binding.layoutNoDMs.setVisibility(View.VISIBLE);
-                binding.rvDirectMessages.setVisibility(View.GONE);
-            } else {
-                binding.layoutNoDMs.setVisibility(View.GONE);
-                binding.rvDirectMessages.setVisibility(View.VISIBLE);
-            }
+            originalFriendList.clear();
+            originalFriendList.addAll(list);
+            performFilter(currentSearchQuery);
         });
 
         viewModel.getUserStatus().observe(getViewLifecycleOwner(), status -> {
@@ -369,6 +380,59 @@ public class HomeFragment extends Fragment {
         if (getView() != null) {
             androidx.navigation.Navigation.findNavController(getView()).navigate(
                 R.id.action_home_to_chat_detail, args, null, extras);
+        }
+    }
+
+    private void performFilter(String query) {
+        currentSearchQuery = query;
+        friendList.clear();
+        if (query == null || query.trim().isEmpty()) {
+            friendList.addAll(originalFriendList);
+            if (binding != null) {
+                binding.btnClearSearch.setVisibility(View.GONE);
+                binding.tvNoDMsText.setText("No direct messages yet");
+            }
+        } else {
+            String lowerQuery = query.toLowerCase().trim();
+            if (binding != null) binding.btnClearSearch.setVisibility(View.VISIBLE);
+
+            if (viewModel != null && viewModel.getFriendMap() != null) {
+                for (User u : viewModel.getFriendMap().values()) {
+                    String displayName = u.getUsername();
+                    if (displayName == null || displayName.trim().isEmpty()) {
+                        displayName = u.getEmail();
+                    }
+                    if (displayName != null && displayName.toLowerCase().contains(lowerQuery)) {
+                        friendList.add(u);
+                    }
+                }
+            }
+
+            friendList.sort((u1, u2) -> {
+                boolean pin1 = viewModel != null && viewModel.isUserPinned(u1.getUserId());
+                boolean pin2 = viewModel != null && viewModel.isUserPinned(u2.getUserId());
+                if (pin1 && !pin2) return -1;
+                if (!pin1 && pin2) return 1;
+
+                String name1 = u1.getUsername() != null ? u1.getUsername() : "";
+                String name2 = u2.getUsername() != null ? u2.getUsername() : "";
+                return name1.compareToIgnoreCase(name2);
+            });
+        }
+
+        if (dmAdapter != null) {
+            dmAdapter.notifyDataSetChanged();
+        }
+
+        if (binding != null) {
+            if (friendList.isEmpty()) {
+                binding.layoutNoDMs.setVisibility(View.VISIBLE);
+                binding.rvDirectMessages.setVisibility(View.GONE);
+                binding.tvNoDMsText.setText("No friends or conversations match your search");
+            } else {
+                binding.layoutNoDMs.setVisibility(View.GONE);
+                binding.rvDirectMessages.setVisibility(View.VISIBLE);
+            }
         }
     }
 

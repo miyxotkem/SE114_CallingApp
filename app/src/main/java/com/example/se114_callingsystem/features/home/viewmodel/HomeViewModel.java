@@ -50,6 +50,10 @@ public class HomeViewModel extends ViewModel {
         return friendList;
     }
 
+    public java.util.Map<String, User> getFriendMap() {
+        return friendMap;
+    }
+
     public LiveData<String> getUserStatus() {
         return userStatus;
     }
