@@ -9,6 +9,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import android.widget.TextView;
+import android.widget.ImageView;
+import com.bumptech.glide.Glide;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -53,6 +56,7 @@ public class ChatInfoFragment extends Fragment {
     private PinnedMessagesAdapter pinnedAdapter;
 
     private ChatInfoPagerAdapter pagerAdapter;
+    private com.google.firebase.firestore.ListenerRegistration dmNicknamesListener;
 
     private static final Pattern URL_PATTERN = Pattern.compile(
             "(https?://[\\w\\-._~:/?#\\[\\]@!$&'()*+,;=%]+)",
@@ -111,10 +115,9 @@ public class ChatInfoFragment extends Fragment {
 
         new TabLayoutMediator(binding.tabLayout, binding.viewPager, (tab, position) -> {
             switch (position) {
-                case 0: tab.setText("👥 Members"); break;
-                case 1: tab.setText("📷 Media"); break;
-                case 2: tab.setText("📎 Files"); break;
-                case 3: tab.setText("🔗 Links"); break;
+                case 0: tab.setText("📷 Media"); break;
+                case 1: tab.setText("📎 Files"); break;
+                case 2: tab.setText("🔗 Links"); break;
             }
         }).attach();
     }
@@ -220,30 +223,22 @@ public class ChatInfoFragment extends Fragment {
                         String sId = documentSnapshot.getString("serverId");
                         if (sId != null) {
                             serverId = sId;
-                            setupNicknamesButton(sId);
                             loadServerMembers(sId);
                         } else {
+                            setupDMNicknamesButton();
                             loadDMParticipants();
                         }
+                    } else if (binding != null) {
+                        setupDMNicknamesButton();
+                        loadDMParticipants();
                     }
                 });
         } else if (serverId != null) {
-            setupNicknamesButton(serverId);
             loadServerMembers(serverId);
         } else {
+            setupDMNicknamesButton();
             loadDMParticipants();
         }
-    }
-
-    private void setupNicknamesButton(String sId) {
-        if (binding == null) return;
-        binding.btnNicknames.setVisibility(View.VISIBLE);
-        binding.dividerNicknames.setVisibility(View.VISIBLE);
-        binding.btnNicknames.setOnClickListener(v -> {
-            Bundle args = new Bundle();
-            args.putString("SERVER_ID", sId);
-            Navigation.findNavController(v).navigate(R.id.nav_server_manage_members, args);
-        });
     }
 
     private void loadServerMembers(String sId) {
@@ -266,25 +261,224 @@ public class ChatInfoFragment extends Fragment {
             });
     }
 
+    private void setupDMNicknamesButton() {
+        if (binding == null) return;
+        binding.btnNicknames.setVisibility(View.VISIBLE);
+        binding.dividerNicknames.setVisibility(View.VISIBLE);
+        
+        try {
+            android.widget.TextView tvNicknames = (android.widget.TextView) binding.btnNicknames.getChildAt(1);
+            if (tvNicknames != null) {
+                tvNicknames.setText("Đặt biệt danh");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        binding.btnNicknames.setOnClickListener(v -> showDMNicknamesDialog());
+    }
+
+    private void showDMNicknamesDialog() {
+        if (getContext() == null) return;
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        
+        android.widget.ScrollView scrollView = new android.widget.ScrollView(requireContext());
+        android.widget.LinearLayout root = new android.widget.LinearLayout(requireContext());
+        root.setOrientation(android.widget.LinearLayout.VERTICAL);
+        root.setPadding(32, 32, 32, 32);
+        root.setBackgroundColor(Color.parseColor("#313338"));
+        
+        TextView tvTitle = new TextView(requireContext());
+        tvTitle.setText("Đặt biệt danh");
+        tvTitle.setTextColor(Color.WHITE);
+        tvTitle.setTextSize(18);
+        tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+        tvTitle.setPadding(0, 0, 0, 32);
+        root.addView(tvTitle);
+        
+        for (ServerMember member : serverMembers) {
+            View itemView = LayoutInflater.from(requireContext()).inflate(R.layout.item_chat_member, root, false);
+            
+            ImageView ivAvatar = itemView.findViewById(R.id.ivAvatar);
+            View viewStatusIndicator = itemView.findViewById(R.id.viewStatusIndicator);
+            TextView tvUsername = itemView.findViewById(R.id.tvUsername);
+            TextView tvNickname = itemView.findViewById(R.id.tvNickname);
+            
+            String displayName = member.getNickname();
+            if (displayName == null || displayName.trim().isEmpty()) {
+                displayName = member.getUserName();
+            }
+            tvUsername.setText(displayName);
+            
+            if (member.getNickname() != null && !member.getNickname().isEmpty() && !member.getNickname().equals(member.getUserName())) {
+                tvNickname.setText(member.getUserName());
+                tvNickname.setVisibility(View.VISIBLE);
+            } else {
+                tvNickname.setVisibility(View.GONE);
+            }
+            
+            viewStatusIndicator.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.discord_text_muted, null)));
+            String uid = member.getUserId();
+            itemView.setTag(uid);
+            
+            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users").document(uid).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists() && uid.equals(itemView.getTag()) && getContext() != null) {
+                        String profilePic = doc.getString("profilePic");
+                        String status = doc.getString("status");
+                        
+                        if (profilePic != null && !profilePic.isEmpty()) {
+                            Glide.with(ChatInfoFragment.this)
+                                .load(profilePic)
+                                .placeholder(R.drawable.ic_user)
+                                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+                                .into(ivAvatar);
+                        } else {
+                            ivAvatar.setImageResource(R.drawable.ic_user);
+                        }
+                        
+                        if ("online".equalsIgnoreCase(status)) {
+                            viewStatusIndicator.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.discord_green, null)));
+                        } else {
+                            viewStatusIndicator.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.discord_text_muted, null)));
+                        }
+                    }
+                });
+                
+            itemView.setOnClickListener(v -> {
+                dialog.dismiss();
+                showSetNicknameDialog(member);
+            });
+            
+            root.addView(itemView);
+        }
+        
+        scrollView.addView(root);
+        dialog.setContentView(scrollView);
+        dialog.show();
+    }
+
+    private void showSetNicknameDialog(ServerMember member) {
+        if (getContext() == null) return;
+        android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setText(member.getNickname() != null ? member.getNickname() : "");
+        input.setSelection(input.getText().length());
+        
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Đặt biệt danh")
+            .setMessage("Đặt biệt danh cho " + member.getUserName())
+            .setView(input)
+            .setPositiveButton("Lưu", (d, w) -> {
+                String nickname = input.getText().toString().trim();
+                saveDMNickname(member.getUserId(), nickname);
+            })
+            .setNegativeButton("Hủy", null)
+            .show();
+    }
+
+    private void saveDMNickname(String targetUid, String newNickname) {
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        java.util.Map<String, Object> update = new java.util.HashMap<>();
+        update.put("nicknames." + targetUid, newNickname);
+        
+        db.collection("Channels").document(chatId).update(update)
+            .addOnFailureListener(e -> {
+                java.util.Map<String, Object> data = new java.util.HashMap<>();
+                java.util.Map<String, Object> nicknames = new java.util.HashMap<>();
+                nicknames.put(targetUid, newNickname);
+                data.put("nicknames", nicknames);
+                db.collection("Channels").document(chatId).set(data, com.google.firebase.firestore.SetOptions.merge());
+            });
+    }
+
     private void loadDMParticipants() {
         String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
             com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
         if (currentUid.isEmpty()) return;
 
         serverMembers.clear();
-        com.google.firebase.firestore.FirebaseFirestore.getInstance()
-            .collection("users").document(currentUid).get()
-            .addOnSuccessListener(doc -> {
-                if (doc.exists()) {
-                    String username = doc.getString("username");
+        
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        
+        db.collection("users").document(currentUid).get()
+            .addOnSuccessListener(docMe -> {
+                if (docMe.exists() && binding != null) {
+                    String username = docMe.getString("username");
                     ServerMember me = new ServerMember(currentUid, username, "online");
-                    me.setNickname("You");
                     serverMembers.add(me);
-                    if (pinnedAdapter != null) {
-                        pinnedAdapter.setServerMembers(serverMembers);
+                    
+                    String otherUid = null;
+                    if (chatId != null && chatId.startsWith("dm_")) {
+                        String[] parts = chatId.split("_");
+                        if (parts.length == 3) {
+                            otherUid = parts[1].equals(currentUid) ? parts[2] : parts[1];
+                        }
+                    }
+                    
+                    if (otherUid != null) {
+                        String finalOtherUid = otherUid;
+                        db.collection("users").document(finalOtherUid).get()
+                            .addOnSuccessListener(docOther -> {
+                                if (docOther.exists() && binding != null) {
+                                    String otherUsername = docOther.getString("username");
+                                    ServerMember other = new ServerMember(finalOtherUid, otherUsername, "online");
+                                    serverMembers.add(other);
+                                    
+                                    listenToDMNicknames();
+                                }
+                            });
+                    } else {
+                        listenToDMNicknames();
                     }
                 }
             });
+    }
+
+    private void listenToDMNicknames() {
+        if (chatId == null) return;
+        if (dmNicknamesListener != null) {
+            dmNicknamesListener.remove();
+        }
+        
+        dmNicknamesListener = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("Channels").document(chatId)
+            .addSnapshotListener((snapshot, error) -> {
+                if (error != null || snapshot == null || !snapshot.exists()) return;
+                
+                java.util.Map<String, Object> nicknames = (java.util.Map<String, Object>) snapshot.get("nicknames");
+                if (nicknames != null) {
+                    for (ServerMember m : serverMembers) {
+                        String uid = m.getUserId();
+                        if (nicknames.containsKey(uid)) {
+                            m.setNickname((String) nicknames.get(uid));
+                        }
+                    }
+                    if (pinnedAdapter != null) {
+                        pinnedAdapter.setServerMembers(serverMembers);
+                    }
+                    updateChatHeaderTitle(nicknames);
+                }
+            });
+    }
+
+    private void updateChatHeaderTitle(java.util.Map<String, Object> nicknames) {
+        if (binding == null) return;
+        String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String otherUid = null;
+        if (chatId != null && chatId.startsWith("dm_")) {
+            String[] parts = chatId.split("_");
+            if (parts.length == 3) {
+                otherUid = parts[1].equals(currentUid) ? parts[2] : parts[1];
+            }
+        }
+        if (otherUid != null && nicknames.containsKey(otherUid)) {
+            String nickname = (String) nicknames.get(otherUid);
+            if (nickname != null && !nickname.trim().isEmpty()) {
+                binding.tvChannelInfoName.setText("# " + nickname.toLowerCase());
+            }
+        }
     }
 
     private void setupPinnedMessages() {
@@ -360,6 +554,10 @@ public class ChatInfoFragment extends Fragment {
         binding = null;
         if (chatRef != null && messagesListener != null) {
             chatRef.removeEventListener(messagesListener);
+        }
+        if (dmNicknamesListener != null) {
+            dmNicknamesListener.remove();
+            dmNicknamesListener = null;
         }
     }
 

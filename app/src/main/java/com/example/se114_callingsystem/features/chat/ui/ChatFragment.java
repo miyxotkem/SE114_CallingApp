@@ -78,6 +78,7 @@ public class ChatFragment extends Fragment {
     private final List<ServerMember> serverMembers = new ArrayList<>();
     private final List<ServerMember> filteredMembers = new ArrayList<>();
     private MentionAdapter mentionAdapter;
+    private com.google.firebase.firestore.ListenerRegistration dmNicknamesListener;
 
     private final android.os.Handler typingHandler = new android.os.Handler();
     private final Runnable typingStopRunnable = () -> setTypingStatus(false);
@@ -88,6 +89,17 @@ public class ChatFragment extends Fragment {
     private android.media.MediaRecorder mediaRecorder = null;
     private String audioFilePath = null;
     private long recordStartTime = 0;
+
+    // Recording state tracking (Messenger-style)
+    private boolean isPaused = false;
+    private boolean isPreviewMode = false;
+    private long totalRecordedDuration = 0;
+    private long sessionStartTime = 0;
+    private final android.os.Handler timerHandler = new android.os.Handler();
+    private Runnable timerRunnable = null;
+    private String segmentFilePath = null;
+    private Runnable previewProgressRunnable = null;
+    private final android.os.Handler previewProgressHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -104,7 +116,8 @@ public class ChatFragment extends Fragment {
         requestAudioPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
-                    Toast.makeText(getContext(), "Quyền ghi âm đã được cấp. Hãy nhấn giữ để ghi âm.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Quyền ghi âm đã được cấp. Bắt đầu ghi âm.", Toast.LENGTH_SHORT).show();
+                    startRecording();
                 } else {
                     Toast.makeText(getContext(), "Cần quyền ghi âm để sử dụng tính năng này.", Toast.LENGTH_SHORT).show();
                 }
@@ -161,6 +174,7 @@ public class ChatFragment extends Fragment {
                     binding.ivOnlineStatus.setVisibility(View.VISIBLE);
                     binding.tvChannelName.setText(channelName);
                     binding.edtMessage.setHint("Message " + channelName);
+                    loadDMParticipants();
                 } else {
                     // Chat Server Channel
                     binding.tvChannelHash.setVisibility(View.VISIBLE);
@@ -922,91 +936,520 @@ public class ChatFragment extends Fragment {
                 });
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private void setupAudioRecording() {
-        binding.btnRecordAudio.setOnTouchListener((v, event) -> {
-            switch (event.getAction()) {
-                case android.view.MotionEvent.ACTION_DOWN:
-                    if (androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO) 
-                            != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        requestAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO);
-                    } else {
-                        startRecording();
+        binding.btnRecordAudio.setOnClickListener(v -> {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO) 
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO);
+            } else {
+                startRecording();
+            }
+        });
+
+        // Cancel recording (Trash button)
+        binding.btnRecordCancel.setOnClickListener(v -> cancelRecordingSession());
+
+        // Reset/Re-record (Reload button)
+        binding.btnRecordReset.setOnClickListener(v -> resetRecordingSession());
+
+        // Pause/Resume recording
+        binding.btnRecordPause.setOnClickListener(v -> togglePauseResumeRecording());
+
+        // Play/Pause preview playback
+        binding.btnRecordPlay.setOnClickListener(v -> togglePreviewPlayback());
+
+        // Send recorded audio
+        binding.btnRecordSend.setOnClickListener(v -> sendRecordingSession());
+
+        // Seek/scrub on preview waveform
+        binding.layoutWaveform.setOnTouchListener((v, event) -> {
+            if (com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioFilePath)) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
+                    float width = v.getWidth();
+                    float x = event.getX();
+                    float percent = Math.max(0f, Math.min(1f, x / width));
+                    int duration = com.example.se114_callingsystem.core.util.AudioPlayerManager.getDuration();
+                    if (duration > 0) {
+                        com.example.se114_callingsystem.core.util.AudioPlayerManager.seekTo((int) (percent * duration));
                     }
-                    return true;
-                case android.view.MotionEvent.ACTION_UP:
-                case android.view.MotionEvent.ACTION_CANCEL:
-                    stopRecording();
-                    return true;
+                }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.performClick();
+                }
+                return true;
             }
             return false;
         });
     }
 
+    private void appendFile(String sourcePath, String destPath) {
+        if (sourcePath == null || destPath == null) return;
+        java.io.File source = new java.io.File(sourcePath);
+        if (!source.exists() || source.length() == 0) return;
+        
+        java.io.File dest = new java.io.File(destPath);
+        try (java.io.FileInputStream in = new java.io.FileInputStream(source);
+             java.io.FileOutputStream out = new java.io.FileOutputStream(dest, true)) {
+            
+            byte[] buf = new byte[4096];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private void startRecording() {
         try {
-            audioFilePath = requireContext().getCacheDir().getAbsolutePath() + "/temp_audio.m4a";
+            audioFilePath = requireContext().getCacheDir().getAbsolutePath() + "/temp_accumulated.aac";
+            segmentFilePath = requireContext().getCacheDir().getAbsolutePath() + "/temp_segment.aac";
             
+            try {
+                new java.io.File(audioFilePath).delete();
+            } catch (Exception ignored) {}
+            try {
+                new java.io.File(segmentFilePath).delete();
+            } catch (Exception ignored) {}
+            
+            // Stop any playing audio
             com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
             
             mediaRecorder = new android.media.MediaRecorder(requireContext());
             mediaRecorder.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
-            mediaRecorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4);
+            mediaRecorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.AAC_ADTS);
             mediaRecorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
-            mediaRecorder.setOutputFile(audioFilePath);
+            mediaRecorder.setOutputFile(segmentFilePath);
             mediaRecorder.prepare();
             mediaRecorder.start();
             
-            recordStartTime = System.currentTimeMillis();
-            binding.edtMessage.setHint("🔴 Đang ghi âm...");
-            binding.edtMessage.setEnabled(false);
+            // State initialization
+            isPaused = false;
+            isPreviewMode = false;
+            totalRecordedDuration = 0;
+            sessionStartTime = System.currentTimeMillis();
+            
+            // UI setup
+            binding.inputAreaPanel.setVisibility(View.GONE);
+            binding.recordingPanel.setVisibility(View.VISIBLE);
+            
+            binding.tvRecordTimer.setText("00:00");
+            
+            binding.cardMicResume.setVisibility(View.VISIBLE);
+            binding.btnRecordPause.setImageResource(R.drawable.ic_pause);
+            binding.btnRecordPlay.setVisibility(View.GONE);
+            binding.btnRecordPlay.setImageResource(R.drawable.ic_play);
+            
+            // Start timer
+            startTimerRunnable();
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(getContext(), "Không thể khởi động ghi âm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void stopRecording() {
-        if (mediaRecorder == null) return;
-        
-        boolean success = false;
+    private void resumeRecordingSegment() {
         try {
-            mediaRecorder.stop();
-            success = true;
+            try {
+                new java.io.File(segmentFilePath).delete();
+            } catch (Exception ignored) {}
+            
+            com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+            
+            mediaRecorder = new android.media.MediaRecorder(requireContext());
+            mediaRecorder.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
+            mediaRecorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.AAC_ADTS);
+            mediaRecorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
+            mediaRecorder.setOutputFile(segmentFilePath);
+            mediaRecorder.prepare();
+            mediaRecorder.start();
+            
+            isPaused = false;
+            isPreviewMode = false;
+            sessionStartTime = System.currentTimeMillis();
+            
+            // UI updates
+            binding.btnRecordPause.setImageResource(R.drawable.ic_pause);
+            binding.btnRecordPlay.setVisibility(View.GONE);
+            
+            startTimerRunnable();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
+            Toast.makeText(getContext(), "Không thể tiếp tục ghi âm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void startTimerRunnable() {
+        if (timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+        }
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (mediaRecorder == null && !isPreviewMode) return;
+                
+                long currentDuration = totalRecordedDuration;
+                if (!isPaused && !isPreviewMode) {
+                    currentDuration += (System.currentTimeMillis() - sessionStartTime);
+                }
+                
+                int seconds = (int) (currentDuration / 1000);
+                int minutes = seconds / 60;
+                seconds = seconds % 60;
+                
+                if (binding != null) {
+                    binding.tvRecordTimer.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+                }
+                
+                timerHandler.postDelayed(this, 500);
+            }
+        };
+        timerHandler.post(timerRunnable);
+    }
+    
+    private void stopTimerRunnable() {
+        if (timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+            timerRunnable = null;
+        }
+    }
+
+    private void initWaveformPreview() {
+        if (binding == null) return;
+        int barCount = binding.layoutWaveform.getChildCount();
+        final int inactiveColor = Color.parseColor("#40FFFFFF");
+        for (int i = 0; i < barCount; i++) {
+            View bar = binding.layoutWaveform.getChildAt(i);
+            android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+            gd.setCornerRadius(100);
+            gd.setColor(inactiveColor);
+            bar.setBackground(gd);
+        }
+    }
+
+    private void resetWaveformColors() {
+        if (binding == null) return;
+        int barCount = binding.layoutWaveform.getChildCount();
+        final int inactiveColor = Color.parseColor("#40FFFFFF");
+        for (int i = 0; i < barCount; i++) {
+            View bar = binding.layoutWaveform.getChildAt(i);
+            android.graphics.drawable.Drawable bg = bar.getBackground();
+            if (bg instanceof android.graphics.drawable.GradientDrawable) {
+                ((android.graphics.drawable.GradientDrawable) bg).setColor(inactiveColor);
+            } else {
+                android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                gd.setCornerRadius(100);
+                gd.setColor(inactiveColor);
+                bar.setBackground(gd);
+            }
+        }
+    }
+
+    private void startPreviewProgressUpdater() {
+        if (previewProgressRunnable != null) {
+            previewProgressHandler.removeCallbacks(previewProgressRunnable);
+        }
+        
+        final int activeColor = Color.WHITE;
+        final int inactiveColor = Color.parseColor("#40FFFFFF");
+        
+        previewProgressRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (binding == null) return;
+                
+                if (com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioFilePath)) {
+                    int current = com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentPosition();
+                    int duration = com.example.se114_callingsystem.core.util.AudioPlayerManager.getDuration();
+                    
+                    float percent = 0f;
+                    if (duration > 0) {
+                        percent = (float) current / duration;
+                        int seconds = current / 1000;
+                        int minutes = seconds / 60;
+                        seconds = seconds % 60;
+                        binding.tvRecordTimer.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+                    }
+                    
+                    int barCount = binding.layoutWaveform.getChildCount();
+                    int activeCount = (int) (percent * barCount);
+                    for (int i = 0; i < barCount; i++) {
+                        View bar = binding.layoutWaveform.getChildAt(i);
+                        android.graphics.drawable.Drawable bg = bar.getBackground();
+                        if (bg instanceof android.graphics.drawable.GradientDrawable) {
+                            ((android.graphics.drawable.GradientDrawable) bg).setColor(
+                                i < activeCount ? activeColor : inactiveColor
+                            );
+                        } else {
+                            android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                            gd.setCornerRadius(100);
+                            gd.setColor(i < activeCount ? activeColor : inactiveColor);
+                            bar.setBackground(gd);
+                        }
+                    }
+                    previewProgressHandler.postDelayed(this, 100);
+                } else {
+                    binding.btnRecordPlay.setImageResource(R.drawable.ic_play);
+                    resetWaveformColors();
+                    int seconds = (int) (totalRecordedDuration / 1000);
+                    int minutes = seconds / 60;
+                    seconds = seconds % 60;
+                    binding.tvRecordTimer.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+                }
+            }
+        };
+        previewProgressHandler.post(previewProgressRunnable);
+    }
+
+    private void stopPreviewProgressUpdater() {
+        if (previewProgressRunnable != null) {
+            previewProgressHandler.removeCallbacks(previewProgressRunnable);
+        }
+        resetWaveformColors();
+        if (binding != null) {
+            int seconds = (int) (totalRecordedDuration / 1000);
+            int minutes = seconds / 60;
+            seconds = seconds % 60;
+            binding.tvRecordTimer.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+        }
+    }
+
+    private void togglePauseResumeRecording() {
+        if (isPreviewMode) {
+            resumeRecordingSegment();
+            return;
+        }
+        
+        if (mediaRecorder == null) return;
+        
+        try {
+            if (!isPaused) {
+                // Pause recording: stop current segment and append it to accumulated file
+                stopTimerRunnable();
+                mediaRecorder.stop();
+                mediaRecorder.release();
+                mediaRecorder = null;
+                
+                totalRecordedDuration += (System.currentTimeMillis() - sessionStartTime);
+                appendFile(segmentFilePath, audioFilePath);
+                try {
+                    new java.io.File(segmentFilePath).delete();
+                } catch (Exception ignored) {}
+                
+                isPaused = true;
+                
+                // UI updates
+                binding.btnRecordPause.setImageResource(R.drawable.ic_mic_on);
+                binding.btnRecordPlay.setVisibility(View.VISIBLE);
+                binding.btnRecordPlay.setImageResource(R.drawable.ic_play);
+                initWaveformPreview();
+            } else {
+                // Resume recording segment
+                resumeRecordingSegment();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Không thể tạm dừng/tiếp tục ghi âm: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopRecorderForPreview() {
+        if (mediaRecorder != null) {
+            try {
+                if (!isPaused) {
+                    totalRecordedDuration += (System.currentTimeMillis() - sessionStartTime);
+                }
+                mediaRecorder.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    mediaRecorder.release();
+                } catch (Exception ignored) {}
+                mediaRecorder = null;
+            }
+        }
+        
+        appendFile(segmentFilePath, audioFilePath);
+        try {
+            new java.io.File(segmentFilePath).delete();
+        } catch (Exception ignored) {}
+        
+        isPreviewMode = true;
+        
+        // UI updates for preview mode
+        binding.cardMicResume.setVisibility(View.VISIBLE);
+        binding.btnRecordPause.setImageResource(R.drawable.ic_mic_on);
+        binding.btnRecordPlay.setVisibility(View.VISIBLE);
+        binding.btnRecordPlay.setImageResource(R.drawable.ic_play);
+        initWaveformPreview();
+        
+        // Format the timer to show total duration
+        int seconds = (int) (totalRecordedDuration / 1000);
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+        binding.tvRecordTimer.setText(String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds));
+    }
+
+    private void togglePreviewPlayback() {
+        if (!isPreviewMode) {
+            stopRecorderForPreview();
+        }
+        
+        if (com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioFilePath)) {
+            com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+        } else {
+            binding.btnRecordPlay.setImageResource(R.drawable.ic_pause);
+            com.example.se114_callingsystem.core.util.AudioPlayerManager.play(audioFilePath, new com.example.se114_callingsystem.core.util.AudioPlayerManager.AudioPlayerListener() {
+                @Override
+                public void onStart() {
+                    if (binding != null) {
+                        binding.btnRecordPlay.setImageResource(R.drawable.ic_pause);
+                        startPreviewProgressUpdater();
+                    }
+                }
+
+                @Override
+                public void onStop() {
+                    if (binding != null) {
+                        binding.btnRecordPlay.setImageResource(R.drawable.ic_play);
+                        stopPreviewProgressUpdater();
+                    }
+                }
+
+                @Override
+                public void onComplete() {
+                    if (binding != null) {
+                        binding.btnRecordPlay.setImageResource(R.drawable.ic_play);
+                        stopPreviewProgressUpdater();
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    if (binding != null) {
+                        binding.btnRecordPlay.setImageResource(R.drawable.ic_play);
+                        stopPreviewProgressUpdater();
+                        Toast.makeText(getContext(), "Lỗi phát thử âm thanh: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+    }
+
+    private void resetRecordingSession() {
+        stopTimerRunnable();
+        stopPreviewProgressUpdater();
+        com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+        
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder.stop();
+            } catch (Exception ignored) {}
             try {
                 mediaRecorder.release();
             } catch (Exception ignored) {}
             mediaRecorder = null;
         }
-
-        binding.edtMessage.setEnabled(true);
-        if (serverId == null) {
-            String channelName = binding.tvChannelName.getText().toString();
-            binding.edtMessage.setHint("Message " + channelName);
-        } else {
-            String channelName = binding.tvChannelName.getText().toString();
-            binding.edtMessage.setHint("Message #" + channelName.toLowerCase());
-        }
-
-        if (success) {
-            long duration = System.currentTimeMillis() - recordStartTime;
-            if (duration < 1000) {
-                Toast.makeText(getContext(), "Tin nhắn quá ngắn", Toast.LENGTH_SHORT).show();
-                try {
-                    new java.io.File(audioFilePath).delete();
-                } catch (Exception ignored) {}
-            } else {
-                uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)));
-            }
-        } else {
-            Toast.makeText(getContext(), "Ghi âm thất bại", Toast.LENGTH_SHORT).show();
+        
+        if (audioFilePath != null) {
             try {
                 new java.io.File(audioFilePath).delete();
             } catch (Exception ignored) {}
+            audioFilePath = null;
         }
+        if (segmentFilePath != null) {
+            try {
+                new java.io.File(segmentFilePath).delete();
+            } catch (Exception ignored) {}
+            segmentFilePath = null;
+        }
+        
+        isPaused = false;
+        isPreviewMode = false;
+        totalRecordedDuration = 0;
+        
+        startRecording();
+    }
+
+    private void cancelRecordingSession() {
+        stopTimerRunnable();
+        stopPreviewProgressUpdater();
+        com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+        
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder.stop();
+            } catch (Exception ignored) {}
+            try {
+                mediaRecorder.release();
+            } catch (Exception ignored) {}
+            mediaRecorder = null;
+        }
+        
+        if (audioFilePath != null) {
+            try {
+                new java.io.File(audioFilePath).delete();
+            } catch (Exception ignored) {}
+            audioFilePath = null;
+        }
+        if (segmentFilePath != null) {
+            try {
+                new java.io.File(segmentFilePath).delete();
+            } catch (Exception ignored) {}
+            segmentFilePath = null;
+        }
+        
+        isPaused = false;
+        isPreviewMode = false;
+        totalRecordedDuration = 0;
+        
+        binding.recordingPanel.setVisibility(View.GONE);
+        binding.inputAreaPanel.setVisibility(View.VISIBLE);
+    }
+
+    private void sendRecordingSession() {
+        stopTimerRunnable();
+        stopPreviewProgressUpdater();
+        com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+        
+        if (mediaRecorder != null) {
+            try {
+                if (!isPaused) {
+                    totalRecordedDuration += (System.currentTimeMillis() - sessionStartTime);
+                }
+                mediaRecorder.stop();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    mediaRecorder.release();
+                } catch (Exception ignored) {}
+                mediaRecorder = null;
+            }
+            appendFile(segmentFilePath, audioFilePath);
+            try {
+                new java.io.File(segmentFilePath).delete();
+            } catch (Exception ignored) {}
+        }
+        
+        if (totalRecordedDuration < 1000) {
+            Toast.makeText(getContext(), "Tin nhắn quá ngắn", Toast.LENGTH_SHORT).show();
+            cancelRecordingSession();
+            return;
+        }
+        
+        if (audioFilePath != null) {
+            uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)));
+        }
+        
+        isPaused = false;
+        isPreviewMode = false;
+        totalRecordedDuration = 0;
+        
+        binding.recordingPanel.setVisibility(View.GONE);
+        binding.inputAreaPanel.setVisibility(View.VISIBLE);
     }
 
     private void uploadAudioToCloudinary(Uri fileUri) {
@@ -1177,17 +1620,138 @@ public class ChatFragment extends Fragment {
     public void onStop() {
         super.onStop();
         com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder.release();
+            } catch (Exception ignored) {}
+            mediaRecorder = null;
+        }
+        stopTimerRunnable();
+        stopPreviewProgressUpdater();
+        if (segmentFilePath != null) {
+            try {
+                new java.io.File(segmentFilePath).delete();
+            } catch (Exception ignored) {}
+        }
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         setTypingStatus(false);
+        stopPreviewProgressUpdater();
         if (viewModel != null) {
             viewModel.stopChatSession();
         }
+        if (dmNicknamesListener != null) {
+            dmNicknamesListener.remove();
+            dmNicknamesListener = null;
+        }
         activeChatId = null;
         binding = null;
+    }
+
+    private void loadDMParticipants() {
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        if (currentUid.isEmpty()) return;
+
+        serverMembers.clear();
+        
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        
+        db.collection("users").document(currentUid).get()
+            .addOnSuccessListener(docMe -> {
+                if (docMe.exists() && binding != null) {
+                    String username = docMe.getString("username");
+                    ServerMember me = new ServerMember(currentUid, username, "online");
+                    serverMembers.add(me);
+                    
+                    String otherUid = null;
+                    if (groupId != null && groupId.startsWith("dm_")) {
+                        String[] parts = groupId.split("_");
+                        if (parts.length == 3) {
+                            otherUid = parts[1].equals(currentUid) ? parts[2] : parts[1];
+                        }
+                    }
+                    
+                    if (otherUid != null) {
+                        String finalOtherUid = otherUid;
+                        db.collection("users").document(finalOtherUid).get()
+                            .addOnSuccessListener(docOther -> {
+                                if (docOther.exists() && binding != null) {
+                                    String otherUsername = docOther.getString("username");
+                                    ServerMember other = new ServerMember(finalOtherUid, otherUsername, "online");
+                                    serverMembers.add(other);
+                                    
+                                    listenToDMNicknames();
+                                }
+                            });
+                    } else {
+                        listenToDMNicknames();
+                    }
+                }
+            });
+    }
+
+    private void listenToDMNicknames() {
+        if (groupId == null) return;
+        if (dmNicknamesListener != null) {
+            dmNicknamesListener.remove();
+        }
+        
+        if (adapter != null) {
+            adapter.setServerMembers(serverMembers);
+            adapter.notifyDataSetChanged();
+        }
+        if (mentionAdapter != null) {
+            mentionAdapter.setList(new ArrayList<>(serverMembers));
+        }
+
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        dmNicknamesListener = db.collection("Channels").document(groupId)
+            .addSnapshotListener((snapshot, error) -> {
+                if (error != null || snapshot == null || !snapshot.exists()) return;
+                
+                java.util.Map<String, Object> nicknames = (java.util.Map<String, Object>) snapshot.get("nicknames");
+                if (nicknames != null) {
+                    for (ServerMember m : serverMembers) {
+                        String uid = m.getUserId();
+                        if (nicknames.containsKey(uid)) {
+                            m.setNickname((String) nicknames.get(uid));
+                        }
+                    }
+                    if (adapter != null) {
+                        adapter.setServerMembers(serverMembers);
+                        adapter.notifyDataSetChanged();
+                    }
+                    if (mentionAdapter != null) {
+                        mentionAdapter.setList(new ArrayList<>(serverMembers));
+                    }
+                    
+                    updateChatHeaderTitle(nicknames);
+                }
+            });
+    }
+
+    private void updateChatHeaderTitle(java.util.Map<String, Object> nicknames) {
+        if (binding == null) return;
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String otherUid = null;
+        if (groupId != null && groupId.startsWith("dm_")) {
+            String[] parts = groupId.split("_");
+            if (parts.length == 3) {
+                otherUid = parts[1].equals(currentUid) ? parts[2] : parts[1];
+            }
+        }
+        if (otherUid != null && nicknames.containsKey(otherUid)) {
+            String nickname = (String) nicknames.get(otherUid);
+            if (nickname != null && !nickname.trim().isEmpty()) {
+                binding.tvChannelName.setText(nickname);
+                binding.edtMessage.setHint("Message " + nickname);
+            }
+        }
     }
 
     @Override

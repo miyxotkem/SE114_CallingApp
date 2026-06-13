@@ -37,16 +37,15 @@ public class ChatInfoPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
-            case 0: return new ChatMembersFragment();
-            case 1: return new MediaGridFragment();
-            case 2: return new SharedFilesFragment();
-            case 3: return new SharedLinksFragment();
-            default: return new ChatMembersFragment();
+            case 0: return new MediaGridFragment();
+            case 1: return new SharedFilesFragment();
+            case 2: return new SharedLinksFragment();
+            default: return new MediaGridFragment();
         }
     }
 
     @Override
     public int getItemCount() {
-        return 4;
+        return 3;
     }
 }

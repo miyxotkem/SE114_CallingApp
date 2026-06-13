@@ -313,4 +313,221 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Recording Control Area (Mockup Style) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/recordingPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_recording_panel"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="12dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Drag Handle -->
+        <View
+            android:id="@+id/dragHandle"
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:background="#40FFFFFF"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Sub-header Instruction Text -->
+        <TextView
+            android:id="@+id/tvRecordInstruction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Trượt ngón tay trên bản ghi âm để phát từ bất kỳ điểm nào."
+            android:textColor="#99FFFFFF"
+            android:textSize="12sp"
+            android:fontFamily="@font/inter"
+            app:layout_constraintTop_toBottomOf="@id/dragHandle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Middle Row: Capsule and Mic Button -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/middleRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tvRecordInstruction">
+
+            <!-- Audio Player Capsule -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/audioCapsule"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_audio_capsule"
+                android:paddingHorizontal="12dp"
+                android:layout_marginEnd="12dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/cardMicResume"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <!-- Play/Pause Button -->
+                <ImageButton
+                    android:id="@+id/btnRecordPlay"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_play"
+                    app:tint="#FFFFFF"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <!-- Waveform visualization -->
+                <LinearLayout
+                    android:id="@+id/layoutWaveform"
+                    android:layout_width="0dp"
+                    android:layout_height="24dp"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="12dp"
+                    app:layout_constraintStart_toEndOf="@id/btnRecordPlay"
+                    app:layout_constraintEnd_toStartOf="@id/tvRecordTimer"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent">
+
+                    <View android:layout_width="2dp" android:layout_height="8dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="12dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="16dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="10dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="14dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="18dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="12dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="6dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="14dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="20dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="16dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="10dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="14dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="8dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="12dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="18dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="12dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="6dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="14dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+                    <View android:layout_width="2dp" android:layout_height="10dp" android:background="#FFFFFF" android:layout_marginHorizontal="1dp"/>
+
+                </LinearLayout>
+
+                <!-- Timer -->
+                <TextView
+                    android:id="@+id/tvRecordTimer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="00:00"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/inter"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Circular Mic/Resume Button Container -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardMicResume"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="#1A2D2D"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <ImageButton
+                    android:id="@+id/btnRecordPause"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_mic_on"
+                    app:tint="#FFFFFF" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Bottom Controls Row -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintTop_toBottomOf="@id/middleRow"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <!-- Trash Button -->
+            <ImageButton
+                android:id="@+id/btnRecordCancel"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_delete"
+                app:tint="@color/discord_red"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <!-- Reset/Re-record Button -->
+            <ImageButton
+                android:id="@+id/btnRecordReset"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_revert"
+                app:tint="@color/discord_green"
+                app:layout_constraintStart_toEndOf="@id/btnRecordCancel"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <!-- Send Button Container -->
+            <LinearLayout
+                android:id="@+id/btnRecordSend"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/bg_send_button"
+                android:paddingHorizontal="20dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gửi"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/inter" />
+
+                <ImageView
+                    android:id="@+id/btnRecordSendIcon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_send"
+                    app:tint="#FFFFFF" />
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

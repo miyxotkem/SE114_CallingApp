@@ -670,6 +670,12 @@ public class ServerFragment extends Fragment {
         this.serverName = newServerName;
         this.serverPurpose = "";
         
+        Bundle args = getArguments();
+        if (args != null) {
+            args.putString("SERVER_ID", newServerId);
+            args.putString("SERVER_NAME", newServerName);
+        }
+        
         isChatLoaded = false;
         isCallLoaded = false;
         isPostLoaded = false;

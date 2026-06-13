@@ -75,6 +75,18 @@ public class MainActivity extends AppCompatActivity {
                 if (currentFragment instanceof ServerFragment) {
                     ((ServerFragment) currentFragment).switchServer(server.getServerId(), server.getServerName());
                     sidebarAdapter.setActiveServerId(server.getServerId());
+                    try {
+                        androidx.navigation.NavBackStackEntry currentEntry = navController.getCurrentBackStackEntry();
+                        if (currentEntry != null) {
+                            Bundle currentArgs = currentEntry.getArguments();
+                            if (currentArgs != null) {
+                                currentArgs.putString("SERVER_ID", server.getServerId());
+                                currentArgs.putString("SERVER_NAME", server.getServerName());
+                            }
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("MainActivity", "Error updating backstack entry arguments", e);
+                    }
                 } else {
                     Bundle args = new Bundle();
                     args.putString("SERVER_ID", server.getServerId());
@@ -540,6 +552,18 @@ public class MainActivity extends AppCompatActivity {
                     androidx.fragment.app.Fragment currentFragment = navHostFragment.getChildFragmentManager().getPrimaryNavigationFragment();
                     if (currentFragment instanceof ServerFragment) {
                         ((ServerFragment) currentFragment).switchServer(serverIdToJoin, doc.getString("serverName"));
+                        try {
+                            androidx.navigation.NavBackStackEntry currentEntry = navController.getCurrentBackStackEntry();
+                            if (currentEntry != null) {
+                                Bundle currentArgs = currentEntry.getArguments();
+                                if (currentArgs != null) {
+                                    currentArgs.putString("SERVER_ID", serverIdToJoin);
+                                    currentArgs.putString("SERVER_NAME", doc.getString("serverName"));
+                                }
+                            }
+                        } catch (Exception e) {
+                            android.util.Log.e("MainActivity", "Error updating backstack entry arguments", e);
+                        }
                     } else {
                         Bundle args = new Bundle();
                         args.putString("SERVER_ID", serverIdToJoin);
