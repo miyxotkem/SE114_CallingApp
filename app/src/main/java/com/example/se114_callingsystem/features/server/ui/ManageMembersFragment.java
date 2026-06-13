@@ -83,49 +83,56 @@ public class ManageMembersFragment extends Fragment {
 
             @Override
             public void onKick(ServerMember member) {
-                // Xóa khỏi bảng members
-                db.collection("servers").document(serverId).collection("members").document(member.getUserId())
-                        .delete()
-                        .addOnSuccessListener(a -> {
-                            // Cập nhật lại mảng members ở server document để xóa userId này
-                            db.collection("servers").document(serverId)
-                                .update("members", com.google.firebase.firestore.FieldValue.arrayRemove(member.getUserId()));
-                                
-                            if (getContext() != null) {
-                                Toast.makeText(requireContext(), "Member kicked", Toast.LENGTH_SHORT).show();
-                            }
-                            loadMembers();
-                        });
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Đuổi thành viên",
+                        "Bạn có chắc chắn muốn đuổi " + (member.getUserName() != null ? member.getUserName() : "thành viên") + " khỏi Server này không?",
+                        "Đuổi",
+                        "#F23F42",
+                        () -> {
+                            // Xóa khỏi bảng members
+                            db.collection("servers").document(serverId).collection("members").document(member.getUserId())
+                                    .delete()
+                                    .addOnSuccessListener(a -> {
+                                        // Cập nhật lại mảng members ở server document để xóa userId này
+                                        db.collection("servers").document(serverId)
+                                            .update("members", com.google.firebase.firestore.FieldValue.arrayRemove(member.getUserId()));
+                                            
+                                        if (getContext() != null) {
+                                            Toast.makeText(requireContext(), "Member kicked", Toast.LENGTH_SHORT).show();
+                                        }
+                                        loadMembers();
+                                    });
+                        }
+                );
             }
 
             @Override
             public void onSetNickname(ServerMember member) {
-                androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-                builder.setTitle("Đặt biệt danh cho " + (member.getUserName() != null ? member.getUserName() : "thành viên"));
-
-                final android.widget.EditText input = new android.widget.EditText(requireContext());
-                input.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
-                input.setText(member.getNickname() != null ? member.getNickname() : "");
-                builder.setView(input);
-
-                builder.setPositiveButton("Lưu", (dialog, which) -> {
-                    String nickname = input.getText().toString().trim();
-                    db.collection("servers").document(serverId).collection("members").document(member.getUserId())
-                            .update("nickname", nickname)
-                            .addOnSuccessListener(a -> {
-                                if (getContext() != null) {
-                                    Toast.makeText(requireContext(), "Đã cập nhật biệt danh", Toast.LENGTH_SHORT).show();
-                                }
-                                loadMembers();
-                            })
-                            .addOnFailureListener(e -> {
-                                if (getContext() != null) {
-                                    Toast.makeText(requireContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                });
-                builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
-                builder.show();
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showInputDialog(
+                        requireContext(),
+                        "Đặt biệt danh cho " + (member.getUserName() != null ? member.getUserName() : "thành viên"),
+                        "Nhập biệt danh mới",
+                        member.getNickname() != null ? member.getNickname() : "",
+                        "Lưu",
+                        "#5865F2",
+                        (input) -> {
+                            String nickname = input;
+                            db.collection("servers").document(serverId).collection("members").document(member.getUserId())
+                                    .update("nickname", nickname)
+                                    .addOnSuccessListener(a -> {
+                                        if (getContext() != null) {
+                                            Toast.makeText(requireContext(), "Đã cập nhật biệt danh", Toast.LENGTH_SHORT).show();
+                                        }
+                                        loadMembers();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        if (getContext() != null) {
+                                            Toast.makeText(requireContext(), "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                );
             }
         });
         rvMembers.setAdapter(adapter);

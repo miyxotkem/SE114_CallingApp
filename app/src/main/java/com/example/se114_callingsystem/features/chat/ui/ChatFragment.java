@@ -84,6 +84,7 @@ public class ChatFragment extends Fragment {
     private final Runnable typingStopRunnable = () -> setTypingStatus(false);
     private boolean isTyping = false;
     private ChatViewModel viewModel;
+    private DatabaseReference groupChatRef;
 
     private ActivityResultLauncher<String> requestAudioPermissionLauncher;
     private android.media.MediaRecorder mediaRecorder = null;
@@ -187,16 +188,19 @@ public class ChatFragment extends Fragment {
 
         activeChatId = groupId;
 
+        // QUAN TRỌNG: setupRecyclerView() phải được gọi TRƯỚC listenForMessages()
+        // để adapter không bị null khi Firebase fire onDataChange từ cache
         setupRecyclerView();
         setupClickListeners();
         setupMentionSuggestions();
+        setupAudioRecording();
         setupObservers();
 
         if (groupId != null) {
+            groupChatRef = Firebase.getDatabase().getReference("chats").child(groupId);
             viewModel.startChatSession(groupId, serverId, senderId);
             markNotificationsAsRead(groupId);
         }
-        setupAudioRecording();
     }
 
     private void setupObservers() {
@@ -211,16 +215,21 @@ public class ChatFragment extends Fragment {
                 messageList.add(model);
             }
             adapter.notifyDataSetChanged();
+            updatePinnedMessageHeader();
 
             if (!messageList.isEmpty()) {
                 Message lastMsg = messageList.get(messageList.size() - 1);
-                String lastMsgId = lastMsg.getMessageId();
-                if (lastMessageId == null || !lastMsgId.equals(lastMessageId)) {
-                    binding.chatRecyclerView.scrollToPosition(messageList.size() - 1);
-                    lastMessageId = lastMsgId;
+                String currentLastMsgId = lastMsg.getMessageId();
+                if (ChatFragment.this.lastMessageId == null || !ChatFragment.this.lastMessageId.equals(currentLastMsgId)) {
+                    binding.chatRecyclerView.post(() -> {
+                        if (binding != null) {
+                            binding.chatRecyclerView.scrollToPosition(messageList.size() - 1);
+                        }
+                    });
+                    ChatFragment.this.lastMessageId = currentLastMsgId;
                 }
             } else {
-                lastMessageId = null;
+                ChatFragment.this.lastMessageId = null;
             }
         });
 
@@ -286,7 +295,9 @@ public class ChatFragment extends Fragment {
             }
         });
 
-        binding.chatRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        layoutManager.setStackFromEnd(true); // Chat style: stack messages from bottom
+        binding.chatRecyclerView.setLayoutManager(layoutManager);
         binding.chatRecyclerView.setAdapter(adapter);
         setupSwipeToReply();
     }
@@ -319,15 +330,17 @@ public class ChatFragment extends Fragment {
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
             String[] options = {"📷 Send Image", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Upload Media & Options")
-                    .setItems(options, (dialog, which) -> {
-                        if (which == 0) imagePickerLauncher.launch("image/*");
-                        else if (which == 1) filePickerLauncher.launch("*/*");
-                        else if (which == 2) showGifSearchDialog();
+            com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
+                    requireContext(),
+                    "Upload Media & Options",
+                    options,
+                    (index, option) -> {
+                        if (index == 0) imagePickerLauncher.launch("image/*");
+                        else if (index == 1) filePickerLauncher.launch("*/*");
+                        else if (index == 2) showGifSearchDialog();
                         else showReminderDialog(null, null);
-                    })
-                    .show();
+                    }
+            );
         });
 
         binding.btnBack.setOnClickListener(v -> {
@@ -375,7 +388,7 @@ public class ChatFragment extends Fragment {
 
     private void sendMessage() {
         if (binding == null) return;
-        
+
         String msg = binding.edtMessage.getText().toString().trim();
         if (!msg.isEmpty() && viewModel != null) {
             Message messageModel = new Message(senderId, groupId, msg, System.currentTimeMillis());
@@ -405,10 +418,10 @@ public class ChatFragment extends Fragment {
                     checkAndTriggerMentions(messageModel);
                 }
             });
-
-            if (binding != null) binding.edtMessage.setText("");
-            setTypingStatus(false);
         }
+
+        if (binding != null) binding.edtMessage.setText("");
+        setTypingStatus(false);
     }
 
     private void uploadToCloudinary(Uri fileUri, String type) {
@@ -457,6 +470,8 @@ public class ChatFragment extends Fragment {
         });
     }
 
+
+
     private void showReplyUI(Message message) {
         if (message.isDeleted() || binding == null) return;
         messageToReply = message;
@@ -477,6 +492,98 @@ public class ChatFragment extends Fragment {
             binding.cardReplyPreviewImage.setVisibility(View.GONE);
         }
         binding.edtMessage.requestFocus();
+    }
+
+    private void updatePinnedMessageHeader() {
+        if (binding == null) return;
+        View layoutPinnedMessage = binding.getRoot().findViewById(R.id.layoutPinnedMessage);
+        TextView tvPinnedContent = binding.getRoot().findViewById(R.id.tvPinnedMessageContent);
+        if (layoutPinnedMessage == null || tvPinnedContent == null) return;
+
+        Message latestPinned = null;
+        // Search backwards to find the latest pinned message
+        for (int i = messageList.size() - 1; i >= 0; i--) {
+            Message m = messageList.get(i);
+            if (m.isPinned() && !m.isDeleted()) {
+                latestPinned = m;
+                break;
+            }
+        }
+
+        if (latestPinned != null) {
+            layoutPinnedMessage.setVisibility(View.VISIBLE);
+            String type = latestPinned.getType();
+            if ("image".equals(type)) {
+                tvPinnedContent.setText("📷 Hình ảnh");
+            } else if ("file".equals(type)) {
+                String fileName = "Tài liệu đính kèm";
+                try { fileName = latestPinned.getContent().substring(latestPinned.getContent().lastIndexOf('/') + 1); } catch (Exception e) {}
+                tvPinnedContent.setText("📎 " + fileName);
+            } else if ("reminder".equals(type)) {
+                tvPinnedContent.setText("⏰ Lời nhắc: " + latestPinned.getContent());
+            } else {
+                tvPinnedContent.setText(latestPinned.getContent());
+            }
+
+            layoutPinnedMessage.setOnClickListener(v -> {
+                showPinnedMessagesBottomSheet();
+            });
+
+            android.widget.ImageView btnViewPinnedMessages = binding.getRoot().findViewById(R.id.btnViewPinnedMessages);
+            if (btnViewPinnedMessages != null) {
+                btnViewPinnedMessages.setOnClickListener(v -> showPinnedMessagesBottomSheet());
+            }
+        } else {
+            layoutPinnedMessage.setVisibility(View.GONE);
+        }
+    }
+
+    private void showPinnedMessagesBottomSheet() {
+        if (getContext() == null) return;
+        java.util.List<Message> pinnedMessages = new java.util.ArrayList<>();
+        for (Message m : messageList) {
+            if (m.isPinned() && !m.isDeleted()) {
+                pinnedMessages.add(m);
+            }
+        }
+        
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = 
+            new com.google.android.material.bottomsheet.BottomSheetDialog(getContext());
+        View view = getLayoutInflater().inflate(R.layout.layout_chat_bottom_sheet_pinned_messages, null);
+        dialog.setContentView(view);
+        
+        try {
+            ((View) view.getParent()).setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        } catch (Exception e) {}
+        
+        androidx.recyclerview.widget.RecyclerView rvPinnedMessages = view.findViewById(R.id.rvPinnedMessages);
+        View tvNoPinnedMessages = view.findViewById(R.id.tvNoPinnedMessages);
+        
+        if (pinnedMessages.isEmpty()) {
+            rvPinnedMessages.setVisibility(View.GONE);
+            tvNoPinnedMessages.setVisibility(View.VISIBLE);
+        } else {
+            rvPinnedMessages.setVisibility(View.VISIBLE);
+            tvNoPinnedMessages.setVisibility(View.GONE);
+            
+            rvPinnedMessages.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(getContext()));
+            PinnedMessagesAdapter pinnedAdapter = new PinnedMessagesAdapter(pinnedMessages, serverColor, new PinnedMessagesAdapter.OnPinnedMessageInteractListener() {
+                @Override
+                public void onGoTo(Message message) {
+                    dialog.dismiss();
+                    scrollToMessage(message.getMessageId());
+                }
+                @Override
+                public void onUnpin(Message message) {
+                    viewModel.togglePin(message.getMessageId(), false);
+                    dialog.dismiss();
+                }
+            });
+            pinnedAdapter.setServerMembers(serverMembers);
+            rvPinnedMessages.setAdapter(pinnedAdapter);
+        }
+        
+        dialog.show();
     }
 
     private void setupMentionSuggestions() {
@@ -742,20 +849,36 @@ public class ChatFragment extends Fragment {
     private void showReminderDialog(@Nullable Message messageToEdit, @Nullable String defaultContent) {
         if (getContext() == null) return;
         
-        View view = getLayoutInflater().inflate(R.layout.dialog_chat_add_reminder, null);
-        com.google.android.material.textfield.TextInputEditText etReminderContent = view.findViewById(R.id.etReminderContent);
-        TextView tvReminderDateTime = view.findViewById(R.id.tvReminderDateTime);
-        Button btnPickDate = view.findViewById(R.id.btnPickDate);
+        android.app.Dialog dialog = new android.app.Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_chat_add_reminder);
+        
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+        
+        TextView tvDialogTitle = dialog.findViewById(R.id.tvDialogTitle);
+        com.google.android.material.textfield.TextInputEditText etReminderContent = dialog.findViewById(R.id.etReminderContent);
+        TextView tvReminderDateTime = dialog.findViewById(R.id.tvReminderDateTime);
+        TextView btnPickDate = dialog.findViewById(R.id.btnPickDate);
+        TextView btnSave = dialog.findViewById(R.id.btnSave);
+        TextView btnCancel = dialog.findViewById(R.id.btnCancel);
         
         final java.util.Calendar calendar = java.util.Calendar.getInstance();
         
         if (messageToEdit != null) {
+            tvDialogTitle.setText("Sửa lời nhắc");
+            btnSave.setText("Lưu");
             etReminderContent.setText(messageToEdit.getContent());
             calendar.setTimeInMillis(messageToEdit.getReminderTime());
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
             tvReminderDateTime.setText("Thời gian: " + sdf.format(new Date(messageToEdit.getReminderTime())));
-        } else if (defaultContent != null) {
-            etReminderContent.setText(defaultContent);
+        } else {
+            tvDialogTitle.setText("Tạo lời nhắc");
+            btnSave.setText("Tạo");
+            if (defaultContent != null) {
+                etReminderContent.setText(defaultContent);
+            }
         }
         
         final boolean[] isTimeSelected = {messageToEdit != null};
@@ -791,41 +914,38 @@ public class ChatFragment extends Fragment {
             }, year, month, day).show();
         });
         
-        String title = (messageToEdit == null) ? "Tạo lời nhắc" : "Sửa lời nhắc";
-        String positiveText = (messageToEdit == null) ? "Tạo" : "Lưu";
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
         
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle(title)
-                .setView(view)
-                .setPositiveButton(positiveText, (dialog, which) -> {
-                    String content = etReminderContent.getText().toString().trim();
-                    if (content.isEmpty()) {
-                        Toast.makeText(getContext(), "Nội dung lời nhắc không được để trống!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (!isTimeSelected[0]) {
-                        Toast.makeText(getContext(), "Vui lòng chọn thời gian nhắc nhở!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    
-                    if (messageToEdit == null) {
-                        if (viewModel != null) {
-                            Message reminder = new Message(senderId, groupId, content, System.currentTimeMillis());
-                            reminder.setType("reminder");
-                            reminder.setReminderTime(calendar.getTimeInMillis());
-                            viewModel.sendMessage(reminder, null);
-                        }
-                    } else {
-                        if (viewModel != null && messageToEdit.getMessageId() != null) {
-                            Map<String, Object> updates = new HashMap<>();
-                            updates.put("content", content);
-                            updates.put("reminderTime", calendar.getTimeInMillis());
-                            viewModel.updateMessage(messageToEdit.getMessageId(), updates);
-                        }
-                    }
-                })
-                .setNegativeButton("Hủy", null)
-                .show();
+        btnSave.setOnClickListener(v -> {
+            String content = etReminderContent.getText().toString().trim();
+            if (content.isEmpty()) {
+                Toast.makeText(getContext(), "Nội dung lời nhắc không được để trống!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!isTimeSelected[0]) {
+                Toast.makeText(getContext(), "Vui lòng chọn thời gian nhắc nhở!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            if (messageToEdit == null) {
+                if (viewModel != null) {
+                    Message reminder = new Message(senderId, groupId, content, System.currentTimeMillis());
+                    reminder.setType("reminder");
+                    reminder.setReminderTime(calendar.getTimeInMillis());
+                    viewModel.sendMessage(reminder, null);
+                }
+            } else {
+                if (viewModel != null && messageToEdit.getMessageId() != null) {
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("content", content);
+                    updates.put("reminderTime", calendar.getTimeInMillis());
+                    viewModel.updateMessage(messageToEdit.getMessageId(), updates);
+                }
+            }
+            dialog.dismiss();
+        });
+        
+        dialog.show();
     }
 
     private void checkAndTriggerMentions(Message message) {

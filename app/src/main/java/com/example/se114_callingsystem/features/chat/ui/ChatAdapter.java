@@ -199,16 +199,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         return true;
                     }
                     String[] options = {"✏️ Sửa lời nhắc", "🗑️ Xóa lời nhắc"};
-                    new com.google.android.material.dialog.MaterialAlertDialogBuilder(v.getContext())
-                            .setTitle("Tùy chọn lời nhắc")
-                            .setItems(options, (dialog, which) -> {
-                                if (which == 0) {
+                    com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
+                            v.getContext(),
+                            "Tùy chọn lời nhắc",
+                            options,
+                            (index, option) -> {
+                                if (index == 0) {
                                     listener.onEditReminder(message);
                                 } else {
                                     listener.onDelete(message);
                                 }
-                            })
-                            .show();
+                            }
+                    );
                     return true;
                 });
             }
@@ -260,6 +262,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
+    public java.util.Map<String, String> planCache = new java.util.HashMap<>();
+
     public static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageText, senderName, textTime, textReaction, textRepliedTo, tvFileName, tvReplyHeader, tvAudioTime;
         ImageView avatarImg, ivMessageImage, ivRepliedImage, btnPlayPause;
@@ -289,6 +293,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             tvAudioTime = itemView.findViewById(R.id.tvAudioTime);
         }
 
+        private void applyAvatarBorder(ImageView avatarImg, String plan) {
+            if (avatarImg instanceof com.google.android.material.imageview.ShapeableImageView) {
+                com.google.android.material.imageview.ShapeableImageView siv = (com.google.android.material.imageview.ShapeableImageView) avatarImg;
+                float density = siv.getResources().getDisplayMetrics().density;
+                if ("Pro".equals(plan)) {
+                    siv.setStrokeWidth(2f * density);
+                    siv.setStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFD700")));
+                    int padding = (int)(2 * density);
+                    siv.setPadding(padding, padding, padding, padding);
+                } else {
+                    siv.setStrokeWidth(0f);
+                    siv.setPadding(0, 0, 0, 0);
+                }
+            }
+        }
+
         void bind(Message message, List<Message> messages, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
             bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, layoutAudio, btnPlayPause, layoutWaveform, tvAudioTime, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
             
@@ -313,11 +333,38 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     if (displayName == null || displayName.trim().isEmpty()) {
                         displayName = foundMember.getUserName();
                     }
-                    senderName.setText(displayName);
+                    
+                    String cachedPlan = adapter.planCache.get(uid);
+                    if (cachedPlan != null) {
+                        if ("Pro".equals(cachedPlan)) senderName.setText(displayName + " ✨");
+                        else if ("Standard".equals(cachedPlan)) senderName.setText(displayName + " ⭐");
+                        else senderName.setText(displayName);
+                    } else {
+                        senderName.setText(displayName);
+                        final String finalName = displayName;
+                        db.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                String plan = documentSnapshot.getString("plan");
+                                if (plan == null) plan = "Basic";
+                                adapter.planCache.put(uid, plan);
+                                if (uid.equals(senderName.getTag())) {
+                                    if ("Pro".equals(plan)) senderName.setText(finalName + " ✨");
+                                    else if ("Standard".equals(plan)) senderName.setText(finalName + " ⭐");
+                                }
+                            }
+                        });
+                    }
                 } else {
                     db.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists() && uid.equals(senderName.getTag())) {
-                            senderName.setText(documentSnapshot.getString("username"));
+                            String displayName = documentSnapshot.getString("username");
+                            String plan = documentSnapshot.getString("plan");
+                            if (plan == null) plan = "Basic";
+                            adapter.planCache.put(uid, plan);
+                            
+                            if ("Pro".equals(plan)) senderName.setText(displayName + " ✨");
+                            else if ("Standard".equals(plan)) senderName.setText(displayName + " ⭐");
+                            else senderName.setText(displayName);
                         }
                     });
                 }
@@ -337,6 +384,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     String uid = message.getSenderId();
                     avatarImg.setTag(uid);
                     
+                    String cachedPlan = adapter.planCache.get(uid);
+                    if (cachedPlan != null) applyAvatarBorder(avatarImg, cachedPlan);
+                    else applyAvatarBorder(avatarImg, "Basic");
+                    
                     String cachedAvatar = avatarCache.get(uid);
                     if (cachedAvatar != null) {
                         if (!cachedAvatar.isEmpty()) {
@@ -351,16 +402,23 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     } else {
                         avatarImg.setImageResource(R.drawable.ic_user);
                         db.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
-                            if (documentSnapshot.exists() && uid.equals(avatarImg.getTag())) {
-                                String profilePic = documentSnapshot.getString("profilePic");
-                                if (profilePic == null) profilePic = "";
-                                avatarCache.put(uid, profilePic);
-                                if (!profilePic.isEmpty()) {
-                                    Glide.with(avatarImg.getContext())
-                                         .load(profilePic)
-                                         .placeholder(R.drawable.ic_user)
-                                         .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                         .into(avatarImg);
+                            if (documentSnapshot.exists()) {
+                                String plan = documentSnapshot.getString("plan");
+                                if (plan == null) plan = "Basic";
+                                adapter.planCache.put(uid, plan);
+                                if (uid.equals(avatarImg.getTag())) applyAvatarBorder(avatarImg, plan);
+
+                                if (uid.equals(avatarImg.getTag())) {
+                                    String profilePic = documentSnapshot.getString("profilePic");
+                                    if (profilePic == null) profilePic = "";
+                                    avatarCache.put(uid, profilePic);
+                                    if (!profilePic.isEmpty()) {
+                                        Glide.with(avatarImg.getContext())
+                                             .load(profilePic)
+                                             .placeholder(R.drawable.ic_user)
+                                             .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                             .into(avatarImg);
+                                    }
                                 }
                             }
                         });

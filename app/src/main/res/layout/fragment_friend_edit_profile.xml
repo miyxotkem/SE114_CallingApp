@@ -69,11 +69,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="PROFILE PREVIEW"
-                android:textColor="@color/discord_text_muted"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter" android:textStyle="bold"
-                android:letterSpacing="0.05"
+                android:text="Profile Preview"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp" />
 
@@ -114,24 +114,45 @@
                             android:background="#40000000"
                             android:clickable="false" />
 
-                        <!-- Camera Edit Icon on Banner -->
-                        <com.google.android.material.card.MaterialCardView
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal|top"
                             android:layout_marginTop="44dp"
-                            app:cardBackgroundColor="#CC000000"
-                            app:cardCornerRadius="16dp"
-                            app:cardElevation="0dp"
-                            app:strokeWidth="0dp"
+                            android:orientation="horizontal"
+                            android:gravity="center"
                             android:clickable="false">
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_edit"
-                                app:tint="@color/white" />
-                        </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                app:cardBackgroundColor="#CC000000"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeWidth="0dp"
+                                android:clickable="false">
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_edit"
+                                    app:tint="@color/white" />
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PRO"
+                                android:textColor="#000000"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:fontFamily="@font/inter"
+                                android:background="@drawable/bg_pill_dark"
+                                android:backgroundTint="#FFD700"
+                                android:paddingHorizontal="6dp"
+                                android:paddingVertical="2dp"
+                                android:layout_marginStart="8dp" />
+                        </LinearLayout>
 
                         <!-- Overlapping Preview Avatar -->
                         <FrameLayout
@@ -147,8 +168,6 @@
                                 android:layout_height="86dp"
                                 android:layout_gravity="center"
                                 android:scaleType="centerCrop"
-                                android:padding="2dp"
-                                android:background="@color/discord_dark_alt"
                                 android:src="@drawable/ic_user"
                                 app:strokeColor="@color/discord_dark_alt"
                                 app:strokeWidth="4dp"
@@ -157,21 +176,49 @@
                                 android:focusable="true" />
 
                             <!-- Avatar Dark Overlay -->
-                            <View
+                            <com.google.android.material.imageview.ShapeableImageView
                                 android:layout_width="86dp"
                                 android:layout_height="86dp"
                                 android:layout_gravity="center"
-                                android:background="#40000000"
+                                android:src="#66000000"
+                                app:strokeColor="@color/discord_dark_alt"
+                                app:strokeWidth="4dp"
+                                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize50Percent"
                                 android:clickable="false"
                                 android:importantForAccessibility="no" />
 
                             <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
                                 android:layout_gravity="center"
                                 android:src="@drawable/ic_edit"
                                 app:tint="@color/white"
                                 android:clickable="false" />
+
+                            <!-- Avatar Badge Outer Ring -->
+                            <View
+                                android:id="@+id/viewBadgeRing"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="2dp"
+                                android:layout_marginEnd="2dp"
+                                android:background="@drawable/bg_circle"
+                                android:backgroundTint="@color/discord_dark_alt"
+                                android:visibility="gone" />
+
+                            <!-- Avatar Badge Core -->
+                            <TextView
+                                android:id="@+id/tvAvatarBadge"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="2dp"
+                                android:layout_marginEnd="2dp"
+                                android:gravity="center"
+                                android:text=""
+                                android:textSize="12sp"
+                                android:visibility="gone" />
                         </FrameLayout>
 
                         <TextView
@@ -194,11 +241,11 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="USER DETAILS"
-                android:textColor="@color/discord_text_muted"
-                android:textSize="11sp"
-                android:fontFamily="@font/inter" android:textStyle="bold"
-                android:letterSpacing="0.05"
+                android:text="User Details"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="13sp"
+                android:fontFamily="@font/inter"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="4dp" />
 
@@ -237,11 +284,10 @@
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etUsername"
                             android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:hint="DISPLAY NAME"
+                            android:layout_height="wrap_content"
+                            android:hint="Display Name"
                             android:textColor="@color/discord_text_primary"
                             android:inputType="textPersonName"
-                            android:padding="16dp"
                             android:fontFamily="@font/inter"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -266,11 +312,10 @@
                             android:id="@+id/etBio"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="ABOUT ME (BIO)"
+                            android:hint="About Me (Bio)"
                             android:textColor="@color/discord_text_primary"
                             android:inputType="textMultiLine"
                             android:minLines="2"
-                            android:padding="16dp"
                             android:fontFamily="@font/inter"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -294,11 +339,10 @@
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etWorkplace"
                             android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:hint="WORK/EDUCATION"
+                            android:layout_height="wrap_content"
+                            android:hint="Work / Education"
                             android:textColor="@color/discord_text_primary"
                             android:inputType="textPersonName"
-                            android:padding="16dp"
                             android:fontFamily="@font/inter"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -322,11 +366,10 @@
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etHobbies"
                             android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:hint="HOBBIES"
+                            android:layout_height="wrap_content"
+                            android:hint="Hobbies"
                             android:textColor="@color/discord_text_primary"
                             android:inputType="textPersonName"
-                            android:padding="16dp"
                             android:fontFamily="@font/inter"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -343,17 +386,22 @@
                         app:boxCornerRadiusTopEnd="8dp"
                         app:boxCornerRadiusBottomStart="8dp"
                         app:boxCornerRadiusBottomEnd="8dp"
+                        app:endIconDrawable="@drawable/ic_alarm"
+                        app:endIconMode="custom"
+                        app:endIconTint="@color/discord_text_muted"
                         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                         android:fontFamily="@font/inter">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etDob"
                             android:layout_width="match_parent"
-                            android:layout_height="56dp"
-                            android:hint="DATE OF BIRTH"
+                            android:layout_height="wrap_content"
+                            android:hint="Date of Birth"
                             android:textColor="@color/discord_text_primary"
-                            android:inputType="textPersonName"
-                            android:padding="16dp"
+                            android:focusable="false"
+                            android:clickable="true"
+                            android:cursorVisible="false"
+                            android:inputType="none"
                             android:fontFamily="@font/inter"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>

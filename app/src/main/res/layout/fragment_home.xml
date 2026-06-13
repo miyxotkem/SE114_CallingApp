@@ -166,17 +166,6 @@
                     android:textSize="11sp"
                     android:fontFamily="@font/inter" android:textStyle="bold"
                     android:letterSpacing="0.05" />
-
-                <ImageView
-                    android:id="@+id/btn_new_dm"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:padding="2dp"
-                    android:src="@drawable/ic_add"
-                    app:tint="@color/discord_text_muted"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:clickable="true"
-                    android:focusable="true" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

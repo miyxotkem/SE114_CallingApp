@@ -150,6 +150,26 @@ public class ManageFriendsFragment extends Fragment {
             @Override
             public void onAccept(User user) {
                 if (user.getUserId() != null) {
+                    android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+                    String currentPlan = prefs.getString("current_plan", "Basic");
+                    int limit = 25;
+                    if ("Standard".equals(currentPlan)) limit = 100;
+                    else if ("Pro".equals(currentPlan)) limit = Integer.MAX_VALUE;
+
+                    int currentFriends = friendList.size();
+                    if (currentFriends >= limit) {
+                        com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                                requireContext(),
+                                "Plan Limit Reached",
+                                "You reached the limit of " + (limit == Integer.MAX_VALUE ? "unlimited" : limit) + " friends on your " + currentPlan + " plan. Upgrade your plan to accept this request.",
+                                "Upgrade",
+                                "#5865F2",
+                                () -> {
+                                    Navigation.findNavController(getView()).navigate(R.id.action_friend_manage_to_upgrade_plan);
+                                }
+                        );
+                        return;
+                    }
                     viewModel.acceptRequest(user.getUserId());
                 }
             }
@@ -179,7 +199,16 @@ public class ManageFriendsFragment extends Fragment {
             @Override
             public void onRemove(User user) {
                 if (user.getUserId() != null) {
-                    viewModel.removeFriend(user.getUserId());
+                    com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                            requireContext(),
+                            "Hủy kết bạn",
+                            "Bạn có chắc chắn muốn hủy kết bạn với " + (user.getUsername() != null ? user.getUsername() : user.getEmail()) + " không?",
+                            "Xóa",
+                            "#F23F42",
+                            () -> {
+                                viewModel.removeFriend(user.getUserId());
+                            }
+                    );
                 }
             }
 

@@ -170,13 +170,36 @@ public class ManageFriendsRepository {
                     if (!snaps.isEmpty()) {
                         DocumentSnapshot userSnap = snaps.getDocuments().get(0);
                         String friendUid = userSnap.getString("uid");
+                        String targetPlan = userSnap.getString("plan");
+                        if (targetPlan == null) targetPlan = "Basic";
+                        
+                        final int limit;
+                        if ("Standard".equals(targetPlan)) limit = 100;
+                        else if ("Pro".equals(targetPlan)) limit = Integer.MAX_VALUE;
+                        else limit = 25;
+
                         if (friendUid != null) {
-                            Firebase.getUserFriendRequestsRef(friendUid).child(myUid).setValue(true)
-                                    .addOnSuccessListener(aVoid -> {
-                                        sendFriendNotification(myUid, friendUid, "friend_request");
-                                        callback.onSuccess(null);
-                                    })
-                                    .addOnFailureListener(callback::onFailure);
+                            Firebase.getUserFriendsRef(friendUid).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot snapshot) {
+                                    long count = snapshot.getChildrenCount();
+                                    if (count >= limit) {
+                                        callback.onFailure(new Exception("TARGET_LIMIT_REACHED"));
+                                    } else {
+                                        Firebase.getUserFriendRequestsRef(friendUid).child(myUid).setValue(true)
+                                                .addOnSuccessListener(aVoid -> {
+                                                    sendFriendNotification(myUid, friendUid, "friend_request");
+                                                    callback.onSuccess(null);
+                                                })
+                                                .addOnFailureListener(callback::onFailure);
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError error) {
+                                    callback.onFailure(error.toException());
+                                }
+                            });
                         } else {
                             callback.onFailure(new Exception("INVALID_USER_DATA"));
                         }

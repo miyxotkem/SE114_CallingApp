@@ -121,6 +121,22 @@ public class HomeRepository {
                 });
     }
 
+    public ListenerRegistration listenToCurrentUserProfile(String uid, RealtimeCallback<DocumentSnapshot> callback) {
+        return db.collection("users").document(uid).addSnapshotListener((doc, err) -> {
+            if (err != null) {
+                callback.onError(err);
+                return;
+            }
+            if (doc != null && doc.exists()) {
+                callback.onData(doc);
+            }
+        });
+    }
+
+    public void updatePinnedDMs(String uid, List<String> pinnedDMs) {
+        db.collection("users").document(uid).update("pinnedDMs", pinnedDMs);
+    }
+
     public void joinServer(String inviteCode, String userId, String userName, RepositoryCallback<String> callback) {
         db.collection("servers").document(inviteCode).get().addOnSuccessListener(doc -> {
             if (doc.exists()) {

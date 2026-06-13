@@ -48,6 +48,32 @@ public class AddFriendDialog extends DialogFragment {
                 return;
             }
 
+            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+            String currentPlan = prefs.getString("current_plan", "Basic");
+            int limit = 25;
+            if ("Standard".equals(currentPlan)) limit = 100;
+            else if ("Pro".equals(currentPlan)) limit = Integer.MAX_VALUE;
+
+            int currentFriends = 0;
+            if (viewModel.getFriends().getValue() != null) {
+                currentFriends = viewModel.getFriends().getValue().size();
+            }
+
+            if (currentFriends >= limit) {
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Plan Limit Reached",
+                        "You reached the limit of " + (limit == Integer.MAX_VALUE ? "unlimited" : limit) + " friends on your " + currentPlan + " plan. Upgrade your plan to add more friends.",
+                        "Upgrade",
+                        "#5865F2",
+                        () -> {
+                            androidx.navigation.Navigation.findNavController(requireParentFragment().requireView()).navigate(R.id.action_friend_manage_to_upgrade_plan);
+                            dismiss();
+                        }
+                );
+                return;
+            }
+
             btnAddFriendConfirm.setEnabled(false);
             viewModel.sendFriendRequest(email);
         });
@@ -72,6 +98,11 @@ public class AddFriendDialog extends DialogFragment {
                     break;
                 case "SEND_REQUEST_NOT_FOUND":
                     Toast.makeText(getContext(), "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
+                    btnAddFriendConfirm.setEnabled(true);
+                    viewModel.resetStatus();
+                    break;
+                case "TARGET_LIMIT_REACHED":
+                    Toast.makeText(getContext(), "Người dùng này đã đạt giới hạn bạn bè!", Toast.LENGTH_LONG).show();
                     btnAddFriendConfirm.setEnabled(true);
                     viewModel.resetStatus();
                     break;

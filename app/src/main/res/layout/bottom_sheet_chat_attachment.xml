@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet"
+    android:backgroundTint="@color/discord_dark_floating"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Handle drag bar -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/discord_divider"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tải lên &amp; Tùy chọn"
+        android:textColor="@color/discord_text_primary"
+        android:textSize="18sp"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="8dp"/>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/discord_dark_alt"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="4dp">
+
+            <TextView
+                android:id="@+id/btnUploadImage"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:text="Gửi Hình ảnh"
+                android:drawableStart="@drawable/ic_gallery"
+                app:drawableTint="@color/discord_green"
+                android:drawablePadding="12dp"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <TextView
+                android:id="@+id/btnUploadFile"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:text="Gửi Tài liệu"
+                android:drawableStart="@drawable/ic_file_modern"
+                app:drawableTint="@color/discord_blurple"
+                android:drawablePadding="12dp"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <TextView
+                android:id="@+id/btnSendGif"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:text="Tìm &amp; gửi ảnh GIF"
+                android:drawableStart="@drawable/ic_play"
+                app:drawableTint="@color/discord_yellow"
+                android:drawablePadding="12dp"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <TextView
+                android:id="@+id/btnSetReminder"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:text="Đặt lời nhắc chung"
+                android:drawableStart="@drawable/ic_alarm"
+                app:drawableTint="@color/discord_red"
+                android:drawablePadding="12dp"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"/>
+                
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

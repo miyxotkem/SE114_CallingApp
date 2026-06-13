@@ -237,6 +237,8 @@ public class ManageFriendsViewModel extends ViewModel {
                     operationStatus.setValue("SEND_REQUEST_SELF");
                 } else if ("USER_NOT_FOUND".equals(e.getMessage())) {
                     operationStatus.setValue("SEND_REQUEST_NOT_FOUND");
+                } else if ("TARGET_LIMIT_REACHED".equals(e.getMessage())) {
+                    operationStatus.setValue("TARGET_LIMIT_REACHED");
                 } else {
                     operationStatus.setValue("Failed to send request: " + e.getMessage());
                 }

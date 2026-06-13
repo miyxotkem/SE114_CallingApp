@@ -21,6 +21,9 @@ public class CallingApplication extends Application {
         // Khởi tạo AppDependencyProvider với Application Context
         AppDependencyProvider.init(this);
 
+        // Force Dark Mode globally by default
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+
         // Khởi tạo Cloudinary MediaManager một lần duy nhất tại đây
         initCloudinary();
 

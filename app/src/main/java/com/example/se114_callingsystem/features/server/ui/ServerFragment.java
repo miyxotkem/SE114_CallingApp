@@ -316,9 +316,9 @@ public class ServerFragment extends Fragment {
     private void initViews() {
         if (binding == null) return;
 
-        binding.btnAddChannel.setOnClickListener(v -> showAddChannelDialog("chat"));
-        binding.btnAddCallChannel.setOnClickListener(v -> showAddChannelDialog("call"));
-        binding.btnAddPostChannel.setOnClickListener(v -> showAddChannelDialog("post"));
+        binding.btnAddChannel.setOnClickListener(v -> handleAddChannelClick("chat"));
+        binding.btnAddCallChannel.setOnClickListener(v -> handleAddChannelClick("call"));
+        binding.btnAddPostChannel.setOnClickListener(v -> handleAddChannelClick("post"));
 
         binding.btnServerSettings.setOnClickListener(v -> showServerSettingsDialog());
 
@@ -340,6 +340,32 @@ public class ServerFragment extends Fragment {
         binding.expandChatZone.setRotation(90f);
         binding.expandCallZone.setRotation(90f);
         binding.expandPostZone.setRotation(90f);
+    }
+    
+    private void handleAddChannelClick(String type) {
+        if (getContext() == null || binding == null) return;
+        int currentCount = "chat".equals(type) ? chatList.size() : ("call".equals(type) ? callList.size() : postList.size());
+
+        android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+        String currentPlan = prefs.getString("current_plan", "Basic");
+        int limit = 2;
+        if ("Standard".equals(currentPlan)) limit = 5;
+        else if ("Pro".equals(currentPlan)) limit = 10;
+
+        if (currentCount >= limit) {
+            com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                requireContext(),
+                "Plan Limit Reached",
+                "The number of channels is limited to " + limit + " on your " + currentPlan + " plan. You should upgrade to a higher plan to create more.",
+                "Upgrade",
+                "#5865F2", // Blurple for upgrade
+                () -> {
+                    Navigation.findNavController(binding.getRoot()).navigate(R.id.nav_upgrade_plan);
+                }
+            );
+        } else {
+            showAddChannelDialog(type);
+        }
     }
     
     private void checkDataLoaded() {
@@ -368,9 +394,9 @@ public class ServerFragment extends Fragment {
         EditText etServerNameSettings = view.findViewById(R.id.etServerNameSettings);
         EditText etServerDescriptionSettings = view.findViewById(R.id.etServerDescriptionSettings);
         MaterialButton btnSave = view.findViewById(R.id.btnSaveServerDetails);
-        MaterialButton btnDelete = view.findViewById(R.id.btnDeleteServer);
-        MaterialButton btnManageMembers = view.findViewById(R.id.btnManageMembers);
-        MaterialButton btnChangeColor = view.findViewById(R.id.btnChangeColor);
+        View btnDelete = view.findViewById(R.id.btnDeleteServer);
+        View btnManageMembers = view.findViewById(R.id.btnManageMembers);
+        View btnChangeColor = view.findViewById(R.id.btnChangeColor);
 
         dialogAvatarView = view.findViewById(R.id.ivServerAvatarSettings);
         dialogAvatarLetter = view.findViewById(R.id.tvAvatarLetterSettings);
@@ -415,34 +441,28 @@ public class ServerFragment extends Fragment {
         try {
             int color = Color.parseColor(currentAccentColor);
             if (btnSave != null) btnSave.setBackgroundTintList(ColorStateList.valueOf(color));
-            if (btnManageMembers != null) {
-                btnManageMembers.setTextColor(color);
-                btnManageMembers.setIconTint(ColorStateList.valueOf(color));
-            }
-            if (btnChangeColor != null) {
-                btnChangeColor.setTextColor(color);
-                btnChangeColor.setIconTint(ColorStateList.valueOf(color));
-            }
             if (dialogAvatarLetter != null) dialogAvatarLetter.setTextColor(color);
             com.google.android.material.card.MaterialCardView cardAvatar = view.findViewById(R.id.cardServerAvatarSettings);
             if (cardAvatar != null) cardAvatar.setStrokeColor(color);
         } catch (Exception e) {}
 
-        MaterialButton btnLeave = view.findViewById(R.id.btnLeaveServer);
+        View btnLeave = view.findViewById(R.id.btnLeaveServer);
         if (btnLeave != null) {
             btnLeave.setOnClickListener(v -> {
                 String uid = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
                 if (uid == null) return;
                 
-                new android.app.AlertDialog.Builder(getContext())
-                    .setTitle("Rời Server")
-                    .setMessage("Bạn có chắc chắn muốn rời khỏi Server này?")
-                    .setPositiveButton("Rời đi", (dialogInterface, i) -> {
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                    getContext(),
+                    "Rời Server",
+                    "Bạn có chắc chắn muốn rời khỏi Server này?",
+                    "Rời đi",
+                    "#F23F42",
+                    () -> {
                         settingsDialog.dismiss();
                         viewModel.leaveServer(serverId, uid);
-                    })
-                    .setNegativeButton("Huỷ", null)
-                    .show();
+                    }
+                );
             });
         }
 
@@ -503,14 +523,16 @@ public class ServerFragment extends Fragment {
 
     private void showServerDeleteConfirm() {
         if (getContext() == null) return;
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Delete Server")
-                .setMessage("Are you sure you want to delete this server? This action cannot be undone.")
-                .setPositiveButton("Delete", (d, w) -> {
+        com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                requireContext(),
+                "Delete Server",
+                "Are you sure you want to delete this server? This action cannot be undone.",
+                "Delete",
+                "#F23F42",
+                () -> {
                     viewModel.deleteServer(serverId);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                }
+        );
     }
 
     private void setupChatRecyclerView() {

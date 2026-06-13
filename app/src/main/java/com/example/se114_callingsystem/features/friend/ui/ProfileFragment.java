@@ -99,6 +99,12 @@ public class ProfileFragment extends Fragment {
             binding.tvFriendActionsHeader.setVisibility(View.GONE);
             binding.cardSendMessage.setVisibility(View.GONE);
 
+            binding.tvSubscriptionHeader.setVisibility(View.VISIBLE);
+            binding.cardUpgradePlan.setVisibility(View.VISIBLE);
+            binding.btnUpgradePlan.setOnClickListener(v -> {
+                Navigation.findNavController(v).navigate(R.id.action_profile_to_upgrade_plan);
+            });
+
             binding.tvUserSettingsHeader.setVisibility(View.VISIBLE);
             binding.cardEditProfile.setVisibility(View.VISIBLE);
             binding.tvAccountActionsHeader.setVisibility(View.VISIBLE);
@@ -115,16 +121,28 @@ public class ProfileFragment extends Fragment {
             });
             
             binding.btnLogout.setOnClickListener(v -> {
-                if (getContext() != null) {
-                    requireContext().stopService(new Intent(getContext(), MessageNotificationService.class));
-                }
-                if (getActivity() != null) {
-                    com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(requireActivity(), 
-                        com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
-                }
-                viewModel.signOut();
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Đăng xuất",
+                        "Bạn có chắc chắn muốn đăng xuất không?",
+                        "Đăng xuất",
+                        "#F23F42",
+                        () -> {
+                            if (getContext() != null) {
+                                requireContext().stopService(new Intent(getContext(), MessageNotificationService.class));
+                            }
+                            if (getActivity() != null) {
+                                com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(requireActivity(), 
+                                    com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN).signOut();
+                            }
+                            viewModel.signOut();
+                        }
+                );
             });
         } else {
+            binding.tvSubscriptionHeader.setVisibility(View.GONE);
+            binding.cardUpgradePlan.setVisibility(View.GONE);
+
             binding.tvUserSettingsHeader.setVisibility(View.GONE);
             binding.cardEditProfile.setVisibility(View.GONE);
             binding.tvAccountActionsHeader.setVisibility(View.GONE);
@@ -163,7 +181,41 @@ public class ProfileFragment extends Fragment {
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), user -> {
             if (user == null || binding == null || getContext() == null) return;
 
-            binding.tvUsername.setText(user.getUsername() != null && !user.getUsername().isEmpty() ? user.getUsername() : "User");
+            String displayName = user.getUsername() != null && !user.getUsername().isEmpty() ? user.getUsername() : "User";
+            String plan = user.getPlan();
+            if (plan == null) plan = "Basic";
+
+            binding.tvUsername.setText(displayName);
+
+            if ("Pro".equals(plan)) {
+                binding.tvAvatarBadge.setText("✨");
+                binding.tvAvatarBadge.setVisibility(View.VISIBLE);
+                binding.viewBadgeRing.setVisibility(View.VISIBLE);
+            } else if ("Standard".equals(plan)) {
+                binding.tvAvatarBadge.setText("⭐");
+                binding.tvAvatarBadge.setVisibility(View.VISIBLE);
+                binding.viewBadgeRing.setVisibility(View.VISIBLE);
+            } else {
+                binding.tvAvatarBadge.setVisibility(View.GONE);
+                binding.viewBadgeRing.setVisibility(View.GONE);
+            }
+            
+            // Apply gold border to ivAvatar
+            if (binding.ivAvatar instanceof com.google.android.material.imageview.ShapeableImageView) {
+                com.google.android.material.imageview.ShapeableImageView siv = (com.google.android.material.imageview.ShapeableImageView) binding.ivAvatar;
+                float density = getResources().getDisplayMetrics().density;
+                if ("Pro".equals(plan)) {
+                    siv.setStrokeWidth(3f * density);
+                    siv.setStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFD700")));
+                    int padding = (int)(3 * density);
+                    siv.setPadding(padding, padding, padding, padding);
+                } else {
+                    siv.setStrokeWidth(6f * density);
+                    siv.setStrokeColor(android.content.res.ColorStateList.valueOf(androidx.core.content.ContextCompat.getColor(requireContext(), R.color.discord_dark_deep)));
+                    int padding = (int)(2 * density);
+                    siv.setPadding(padding, padding, padding, padding);
+                }
+            }
             
             // Set online/offline status text & indicator color
             String status = user.getStatus();
@@ -271,6 +323,11 @@ public class ProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadUserProfile(); // Reload data in case it was edited
+        if (isOwnProfile && binding != null && getContext() != null) {
+            android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+            String currentPlan = prefs.getString("current_plan", "Basic");
+            binding.tvCurrentPlan.setText("Current: " + currentPlan + " Plan");
+        }
     }
 
     private void loadUserProfile() {

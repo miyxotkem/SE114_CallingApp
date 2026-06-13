@@ -168,7 +168,7 @@ public class VoiceCallFragment extends Fragment {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requireContext().registerReceiver(serviceReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         } else {
-            requireContext().registerReceiver(serviceReceiver, filter);
+            ContextCompat.registerReceiver(requireContext(), serviceReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
         }
 
         if (checkPermissions()) {
@@ -250,7 +250,9 @@ public class VoiceCallFragment extends Fragment {
             config.mContext = requireContext().getApplicationContext();
             config.mAppId = appId;
             config.mEventHandler = mRtcEventHandler;
+            config.addExtension("agora_segmentation_extension");
             mRtcEngine = RtcEngine.create(config);
+            mRtcEngine.enableExtension("agora_segmentation", "PortraitSegmentation", true);
 
             mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_COMMUNICATION);
             mRtcEngine.enableAudio();
@@ -685,13 +687,16 @@ public class VoiceCallFragment extends Fragment {
 
     private void setupControls() {
         updateVideoButtonUI(true);
-        updateMuteButtonUI(false);
-        binding.btnMute.setSelected(false);
+        updateMuteButtonUI(true);
+        binding.btnMute.setSelected(true); // Mic ban đầu tắt
         binding.btnToggleVideo.setSelected(true); // Video ban đầu tắt nên set selected = true để click lần đầu bật lên
 
-        binding.btnToggleVideo.setOnLongClickListener(v -> {
+        if (mRtcEngine != null) {
+            mRtcEngine.muteLocalAudioStream(true);
+        }
+
+        binding.btnMoreOptions.setOnClickListener(v -> {
             showVirtualBgDialog();
-            return true;
         });
 
         binding.btnMute.setOnClickListener(v -> {
@@ -711,10 +716,12 @@ public class VoiceCallFragment extends Fragment {
             mRtcEngine.muteLocalVideoStream(isVideoOff);
             if (!isVideoOff) {
                 mRtcEngine.startPreview();
+                binding.btnSwitchCamera.setVisibility(View.VISIBLE);
             } else {
                 if (!isSharingScreen) {
                     mRtcEngine.stopPreview();
                 }
+                binding.btnSwitchCamera.setVisibility(View.GONE);
             }
             updateVideoButtonUI(isVideoOff);
             if (!participantList.isEmpty()) {
@@ -722,6 +729,12 @@ public class VoiceCallFragment extends Fragment {
                 sortParticipantList();
                 updateGridLayout();
                 if (adapter != null) adapter.notifyDataSetChanged();
+            }
+        });
+
+        binding.btnSwitchCamera.setOnClickListener(v -> {
+            if (mRtcEngine != null) {
+                mRtcEngine.switchCamera();
             }
         });
 
@@ -821,44 +834,73 @@ public class VoiceCallFragment extends Fragment {
     private void showVirtualBgDialog() {
         if (getContext() == null || mRtcEngine == null) return;
         
-        String[] options = {"Không dùng (Normal)", "Làm mờ nền (Background Blur)", "Hình nền ảo (Virtual Background)"};
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Bộ lọc nền Video")
-            .setItems(options, (dialog, which) -> {
-                if (which == 0) {
-                    mRtcEngine.enableVirtualBackground(false, null, null);
-                    Toast.makeText(getContext(), "Đã tắt bộ lọc nền", Toast.LENGTH_SHORT).show();
-                } else if (which == 1) {
-                    io.agora.rtc2.video.VirtualBackgroundSource source = new io.agora.rtc2.video.VirtualBackgroundSource();
-                    source.backgroundSourceType = io.agora.rtc2.video.VirtualBackgroundSource.BACKGROUND_BLUR;
-                    source.blurDegree = io.agora.rtc2.video.VirtualBackgroundSource.BLUR_DEGREE_MEDIUM;
-                    
-                    io.agora.rtc2.video.SegmentationProperty segProperty = new io.agora.rtc2.video.SegmentationProperty();
-                    segProperty.modelType = io.agora.rtc2.video.SegmentationProperty.SEG_MODEL_AI;
-                    
-                    int res = mRtcEngine.enableVirtualBackground(true, source, segProperty);
-                    if (res == 0) {
-                        Toast.makeText(getContext(), "Đã bật làm mờ nền", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Không hỗ trợ trên thiết bị này: " + res, Toast.LENGTH_SHORT).show();
-                    }
-                } else if (which == 2) {
-                    io.agora.rtc2.video.VirtualBackgroundSource source = new io.agora.rtc2.video.VirtualBackgroundSource();
-                    source.backgroundSourceType = io.agora.rtc2.video.VirtualBackgroundSource.BACKGROUND_COLOR;
-                    source.color = 0x2B2D31; // màu tối Discord
-                    
-                    io.agora.rtc2.video.SegmentationProperty segProperty = new io.agora.rtc2.video.SegmentationProperty();
-                    segProperty.modelType = io.agora.rtc2.video.SegmentationProperty.SEG_MODEL_AI;
-                    
-                    int res = mRtcEngine.enableVirtualBackground(true, source, segProperty);
-                    if (res == 0) {
-                        Toast.makeText(getContext(), "Đã đặt màu nền tối Discord", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "Không hỗ trợ trên thiết bị này: " + res, Toast.LENGTH_SHORT).show();
-                    }
-                }
-            })
-            .show();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = 
+                new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        
+        View view = getLayoutInflater().inflate(R.layout.layout_call_bottom_sheet_virtual_bg, null);
+        bottomSheetDialog.setContentView(view);
+        
+        // Cần set transparent background để thấy được bo góc của layout custom
+        try {
+            View bottomSheet = (View) view.getParent();
+            bottomSheet.setBackgroundResource(android.R.color.transparent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        view.findViewById(R.id.btnBgNormal).setOnClickListener(v -> {
+            mRtcEngine.enableVirtualBackground(false, null, null);
+            Toast.makeText(getContext(), "Đã tắt bộ lọc nền", Toast.LENGTH_SHORT).show();
+            bottomSheetDialog.dismiss();
+        });
+        
+        view.findViewById(R.id.btnBgBlur).setOnClickListener(v -> {
+            if (mRtcEngine.isFeatureAvailableOnDevice(io.agora.rtc2.Constants.FEATURE_VIDEO_VIRTUAL_BACKGROUND) == false) {
+                Toast.makeText(getContext(), "Máy của bạn (hoặc máy ảo) không hỗ trợ tính năng này do phần cứng.", Toast.LENGTH_LONG).show();
+                bottomSheetDialog.dismiss();
+                return;
+            }
+            
+            io.agora.rtc2.video.VirtualBackgroundSource source = new io.agora.rtc2.video.VirtualBackgroundSource();
+            source.backgroundSourceType = io.agora.rtc2.video.VirtualBackgroundSource.BACKGROUND_BLUR;
+            source.blurDegree = io.agora.rtc2.video.VirtualBackgroundSource.BLUR_DEGREE_MEDIUM;
+            
+            io.agora.rtc2.video.SegmentationProperty segProperty = new io.agora.rtc2.video.SegmentationProperty();
+            segProperty.modelType = io.agora.rtc2.video.SegmentationProperty.SEG_MODEL_AI;
+            
+            int res = mRtcEngine.enableVirtualBackground(true, source, segProperty);
+            if (res == 0) {
+                Toast.makeText(getContext(), "Đã bật làm mờ nền", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Lỗi kích hoạt: " + res, Toast.LENGTH_SHORT).show();
+            }
+            bottomSheetDialog.dismiss();
+        });
+        
+        view.findViewById(R.id.btnBgColor).setOnClickListener(v -> {
+            if (mRtcEngine.isFeatureAvailableOnDevice(io.agora.rtc2.Constants.FEATURE_VIDEO_VIRTUAL_BACKGROUND) == false) {
+                Toast.makeText(getContext(), "Máy của bạn (hoặc máy ảo) không hỗ trợ tính năng này do phần cứng.", Toast.LENGTH_LONG).show();
+                bottomSheetDialog.dismiss();
+                return;
+            }
+
+            io.agora.rtc2.video.VirtualBackgroundSource source = new io.agora.rtc2.video.VirtualBackgroundSource();
+            source.backgroundSourceType = io.agora.rtc2.video.VirtualBackgroundSource.BACKGROUND_COLOR;
+            source.color = 0x2B2D31; // màu tối Discord
+            
+            io.agora.rtc2.video.SegmentationProperty segProperty = new io.agora.rtc2.video.SegmentationProperty();
+            segProperty.modelType = io.agora.rtc2.video.SegmentationProperty.SEG_MODEL_AI;
+            
+            int res = mRtcEngine.enableVirtualBackground(true, source, segProperty);
+            if (res == 0) {
+                Toast.makeText(getContext(), "Đã đặt màu nền tối Discord", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Lỗi kích hoạt: " + res, Toast.LENGTH_SHORT).show();
+            }
+            bottomSheetDialog.dismiss();
+        });
+        
+        bottomSheetDialog.show();
     }
 
     private String resolveNameForUid(int agoraUid) {

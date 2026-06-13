@@ -107,6 +107,28 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.mcvServerCreate.setOnClickListener(v -> {
+            android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            String currentPlan = prefs.getString("current_plan", "Basic");
+            int limit = 5;
+            if ("Standard".equals(currentPlan)) limit = 15;
+            else if ("Pro".equals(currentPlan)) limit = 30;
+
+            int currentServerCount = serverList.size();
+            if (currentServerCount >= limit) {
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                    .setTitle("Plan Limit Reached")
+                    .setMessage("You reached the limit of " + limit + " servers on your " + currentPlan + " plan. Upgrade your plan to create more servers.")
+                    .setPositiveButton("Upgrade", (dialog, which) -> {
+                        androidx.navigation.fragment.NavHostFragment nhf = (androidx.navigation.fragment.NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+                        if (nhf != null) {
+                            nhf.getNavController().navigate(R.id.nav_upgrade_plan);
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+                return;
+            }
+
             CreateServerDialog dialog = new CreateServerDialog();
             dialog.show(getSupportFragmentManager(), "Server_on_create");
         });
@@ -524,6 +546,28 @@ public class MainActivity extends AppCompatActivity {
             com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() != null ? 
             com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getDisplayName() : "New Member";
         if (uid == null) return;
+        
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String currentPlan = prefs.getString("current_plan", "Basic");
+        int limit = 5;
+        if ("Standard".equals(currentPlan)) limit = 15;
+        else if ("Pro".equals(currentPlan)) limit = 30;
+
+        int currentServerCount = serverList.size();
+        if (currentServerCount >= limit) {
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Plan Limit Reached")
+                .setMessage("You reached the limit of " + limit + " servers on your " + currentPlan + " plan. Upgrade your plan to join more servers.")
+                .setPositiveButton("Upgrade", (dialog, which) -> {
+                    NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+                    if (nhf != null) {
+                        nhf.getNavController().navigate(R.id.nav_upgrade_plan);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+            return;
+        }
         
         com.google.firebase.firestore.FirebaseFirestore dbInstance = com.google.firebase.firestore.FirebaseFirestore.getInstance();
         dbInstance.collection("servers").document(serverIdToJoin).get().addOnSuccessListener(doc -> {
