@@ -71,7 +71,7 @@
             android:name=".features.call.ui.CallActivity"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
-            android:launchMode="singleInstance"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.SE114_CallingSystem"
             android:exported="false" />
     </application>
