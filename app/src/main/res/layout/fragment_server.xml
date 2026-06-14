@@ -177,13 +177,12 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:text="TEXT CHANNELS"
+                        android:text="@string/text_channels"
                         android:textAllCaps="true"
                         android:letterSpacing="0.08"
                         android:textColor="@color/discord_text_secondary"
                         android:textSize="12sp"
                         android:fontFamily="@font/inter" android:textStyle="bold" />
-
                     <ImageView
                         android:id="@+id/btnAddChannel"
                         android:layout_width="24dp"
@@ -228,7 +227,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:text="VOICE CHANNELS"
+                        android:text="@string/voice_channels"
                         android:textAllCaps="true"
                         android:letterSpacing="0.08"
                         android:textColor="@color/discord_text_secondary"
@@ -279,7 +278,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:layout_weight="1"
-                        android:text="POST CHANNELS"
+                        android:text="@string/post_channels"
                         android:textAllCaps="true"
                         android:letterSpacing="0.08"
                         android:textColor="@color/discord_text_secondary"

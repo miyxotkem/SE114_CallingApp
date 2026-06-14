@@ -11,14 +11,14 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.features.friend.viewmodel.ManageFriendsViewModel;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class AddFriendDialog extends DialogFragment {
+public class AddFriendDialog extends BottomSheetDialogFragment {
 
     private ManageFriendsViewModel viewModel;
     private Button btnAddFriendConfirm;
@@ -26,9 +26,6 @@ public class AddFriendDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
         return inflater.inflate(R.layout.dialog_friend_add, container, false);
     }
 
@@ -122,14 +119,5 @@ public class AddFriendDialog extends DialogFragment {
         });
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().setLayout(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-    }
+
 }

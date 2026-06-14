@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
+import com.bumptech.glide.Glide;
 import com.example.se114_callingsystem.core.model.Server;
 import com.example.se114_callingsystem.core.model.ServerMember;
 import com.example.se114_callingsystem.core.model.User;
@@ -53,9 +54,16 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
         holder.tvName.setText(displayName);
 
         // Hiện Role Badge
-        if ("owner".equals(member.getRole()) || "admin".equals(member.getRole())) {
+        if ("owner".equals(member.getRole())) {
             holder.tvRole.setVisibility(View.VISIBLE);
-            holder.tvRole.setText(member.getRole().toUpperCase());
+            holder.tvRole.setText("OWNER");
+            holder.tvRole.setTextColor(android.graphics.Color.parseColor("#F5A623"));
+            holder.tvRole.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1AF5A623")));
+        } else if ("admin".equals(member.getRole())) {
+            holder.tvRole.setVisibility(View.VISIBLE);
+            holder.tvRole.setText("ADMIN");
+            holder.tvRole.setTextColor(android.graphics.Color.parseColor("#5865F2"));
+            holder.tvRole.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#1A5865F2")));
         } else {
             holder.tvRole.setVisibility(View.GONE);
         }
@@ -88,7 +96,8 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
         };
         holder.currentRef.addValueEventListener(holder.currentListener);
         
-        // Lắng nghe Voice Channel (Từ Firestore)
+        final String finalDisplayName = displayName;
+        // Lắng nghe Voice Channel & Avatar (Từ Firestore)
         if (holder.firestoreListener != null) {
             holder.firestoreListener.remove();
         }
@@ -98,8 +107,53 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
                 if (doc != null && doc.exists()) {
                     String voiceChannel = doc.getString("currentVoiceChannelName");
                     if (voiceChannel != null && !voiceChannel.isEmpty()) {
-                        holder.tvMemberStatus.setVisibility(View.VISIBLE);
+                        if (holder.layoutVoiceStatus != null) {
+                            holder.layoutVoiceStatus.setVisibility(View.VISIBLE);
+                        } else {
+                            holder.tvMemberStatus.setVisibility(View.VISIBLE);
+                        }
                         holder.tvMemberStatus.setText("Đang ở trong phòng thoại " + voiceChannel);
+                    } else {
+                        if (holder.layoutVoiceStatus != null) {
+                            holder.layoutVoiceStatus.setVisibility(View.GONE);
+                        } else {
+                            holder.tvMemberStatus.setVisibility(View.GONE);
+                        }
+                    }
+
+                    // Tải profilePic
+                    String profilePic = doc.getString("profilePic");
+                    if (profilePic != null && !profilePic.isEmpty()) {
+                        if (holder.ivAvatar != null) holder.ivAvatar.setVisibility(View.VISIBLE);
+                        if (holder.tvInitials != null) holder.tvInitials.setVisibility(View.GONE);
+                        if (holder.ivPlaceholder != null) holder.ivPlaceholder.setVisibility(View.GONE);
+                        Glide.with(context).load(profilePic).into(holder.ivAvatar);
+                    } else {
+                        if (holder.ivAvatar != null) holder.ivAvatar.setVisibility(View.GONE);
+                        if (holder.ivPlaceholder != null) holder.ivPlaceholder.setVisibility(View.GONE);
+                        if (holder.tvInitials != null) {
+                            holder.tvInitials.setVisibility(View.VISIBLE);
+                            String initials = finalDisplayName.substring(0, 1).toUpperCase();
+                            holder.tvInitials.setText(initials);
+                            
+                            // Set dynamic background color based on name hash
+                            try {
+                                com.google.android.material.card.MaterialCardView cardAvatar = holder.itemView.findViewById(R.id.cardMemberAvatar);
+                                if (cardAvatar != null) {
+                                    int hash = finalDisplayName.hashCode();
+                                    int[] presetColors = {0xFF5865F2, 0xFF23A559, 0xFFF5A623, 0xFFEB459E, 0xFF00A8FC};
+                                    int chosenColor = presetColors[Math.abs(hash) % presetColors.length];
+                                    cardAvatar.setCardBackgroundColor(chosenColor);
+                                }
+                            } catch (Exception e) {}
+                        }
+                    }
+                } else {
+                    if (holder.ivAvatar != null) holder.ivAvatar.setVisibility(View.GONE);
+                    if (holder.tvInitials != null) holder.tvInitials.setVisibility(View.GONE);
+                    if (holder.ivPlaceholder != null) holder.ivPlaceholder.setVisibility(View.VISIBLE);
+                    if (holder.layoutVoiceStatus != null) {
+                        holder.layoutVoiceStatus.setVisibility(View.GONE);
                     } else {
                         holder.tvMemberStatus.setVisibility(View.GONE);
                     }
@@ -112,6 +166,16 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
                 listener.onSetNickname(member);
             }
         });
+
+        // Nhấp vào avatar để xem Profile
+        com.google.android.material.card.MaterialCardView cardAvatar = holder.itemView.findViewById(R.id.cardMemberAvatar);
+        if (cardAvatar != null) {
+            cardAvatar.setOnClickListener(v -> {
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putString("USER_ID", member.getUserId());
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_profile, bundle);
+            });
+        }
 
         // 3-dot option menu
         holder.btnOptions.setVisibility(View.VISIBLE);
@@ -161,9 +225,9 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvName, tvRole, tvMemberStatus;
-        ImageView btnOptions;
-        View vStatusIndicator;
+        TextView tvName, tvRole, tvMemberStatus, tvInitials;
+        ImageView btnOptions, ivAvatar, ivPlaceholder;
+        View vStatusIndicator, layoutVoiceStatus;
         com.google.firebase.database.ValueEventListener currentListener;
         com.google.firebase.database.DatabaseReference currentRef;
         com.google.firebase.firestore.ListenerRegistration firestoreListener;
@@ -175,6 +239,10 @@ public class ServerMemberAdapter extends RecyclerView.Adapter<ServerMemberAdapte
             tvMemberStatus = itemView.findViewById(R.id.tvMemberStatus);
             btnOptions = itemView.findViewById(R.id.btnMemberOptions);
             vStatusIndicator = itemView.findViewById(R.id.vStatusIndicator);
+            tvInitials = itemView.findViewById(R.id.tvMemberInitials);
+            ivAvatar = itemView.findViewById(R.id.ivMemberAvatar);
+            ivPlaceholder = itemView.findViewById(R.id.ivMemberPlaceholder);
+            layoutVoiceStatus = itemView.findViewById(R.id.layoutVoiceStatus);
         }
     }
 }

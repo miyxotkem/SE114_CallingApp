@@ -13,14 +13,14 @@ import android.widget.Toast;
 import android.widget.ViewFlipper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.core.model.Server;
 import com.example.se114_callingsystem.core.model.ServerMember;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.Random;
 
-public class CreateServerDialog extends DialogFragment {
+public class CreateServerDialog extends BottomSheetDialogFragment {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private String generatedServerId;
@@ -34,9 +34,6 @@ public class CreateServerDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
         return inflater.inflate(R.layout.dialog_server_create, container, false);
     }
 
@@ -164,14 +161,5 @@ public class CreateServerDialog extends DialogFragment {
         step3.setBackgroundResource(step >= 3 ? R.color.discord_blurple : R.color.discord_divider);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().setLayout(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-    }
+
 }

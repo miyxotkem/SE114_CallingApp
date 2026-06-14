@@ -29,7 +29,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Upgrade Plan"
+                android:text="@string/upgrade_plan_title"
                 android:textColor="@color/white"
                 android:textSize="20sp"
                 android:fontFamily="@font/inter"
@@ -52,7 +52,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Choose Your Plan"
+                android:text="@string/choose_your_plan"
                 android:textColor="@color/white"
                 android:textSize="24sp"
                 android:fontFamily="@font/inter"
@@ -64,7 +64,7 @@
                 android:id="@+id/tvRenewedDay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Your plan renews on the 1st of every month."
+                android:text="@string/plan_renew_desc"
                 android:textColor="@color/discord_text_muted"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter"
@@ -93,7 +93,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Basic Plan"
+                        android:text="@string/basic_plan"
                         android:textColor="@color/white"
                         android:textSize="18sp"
                         android:fontFamily="@font/inter"
@@ -102,7 +102,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Free"
+                        android:text="@string/free_price"
                         android:textColor="@color/discord_text_muted"
                         android:textSize="14sp"
                         android:fontFamily="@font/inter"
@@ -132,7 +132,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Standard Plan"
+                        android:text="@string/standard_plan"
                         android:textColor="@color/discord_blurple"
                         android:textSize="18sp"
                         android:fontFamily="@font/inter"
@@ -141,7 +141,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$4.99 / month"
+                        android:text="@string/standard_price"
                         android:textColor="@color/discord_text_muted"
                         android:textSize="14sp"
                         android:fontFamily="@font/inter"
@@ -171,7 +171,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pro Plan"
+                        android:text="@string/pro_plan"
                         android:textColor="#FFD700"
                         android:textSize="18sp"
                         android:fontFamily="@font/inter"
@@ -180,7 +180,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="$9.99 / month"
+                        android:text="@string/pro_price"
                         android:textColor="@color/discord_text_muted"
                         android:textSize="14sp"
                         android:fontFamily="@font/inter"
@@ -199,7 +199,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Plan Features"
+                    android:text="@string/plan_features"
                     android:textColor="@color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"
@@ -220,7 +220,7 @@
                 android:id="@+id/btnSubscribe"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="Upgrade Now"
+                android:text="@string/upgrade_now_button"
                 app:cornerRadius="8dp"
                 android:fontFamily="@font/inter"
                 android:textStyle="bold"

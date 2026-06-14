@@ -23,7 +23,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create an account"
+            android:text="@string/register_title"
             android:textColor="@color/discord_text_primary"
             android:textSize="26sp"
             android:fontFamily="@font/inter" android:textStyle="bold"
@@ -41,7 +41,7 @@
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            android:hint="USERNAME"
+            android:hint="@string/username_label"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
@@ -67,7 +67,7 @@
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            android:hint="EMAIL"
+            android:hint="@string/email_label"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:fontFamily="@font/inter">
 
@@ -93,7 +93,7 @@
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            android:hint="PASSWORD"
+            android:hint="@string/password_label"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/discord_text_secondary"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -121,7 +121,7 @@
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusBottomEnd="8dp"
-            android:hint="CONFIRM PASSWORD"
+            android:hint="@string/password_label"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/discord_text_secondary"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -142,7 +142,7 @@
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:text="Register"
+            android:text="@string/register_button"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:fontFamily="@font/inter" android:textStyle="bold"
@@ -160,7 +160,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Already have an account? "
+                android:text="@string/already_have_account"
                 android:textColor="@color/discord_text_muted"
                 android:fontFamily="@font/inter"
                 android:textSize="14sp" />
@@ -168,7 +168,7 @@
                 android:id="@+id/tvGoToLogin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Log in"
+                android:text="@string/login_button"
                 android:textColor="@color/discord_text_link"
                 android:fontFamily="@font/inter" android:textStyle="bold"
                 android:textSize="14sp" />

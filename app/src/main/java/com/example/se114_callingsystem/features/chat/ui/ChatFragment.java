@@ -178,14 +178,14 @@ public class ChatFragment extends Fragment {
                     binding.tvChannelHash.setVisibility(View.GONE);
                     binding.ivOnlineStatus.setVisibility(View.VISIBLE);
                     binding.tvChannelName.setText(channelName);
-                    binding.edtMessage.setHint("Message " + channelName);
+                    binding.edtMessage.setHint(getString(R.string.chat_input_hint_dm, channelName));
                     loadDMParticipants();
                 } else {
                     // Chat Server Channel
                     binding.tvChannelHash.setVisibility(View.VISIBLE);
                     binding.ivOnlineStatus.setVisibility(View.GONE);
                     binding.tvChannelName.setText(channelName.toLowerCase());
-                    binding.edtMessage.setHint("Message #" + channelName.toLowerCase());
+                    binding.edtMessage.setHint(getString(R.string.chat_input_hint_channel, channelName.toLowerCase()));
                 }
             }
         }
@@ -709,9 +709,9 @@ public class ChatFragment extends Fragment {
                     break;
                 }
             }
-            tvTypingStatus.setText(name + " is typing...");
+            tvTypingStatus.setText(name + " " + getString(R.string.typing_indicator));
         } else {
-            tvTypingStatus.setText("Several people are typing...");
+            tvTypingStatus.setText(getString(R.string.several_people_typing));
         }
         
         // Auto scroll to bottom if we are already at bottom

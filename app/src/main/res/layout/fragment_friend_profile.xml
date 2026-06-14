@@ -25,28 +25,7 @@
                 android:scaleType="centerCrop"
                 android:background="@color/discord_blurple" />
 
-            <!-- Back Button -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btnBackProfile"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="start|top"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="#80000000"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp"
-                android:clickable="true"
-                android:focusable="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_back"
-                    app:tint="@color/white" />
-            </com.google.android.material.card.MaterialCardView>
 
 
             <!-- Overlapping Avatar + Status Dot Container -->
@@ -144,7 +123,7 @@
                 android:id="@+id/tvUserStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Set a custom status..."
+                android:text="@string/status_hint"
                 android:textColor="@color/discord_text_muted"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter"
@@ -162,7 +141,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="About Me"
+                android:text="@string/about_me_header"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter"
@@ -214,7 +193,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Bio"
+                                android:text="@string/bio_label"
                                 android:textColor="@color/discord_text_primary"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
@@ -223,7 +202,7 @@
                                 android:id="@+id/tvBio"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="This user has no bio."
+                                android:text="@string/no_bio"
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:maxLines="1"
@@ -266,7 +245,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Work / Education"
+                                android:text="@string/work_education_label"
                                 android:textColor="@color/discord_text_primary"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
@@ -275,7 +254,7 @@
                                 android:id="@+id/tvWorkplace"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Chưa cập nhật"
+                                android:text="@string/not_updated"
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:maxLines="1"
@@ -318,7 +297,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Hobbies"
+                                android:text="@string/hobbies_label"
                                 android:textColor="@color/discord_text_primary"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
@@ -327,7 +306,7 @@
                                 android:id="@+id/tvHobbies"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Trống"
+                                android:text="@string/empty_value"
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:maxLines="1"
@@ -370,7 +349,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Date of Birth"
+                                android:text="@string/dob_label"
                                 android:textColor="@color/discord_text_primary"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
@@ -379,7 +358,7 @@
                                 android:id="@+id/tvDob"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Chưa cập nhật"
+                                android:text="@string/not_updated"
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:fontFamily="@font/inter"/>
@@ -394,7 +373,7 @@
                 android:id="@+id/tvFriendActionsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Friend Actions"
+                android:text="@string/friend_actions_header"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter"
@@ -435,7 +414,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="Send Message"
+                        android:text="@string/send_message_button"
                         android:textColor="@color/white"
                         android:textSize="15sp"
                         android:fontFamily="@font/inter"
@@ -448,7 +427,7 @@
                 android:id="@+id/tvSubscriptionHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Subscription"
+                android:text="@string/subscription_header"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter"
@@ -501,7 +480,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Upgrade Plan"
+                                android:text="@string/upgrade_plan_title"
                                 android:textColor="#FFD700"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter" android:textStyle="bold" />
@@ -510,7 +489,7 @@
                                 android:id="@+id/tvCurrentPlan"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Current: Basic Plan"
+                                android:text="@string/basic_plan"
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:fontFamily="@font/inter"/>
@@ -530,7 +509,7 @@
                 android:id="@+id/tvUserSettingsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="User Settings"
+                android:text="@string/user_settings"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter"
@@ -584,7 +563,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Edit User Profile"
+                                android:text="@string/edit_profile"
                                 android:textColor="@color/discord_text_primary"
                                 android:textSize="14sp"
                                 android:fontFamily="@font/inter" />
@@ -592,7 +571,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Customize your banner, avatar, bio..."
+                                android:text="@string/edit_profile_desc"
                                 android:textColor="@color/discord_text_muted"
                                 android:textSize="13sp"
                                 android:fontFamily="@font/inter"/>
@@ -630,7 +609,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:layout_marginStart="12dp"
-                            android:text="Dark Mode"
+                            android:text="@string/dark_mode"
                             android:textColor="@color/discord_text_primary"
                             android:fontFamily="@font/inter"
                             android:textSize="14sp" />
@@ -643,6 +622,57 @@
                             app:trackTintMode="src_in" />
                     </LinearLayout>
 
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/discord_divider"
+                        android:layout_marginHorizontal="48dp" />
+
+                    <!-- Language Selection -->
+                    <LinearLayout
+                        android:id="@+id/llLanguageSettings"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="16dp"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_language"
+                            app:tint="@color/discord_text_secondary" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:text="@string/language"
+                            android:textColor="@color/discord_text_primary"
+                            android:fontFamily="@font/inter"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvCurrentLanguage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/current_language_display"
+                            android:textColor="@color/discord_text_secondary"
+                            android:fontFamily="@font/inter"
+                            android:textSize="14sp"
+                            android:layout_marginEnd="8dp" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/discord_text_muted" />
+                    </LinearLayout>
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -651,7 +681,7 @@
                 android:id="@+id/tvAccountActionsHeader"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Account Actions"
+                android:text="@string/account_actions_header"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter"
@@ -700,7 +730,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="12dp"
                             android:layout_marginEnd="8dp"
-                            android:text="Log Out"
+                            android:text="@string/logout"
                             android:textColor="@color/discord_red"
                             android:textSize="14sp"
                             android:fontFamily="@font/inter" />
