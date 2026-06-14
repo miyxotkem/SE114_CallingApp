@@ -3,6 +3,7 @@ package com.example.se114_callingsystem;
 import android.app.Application;
 import com.cloudinary.android.MediaManager;
 import com.example.se114_callingsystem.network.BackendService;
+import com.example.se114_callingsystem.network.ApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
@@ -24,6 +25,8 @@ public class CallingApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
+        // Khởi tạo ApiClient với Application Context
+        ApiClient.init(this);
         // Force Dark Mode globally by default
         androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
 

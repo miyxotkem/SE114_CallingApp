@@ -333,9 +333,18 @@ public class VoiceCallFragment extends Fragment {
             config.mContext = requireContext().getApplicationContext();
             config.mAppId = appId;
             config.mEventHandler = mRtcEventHandler;
-            config.addExtension("agora_segmentation_extension");
+            try {
+                config.addExtension("agora_segmentation_extension");
+            } catch (Throwable t) {
+                Log.e(TAG, "Failed to add extension: " + t.getMessage());
+            }
             mRtcEngine = RtcEngine.create(config);
-            mRtcEngine.enableExtension("agora_segmentation", "PortraitSegmentation", true);
+            try {
+                mRtcEngine.enableExtension("agora_segmentation", "PortraitSegmentation", true);
+            } catch (Throwable t) {
+                Log.e(TAG, "Failed to enable extension: " + t.getMessage());
+            }
+
 
             mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_COMMUNICATION);
             mRtcEngine.enableAudio();
