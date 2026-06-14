@@ -200,8 +200,8 @@
                     android:id="@+id/switchMute"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:focusable="false"
+                    android:clickable="true"
+                    android:focusable="true"
                     app:useMaterialThemeColors="false"
                     app:thumbTint="@color/discord_blurple"
                     android:fontFamily="@font/inter"/>

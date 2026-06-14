@@ -93,6 +93,16 @@ public class PostListAdapter extends RecyclerView.Adapter<PostListAdapter.PostVi
             }
         });
 
+        View.OnClickListener authorClickListener = v -> {
+            if (post.getAuthorId() != null) {
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putString("USER_ID", post.getAuthorId());
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_profile, bundle);
+            }
+        };
+        holder.ivAuthorAvatar.setOnClickListener(authorClickListener);
+        holder.tvAuthorName.setOnClickListener(authorClickListener);
+
         // Handle Media
         if (post.getMediaUrls() != null && !post.getMediaUrls().isEmpty()) {
             holder.mediaContainer.setVisibility(View.VISIBLE);

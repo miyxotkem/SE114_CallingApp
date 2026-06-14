@@ -190,10 +190,17 @@ public class ChatInfoFragment extends Fragment {
         
         SharedPreferences prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE);
         boolean isMuted = prefs.getBoolean("mute_" + chatId, false);
+        
+        // Set state first before listener to prevent triggering toast on startup
         binding.switchMute.setChecked(isMuted);
 
         binding.switchMute.setOnCheckedChangeListener((buttonView, isChecked) -> {
             prefs.edit().putBoolean("mute_" + chatId, isChecked).apply();
+            if (isChecked) {
+                Toast.makeText(getContext(), "Đã tắt thông báo cuộc trò chuyện này", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Đã bật thông báo cuộc trò chuyện này", Toast.LENGTH_SHORT).show();
+            }
         });
 
         binding.btnMuteNotifications.setOnClickListener(v -> {
@@ -224,20 +231,34 @@ public class ChatInfoFragment extends Fragment {
                         if (sId != null) {
                             serverId = sId;
                             loadServerMembers(sId);
+                            binding.btnPinnedMessages.setVisibility(View.VISIBLE);
+                            binding.dividerPinned.setVisibility(View.VISIBLE);
                         } else {
                             setupDMNicknamesButton();
                             loadDMParticipants();
+                            binding.btnPinnedMessages.setVisibility(View.GONE);
+                            binding.dividerPinned.setVisibility(View.GONE);
                         }
                     } else if (binding != null) {
                         setupDMNicknamesButton();
                         loadDMParticipants();
+                        binding.btnPinnedMessages.setVisibility(View.GONE);
+                        binding.dividerPinned.setVisibility(View.GONE);
                     }
                 });
         } else if (serverId != null) {
             loadServerMembers(serverId);
+            if (binding != null) {
+                binding.btnPinnedMessages.setVisibility(View.VISIBLE);
+                binding.dividerPinned.setVisibility(View.VISIBLE);
+            }
         } else {
             setupDMNicknamesButton();
             loadDMParticipants();
+            if (binding != null) {
+                binding.btnPinnedMessages.setVisibility(View.GONE);
+                binding.dividerPinned.setVisibility(View.GONE);
+            }
         }
     }
 

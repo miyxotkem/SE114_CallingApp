@@ -142,6 +142,16 @@ public class CommentListAdapter extends RecyclerView.Adapter<CommentListAdapter.
             }
         });
 
+        View.OnClickListener commentAuthorClickListener = v -> {
+            if (comment.getAuthorId() != null) {
+                android.os.Bundle bundle = new android.os.Bundle();
+                bundle.putString("USER_ID", comment.getAuthorId());
+                androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_profile, bundle);
+            }
+        };
+        holder.ivCommentAvatar.setOnClickListener(commentAuthorClickListener);
+        holder.tvCommentAuthor.setOnClickListener(commentAuthorClickListener);
+
         // Set up reactions display
         if (comment.getReactions() != null && !comment.getReactions().isEmpty()) {
             holder.layoutCommentReactions.setVisibility(View.VISIBLE);
