@@ -25,28 +25,7 @@
                 android:scaleType="centerCrop"
                 android:background="@color/discord_blurple" />
 
-            <!-- Back Button -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/btnBackProfile"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="start|top"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                app:cardBackgroundColor="#80000000"
-                app:cardCornerRadius="18dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp"
-                android:clickable="true"
-                android:focusable="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_back"
-                    app:tint="@color/white" />
-            </com.google.android.material.card.MaterialCardView>
 
 
             <!-- Overlapping Avatar + Status Dot Container -->

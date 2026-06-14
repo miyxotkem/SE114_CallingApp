@@ -42,6 +42,18 @@ public class SelectFriendAdapter extends RecyclerView.Adapter<SelectFriendAdapte
         }
         holder.tvUserName.setText(name);
 
+        if (holder.ivAvatar != null) {
+            String profilePic = user.getProfilePic();
+            if (profilePic != null && !profilePic.isEmpty()) {
+                com.bumptech.glide.Glide.with(holder.itemView.getContext())
+                        .load(profilePic)
+                        .placeholder(R.mipmap.ic_launcher)
+                        .into(holder.ivAvatar);
+            } else {
+                holder.ivAvatar.setImageResource(R.mipmap.ic_launcher);
+            }
+        }
+
         // Reset listener to avoid triggering it when recycling
         holder.cbSelect.setOnCheckedChangeListener(null);
         holder.cbSelect.setChecked(selectedUsers.contains(user));
@@ -69,11 +81,13 @@ public class SelectFriendAdapter extends RecyclerView.Adapter<SelectFriendAdapte
     public static class SelectFriendViewHolder extends RecyclerView.ViewHolder {
         TextView tvUserName;
         CheckBox cbSelect;
+        android.widget.ImageView ivAvatar;
 
         public SelectFriendViewHolder(@NonNull View itemView) {
             super(itemView);
             tvUserName = itemView.findViewById(R.id.tvUserName);
             cbSelect = itemView.findViewById(R.id.cbSelect);
+            ivAvatar = itemView.findViewById(R.id.ivAvatar);
         }
     }
 }

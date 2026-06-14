@@ -1,6 +1,5 @@
 package com.example.se114_callingsystem.features.server.ui;
 
-import android.app.AlertDialog;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -11,7 +10,8 @@ import android.widget.Button;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.example.se114_callingsystem.core.util.BottomSheetUtils;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.se114_callingsystem.R;
@@ -30,7 +30,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddServerMemberDialog extends DialogFragment {
+public class AddServerMemberDialog extends BottomSheetDialogFragment {
 
     private String serverId;
     private RecyclerView rvFriendsToSelect;
@@ -45,9 +45,6 @@ public class AddServerMemberDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        }
         return inflater.inflate(R.layout.dialog_server_add_member, container, false);
     }
 
@@ -81,12 +78,14 @@ public class AddServerMemberDialog extends DialogFragment {
                 return;
             }
 
-            new AlertDialog.Builder(getContext())
-                    .setTitle("Xác nhận")
-                    .setMessage("Thêm " + selectedUsers.size() + " người vào server?")
-                    .setPositiveButton("Thêm", (dialog, which) -> addSelectedUsersToServer(selectedUsers))
-                    .setNegativeButton("Hủy", null)
-                    .show();
+            BottomSheetUtils.showConfirmDialog(
+                    getContext(),
+                    "Xác nhận",
+                    "Thêm " + selectedUsers.size() + " người vào server?",
+                    "Thêm",
+                    "#5865F2",
+                    () -> addSelectedUsersToServer(selectedUsers)
+            );
         });
     }
 
@@ -173,14 +172,5 @@ public class AddServerMemberDialog extends DialogFragment {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (getDialog() != null && getDialog().getWindow() != null) {
-            getDialog().getWindow().setLayout(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-    }
+
 }

@@ -133,12 +133,12 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
         
         holder.ivMoreOptions.setOnClickListener(v -> {
             if (viewModel != null) {
-                showDMOptionsBottomSheet(context, friend, isPinned);
+                showDMOptionsBottomSheet(context, friend, isPinned, holder.itemView);
             }
         });
     }
     
-    private void showDMOptionsBottomSheet(Context context, User friend, boolean isPinned) {
+    private void showDMOptionsBottomSheet(Context context, User friend, boolean isPinned, View anchorView) {
         BottomSheetDialog dialog = new BottomSheetDialog(context);
         android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
         layout.setOrientation(android.widget.LinearLayout.VERTICAL);
@@ -154,15 +154,35 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
         tvTitle.setPadding(48, 16, 48, 32);
         layout.addView(tvTitle);
         
+        android.util.TypedValue outValue = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+
+        // Xem Profile
+        android.widget.TextView btnProfile = new android.widget.TextView(context);
+        btnProfile.setText("Xem Profile");
+        btnProfile.setTextColor(ContextCompat.getColor(context, R.color.discord_text_primary));
+        btnProfile.setTextSize(16);
+        btnProfile.setGravity(android.view.Gravity.START | android.view.Gravity.CENTER_VERTICAL);
+        btnProfile.setPadding(48, 48, 48, 48);
+        btnProfile.setBackgroundResource(outValue.resourceId);
+        btnProfile.setClickable(true);
+        btnProfile.setFocusable(true);
+        layout.addView(btnProfile);
+
+        btnProfile.setOnClickListener(v -> {
+            android.os.Bundle bundle = new android.os.Bundle();
+            bundle.putString("USER_ID", friend.getUserId());
+            androidx.navigation.Navigation.findNavController(anchorView).navigate(R.id.nav_profile, bundle);
+            dialog.dismiss();
+        });
+        
+        // Pin DM
         android.widget.TextView btnPin = new android.widget.TextView(context);
         btnPin.setText(isPinned ? "Unpin DM" : "Pin to Top");
         btnPin.setTextColor(ContextCompat.getColor(context, R.color.discord_text_primary));
         btnPin.setTextSize(16);
         btnPin.setGravity(android.view.Gravity.START | android.view.Gravity.CENTER_VERTICAL);
         btnPin.setPadding(48, 48, 48, 48);
-        
-        android.util.TypedValue outValue = new android.util.TypedValue();
-        context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
         btnPin.setBackgroundResource(outValue.resourceId);
         btnPin.setClickable(true);
         btnPin.setFocusable(true);

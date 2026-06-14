@@ -208,20 +208,7 @@
             app:popEnterAnim="@anim/anim_pop_enter"
             app:popExitAnim="@anim/anim_pop_exit"/>
 
-        <action
-            android:id="@+id/action_server_to_change_color"
-            app:destination="@id/nav_server_change_color" 
-            app:enterAnim="@anim/anim_enter"
-            app:exitAnim="@anim/anim_exit"
-            app:popEnterAnim="@anim/anim_pop_enter"
-            app:popExitAnim="@anim/anim_pop_exit"/>
-        <action
-            android:id="@+id/action_server_to_manage_members"
-            app:destination="@id/nav_server_manage_members" 
-            app:enterAnim="@anim/anim_enter"
-            app:exitAnim="@anim/anim_exit"
-            app:popEnterAnim="@anim/anim_pop_enter"
-            app:popExitAnim="@anim/anim_pop_exit"/>
+
     </fragment>
 
 
@@ -283,24 +270,7 @@
             app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
-    <!-- 1. Đổi màu theme máy chủ -->
-    <fragment
-        android:id="@+id/nav_server_change_color"
-        android:name="com.example.se114_callingsystem.features.server.ui.ChangeColorFragment"
-        android:label="Change Server Color"
-        tools:layout="@layout/fragment_server_change_color">
-        <argument android:name="SERVER_ID" app:argType="string" />
-        <argument android:name="CURRENT_COLOR" app:argType="string" />
-    </fragment>
 
-    <!-- 2. Quản lý thành viên máy chủ -->
-    <fragment
-        android:id="@+id/nav_server_manage_members"
-        android:name="com.example.se114_callingsystem.features.server.ui.ManageMembersFragment"
-        android:label="Manage Server Members"
-        tools:layout="@layout/fragment_server_manage_members">
-        <argument android:name="SERVER_ID" app:argType="string" />
-    </fragment>
 
     <!-- 3. Quản lý bạn bè -->
     <fragment

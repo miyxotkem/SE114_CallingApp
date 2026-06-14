@@ -27,6 +27,7 @@ import com.example.se114_callingsystem.core.model.CallChannel;
 import com.example.se114_callingsystem.core.model.ChatChannel;
 import com.example.se114_callingsystem.core.model.PostChannel;
 import com.example.se114_callingsystem.core.model.Server;
+import com.example.se114_callingsystem.core.model.ServerMember;
 import com.example.se114_callingsystem.features.server.viewmodel.ServerViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
@@ -82,6 +83,7 @@ public class ServerFragment extends Fragment {
     private TextView dialogRemoveAvatar;
     private String serverIconUrl;
     private BottomSheetDialog settingsDialog;
+    private String selectedColorForDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -441,10 +443,26 @@ public class ServerFragment extends Fragment {
         try {
             int color = Color.parseColor(currentAccentColor);
             if (btnSave != null) btnSave.setBackgroundTintList(ColorStateList.valueOf(color));
-            if (dialogAvatarLetter != null) dialogAvatarLetter.setTextColor(color);
             com.google.android.material.card.MaterialCardView cardAvatar = view.findViewById(R.id.cardServerAvatarSettings);
-            if (cardAvatar != null) cardAvatar.setStrokeColor(color);
-        } catch (Exception e) {}
+            if (cardAvatar != null) {
+                cardAvatar.setCardBackgroundColor(color);
+                cardAvatar.setStrokeWidth(0);
+            }
+            if (dialogAvatarLetter != null) {
+                dialogAvatarLetter.setTextColor(Color.WHITE);
+            }
+        } catch (Exception e) {
+            int fallbackColor = Color.parseColor("#5865F2");
+            if (btnSave != null) btnSave.setBackgroundTintList(ColorStateList.valueOf(fallbackColor));
+            com.google.android.material.card.MaterialCardView cardAvatar = view.findViewById(R.id.cardServerAvatarSettings);
+            if (cardAvatar != null) {
+                cardAvatar.setCardBackgroundColor(fallbackColor);
+                cardAvatar.setStrokeWidth(0);
+            }
+            if (dialogAvatarLetter != null) {
+                dialogAvatarLetter.setTextColor(Color.WHITE);
+            }
+        }
 
         View btnLeave = view.findViewById(R.id.btnLeaveServer);
         if (btnLeave != null) {
@@ -500,19 +518,14 @@ public class ServerFragment extends Fragment {
         if (btnManageMembers != null) {
             btnManageMembers.setOnClickListener(v -> {
                 settingsDialog.dismiss();
-                Bundle args = new Bundle();
-                args.putString("SERVER_ID", serverId);
-                Navigation.findNavController(binding.getRoot()).navigate(R.id.action_server_to_manage_members, args);
+                showManageMembersDialog();
             });
         }
 
         if (btnChangeColor != null) {
             btnChangeColor.setOnClickListener(v -> {
                 settingsDialog.dismiss();
-                Bundle args = new Bundle();
-                args.putString("SERVER_ID", serverId);
-                args.putString("CURRENT_COLOR", currentAccentColor);
-                Navigation.findNavController(binding.getRoot()).navigate(R.id.action_server_to_change_color, args);
+                showChangeColorDialog();
             });
         }
 
@@ -715,6 +728,260 @@ public class ServerFragment extends Fragment {
         String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? 
             FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
         viewModel.initServer(serverId, currentUid);
+    }
+
+    private void filterMembers(List<ServerMember> src, List<ServerMember> dest, String query, ServerMemberAdapter adapter) {
+        dest.clear();
+        if (query.isEmpty()) {
+            dest.addAll(src);
+        } else {
+            for (ServerMember m : src) {
+                String name = m.getUserName() != null ? m.getUserName().toLowerCase() : "";
+                String nickname = m.getNickname() != null ? m.getNickname().toLowerCase() : "";
+                if (name.contains(query) || nickname.contains(query)) {
+                    dest.add(m);
+                }
+            }
+        }
+        adapter.notifyDataSetChanged();
+    }
+
+    private void showManageMembersDialog() {
+        if (getContext() == null) return;
+        BottomSheetDialog membersDialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.dialog_server_manage_members, null);
+        membersDialog.setContentView(view);
+
+        RecyclerView rvMembers = view.findViewById(R.id.rvMembers);
+        rvMembers.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        List<ServerMember> allMembersList = new ArrayList<>();
+        List<ServerMember> displayMemberList = new ArrayList<>();
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+
+        ServerMemberAdapter dialogAdapter = new ServerMemberAdapter(displayMemberList, requireContext(), new ServerMemberAdapter.OnMemberActionListener() {
+            @Override
+            public void onPromote(ServerMember member) {
+                db.collection("servers").document(serverId).collection("members").document(member.getUserId())
+                        .update("role", "admin")
+                        .addOnSuccessListener(a -> {
+                            if (getContext() != null) {
+                                Toast.makeText(requireContext(), "Promoted to Admin", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+
+            @Override
+            public void onDemote(ServerMember member) {
+                db.collection("servers").document(serverId).collection("members").document(member.getUserId())
+                        .update("role", "member")
+                        .addOnSuccessListener(a -> {
+                            if (getContext() != null) {
+                                Toast.makeText(requireContext(), "Demoted to Member", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+
+            @Override
+            public void onKick(ServerMember member) {
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                        requireContext(),
+                        "Đuổi thành viên",
+                        "Bạn có chắc chắn muốn đuổi " + (member.getUserName() != null ? member.getUserName() : "thành viên") + " khỏi Server này không?",
+                        "Đuổi",
+                        "#F23F42",
+                        () -> {
+                            db.collection("servers").document(serverId).collection("members").document(member.getUserId())
+                                    .delete()
+                                    .addOnSuccessListener(a -> {
+                                        db.collection("servers").document(serverId)
+                                            .update("members", com.google.firebase.firestore.FieldValue.arrayRemove(member.getUserId()));
+                                        if (getContext() != null) {
+                                            Toast.makeText(requireContext(), "Member kicked", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                );
+            }
+
+            @Override
+            public void onSetNickname(ServerMember member) {
+                com.example.se114_callingsystem.core.util.BottomSheetUtils.showInputDialog(
+                        requireContext(),
+                        "Đặt biệt danh cho " + (member.getUserName() != null ? member.getUserName() : "thành viên"),
+                        "Nhập biệt danh mới",
+                        member.getNickname() != null ? member.getNickname() : "",
+                        "Lưu",
+                        "#5865F2",
+                        (input) -> {
+                            db.collection("servers").document(serverId).collection("members").document(member.getUserId())
+                                    .update("nickname", input)
+                                    .addOnSuccessListener(a -> {
+                                        if (getContext() != null) {
+                                            Toast.makeText(requireContext(), "Đã cập nhật biệt danh", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                );
+            }
+        });
+
+        rvMembers.setAdapter(dialogAdapter);
+
+        EditText edtSearchMembers = view.findViewById(R.id.edtSearchMembers);
+        View btnClearSearch = view.findViewById(R.id.btnClearSearch);
+        final String[] currentQuery = {""};
+
+        if (edtSearchMembers != null) {
+            edtSearchMembers.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    currentQuery[0] = s.toString().trim().toLowerCase();
+                    if (btnClearSearch != null) {
+                        btnClearSearch.setVisibility(currentQuery[0].isEmpty() ? View.GONE : View.VISIBLE);
+                    }
+                    filterMembers(allMembersList, displayMemberList, currentQuery[0], dialogAdapter);
+                }
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {}
+            });
+        }
+
+        if (btnClearSearch != null) {
+            btnClearSearch.setOnClickListener(v -> {
+                if (edtSearchMembers != null) edtSearchMembers.setText("");
+            });
+        }
+
+        // Realtime member listener for dialog
+        com.google.firebase.firestore.ListenerRegistration dialogMembersListener = db.collection("servers").document(serverId).collection("members")
+            .addSnapshotListener((value, error) -> {
+                if (value != null && getContext() != null) {
+                    allMembersList.clear();
+                    String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+                        com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+                    boolean canAddMembers = false;
+                    for (com.google.firebase.firestore.DocumentSnapshot doc : value.getDocuments()) {
+                        ServerMember m = doc.toObject(ServerMember.class);
+                        if (m != null) {
+                            m.setUserId(doc.getId());
+                            allMembersList.add(m);
+                            if (m.getUserId().equals(currentUid)) {
+                                if ("owner".equals(m.getRole()) || "admin".equals(m.getRole())) {
+                                    canAddMembers = true;
+                                }
+                            }
+                        }
+                    }
+                    View btnAddMember = view.findViewById(R.id.btnAddMember);
+                    if (btnAddMember != null) {
+                        btnAddMember.setVisibility(canAddMembers ? View.VISIBLE : View.GONE);
+                        if (canAddMembers) {
+                            btnAddMember.setOnClickListener(v -> {
+                                AddServerMemberDialog dialog = new AddServerMemberDialog(serverId);
+                                dialog.show(getParentFragmentManager(), "Add_server_member");
+                            });
+                        }
+                    }
+                    filterMembers(allMembersList, displayMemberList, currentQuery[0], dialogAdapter);
+                }
+            });
+
+        membersDialog.setOnDismissListener(dialog -> {
+            if (dialogMembersListener != null) {
+                dialogMembersListener.remove();
+            }
+        });
+
+        membersDialog.show();
+        View bottomSheet = membersDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        if (bottomSheet != null) bottomSheet.setBackgroundResource(android.R.color.transparent);
+    }
+
+    private void showChangeColorDialog() {
+        if (getContext() == null) return;
+        BottomSheetDialog colorDialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.dialog_server_change_color, null);
+        colorDialog.setContentView(view);
+
+        selectedColorForDialog = currentAccentColor;
+        if (selectedColorForDialog == null || selectedColorForDialog.equalsIgnoreCase("#7289DA")) {
+            selectedColorForDialog = "#5865F2";
+        }
+
+        com.google.android.material.button.MaterialButton btnSaveTheme = view.findViewById(R.id.btnSaveTheme);
+
+        // Lấy danh sách các nút màu trong GridLayout
+        int[] colorIds = {R.id.color1, R.id.color2, R.id.color3, R.id.color4, R.id.color5,
+                R.id.color6, R.id.color7, R.id.color8, R.id.color9, R.id.color10};
+        String[] colorHex = {"#5865F2", "#23A559", "#DA373C", "#FEE75C", "#EB459E",
+                "#00A8FC", "#00D2C4", "#8A2BE2", "#FF5722", "#4E5058"};
+
+        for (int i = 0; i < colorIds.length; i++) {
+            final String hex = colorHex[i];
+            View colorBtn = view.findViewById(colorIds[i]);
+            if (colorBtn != null) {
+                colorBtn.setOnClickListener(v -> updateDialogPreview(hex, view));
+            }
+        }
+
+        updateDialogPreview(selectedColorForDialog, view);
+
+        if (btnSaveTheme != null) {
+            btnSaveTheme.setOnClickListener(v -> {
+                com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("servers").document(serverId)
+                        .update("accentColor", selectedColorForDialog)
+                        .addOnSuccessListener(aVoid -> {
+                            if (getContext() != null) {
+                                Toast.makeText(requireContext(), "Theme updated!", Toast.LENGTH_SHORT).show();
+                            }
+                            colorDialog.dismiss();
+                        });
+            });
+        }
+
+        colorDialog.show();
+        View bottomSheet = colorDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        if (bottomSheet != null) bottomSheet.setBackgroundResource(android.R.color.transparent);
+    }
+
+    private void updateDialogPreview(String colorHex, View view) {
+        this.selectedColorForDialog = colorHex;
+        int colorInt = Color.parseColor(colorHex);
+
+        com.google.android.material.card.MaterialCardView topBarPreview = view.findViewById(R.id.topBarPreview);
+        TextView tvSentMessage = view.findViewById(R.id.tvSentMessage);
+        com.google.android.material.button.MaterialButton btnSaveTheme = view.findViewById(R.id.btnSaveTheme);
+
+        // Đổi màu thanh TopBar preview
+        if (topBarPreview != null) topBarPreview.setCardBackgroundColor(colorInt);
+
+        // Đổi màu tin nhắn gửi đi
+        if (tvSentMessage != null) tvSentMessage.setBackgroundTintList(ColorStateList.valueOf(colorInt));
+
+        // Đổi màu nút Save
+        if (btnSaveTheme != null) btnSaveTheme.setBackgroundTintList(ColorStateList.valueOf(colorInt));
+
+        // Cập nhật checkmark hoạt động
+        int[] checkIds = {R.id.check1, R.id.check2, R.id.check3, R.id.check4, R.id.check5,
+                R.id.check6, R.id.check7, R.id.check8, R.id.check9, R.id.check10};
+        String[] colorHexes = {"#5865F2", "#23A559", "#DA373C", "#FEE75C", "#EB459E",
+                "#00A8FC", "#00D2C4", "#8A2BE2", "#FF5722", "#4E5058"};
+
+        for (int i = 0; i < checkIds.length; i++) {
+            ImageView checkImg = view.findViewById(checkIds[i]);
+            if (checkImg != null) {
+                if (colorHexes[i].equalsIgnoreCase(colorHex)) {
+                    checkImg.setVisibility(View.VISIBLE);
+                } else {
+                    checkImg.setVisibility(View.GONE);
+                }
+            }
+        }
     }
 
     @Override

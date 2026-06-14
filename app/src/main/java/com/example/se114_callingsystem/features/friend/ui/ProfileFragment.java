@@ -90,11 +90,6 @@ public class ProfileFragment extends Fragment {
     private void initViews() {
         if (binding == null) return;
 
-        // Set up Back button
-        binding.btnBackProfile.setOnClickListener(v -> {
-            Navigation.findNavController(v).popBackStack();
-        });
-
         if (isOwnProfile) {
             binding.tvFriendActionsHeader.setVisibility(View.GONE);
             binding.cardSendMessage.setVisibility(View.GONE);

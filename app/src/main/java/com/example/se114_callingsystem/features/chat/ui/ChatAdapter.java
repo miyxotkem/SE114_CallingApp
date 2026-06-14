@@ -317,6 +317,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 String uid = message.getSenderId();
                 senderName.setTag(uid);
                 senderName.setTextColor(getConsistentColor(uid));
+                senderName.setOnClickListener(v -> {
+                    android.os.Bundle bundle = new android.os.Bundle();
+                    bundle.putString("USER_ID", uid);
+                    androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_profile, bundle);
+                });
 
                 ServerMember foundMember = null;
                 if (serverMembers != null) {
@@ -383,6 +388,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     avatarImg.setVisibility(View.VISIBLE);
                     String uid = message.getSenderId();
                     avatarImg.setTag(uid);
+                    avatarImg.setOnClickListener(v -> {
+                        android.os.Bundle bundle = new android.os.Bundle();
+                        bundle.putString("USER_ID", uid);
+                        androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_profile, bundle);
+                    });
                     
                     String cachedPlan = adapter.planCache.get(uid);
                     if (cachedPlan != null) applyAvatarBorder(avatarImg, cachedPlan);
