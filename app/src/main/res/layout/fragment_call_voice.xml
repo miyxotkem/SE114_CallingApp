@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:text="Voice Channel"
+            android:text="@string/voice_channel_default_title"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:fontFamily="@font/inter" android:textStyle="bold" />
@@ -80,7 +80,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Đang chờ người khác tham gia..."
+            android:text="@string/waiting_for_others"
             android:textColor="@color/white"
             android:textSize="15sp"
             android:fontFamily="@font/inter"

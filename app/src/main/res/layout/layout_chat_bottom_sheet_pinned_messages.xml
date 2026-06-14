@@ -20,7 +20,7 @@
         android:id="@+id/tvPinnedTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="📌 Tin Nhắn Đã Ghim"
+        android:text="@string/pinned_messages_title"
         android:textColor="@color/discord_text_primary"
         android:textSize="18sp"
         android:fontFamily="@font/inter" android:textStyle="bold"
@@ -66,7 +66,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Chưa có tin nhắn ghim nào trong phòng này."
+                android:text="@string/no_pinned_messages"
                 android:textColor="@color/discord_text_secondary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter"

@@ -64,7 +64,7 @@ public class UpgradePlanFragment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, 1);
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-        tvRenewedDay.setText("Your plan renews on " + sdf.format(calendar.getTime()) + ".");
+        tvRenewedDay.setText(getString(R.string.plan_renew_date_format, sdf.format(calendar.getTime())));
 
         updateSelectionUI();
 
@@ -85,7 +85,7 @@ public class UpgradePlanFragment extends Fragment {
 
         btnSubscribe.setOnClickListener(v -> {
             if (selectedPlan.equals(currentPlan)) {
-                Toast.makeText(getContext(), "You are already on the " + selectedPlan + " plan.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.already_on_plan, selectedPlan), Toast.LENGTH_SHORT).show();
                 return;
             }
             if (selectedPlan.equals("Basic")) {
@@ -112,19 +112,19 @@ public class UpgradePlanFragment extends Fragment {
             case "Basic":
                 cardBasicPlan.setStrokeColor(highlightColor);
                 if (tvPlanDescription != null) {
-                    tvPlanDescription.setText("• Up to 2 channels per category (call, chat, post)\n• Text-only custom status (max 30 chars)\n• Basic static profile avatar");
+                    tvPlanDescription.setText(getString(R.string.plan_desc_basic));
                 }
                 break;
             case "Standard":
                 cardStandardPlan.setStrokeColor(highlightColor);
                 if (tvPlanDescription != null) {
-                    tvPlanDescription.setText("• Up to 5 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Exclusive ⭐ Profile Badge");
+                    tvPlanDescription.setText(getString(R.string.plan_desc_standard));
                 }
                 break;
             case "Pro":
                 cardProPlan.setStrokeColor(highlightColor);
                 if (tvPlanDescription != null) {
-                    tvPlanDescription.setText("• Up to 10 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Premium ✨ Profile Badge\n• Exclusive Gold Avatar Border");
+                    tvPlanDescription.setText(getString(R.string.plan_desc_pro));
                 }
                 break;
         }
@@ -198,7 +198,7 @@ public class UpgradePlanFragment extends Fragment {
             com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(uid).update("plan", selectedPlan);
         }
 
-        android.widget.Toast.makeText(getContext(), "Plan upgraded to " + selectedPlan + "!", android.widget.Toast.LENGTH_SHORT).show();
+        android.widget.Toast.makeText(getContext(), getString(R.string.plan_upgraded, selectedPlan), android.widget.Toast.LENGTH_SHORT).show();
         
         // Navigate back to profile
         if (getView() != null) {

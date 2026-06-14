@@ -41,7 +41,7 @@
                 android:layout_centerVertical="true"
                 android:layout_toEndOf="@id/btnBack"
                 android:layout_marginStart="8dp"
-                android:text="📰 Kênh Bài Viết"
+                android:text="@string/post_channel_default_title"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="18sp"
                 android:fontFamily="@font/inter" android:textStyle="bold" />
@@ -92,7 +92,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chưa có bài viết nào"
+            android:text="@string/no_posts_yet"
             android:textColor="@color/discord_text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -102,7 +102,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hãy là người đầu tiên chia sẻ thông tin hoặc hình ảnh thú vị trong kênh bài viết này nhé!"
+            android:text="@string/no_posts_desc"
             android:textColor="@color/discord_text_secondary"
             android:textSize="14sp"
             android:textAlignment="center"
@@ -113,7 +113,7 @@
             android:id="@+id/btnEmptyCreatePost"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:text="Tạo bài viết mới"
+            android:text="@string/create_new_post"
             android:textColor="@color/white"
             android:textAllCaps="false"
             android:textSize="15sp"

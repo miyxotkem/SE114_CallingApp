@@ -39,7 +39,7 @@
                 android:id="@+id/tvChannelInfoName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Channel Settings"
+                android:text="@string/channel_settings_title"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="18sp"
                 android:fontFamily="@font/inter" android:textStyle="bold"
@@ -86,7 +86,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Media"
+                    android:text="@string/media_tab"
                     android:textColor="@color/discord_text_muted"
                     android:textSize="11sp"
                     android:fontFamily="@font/inter"/>
@@ -114,7 +114,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Files"
+                    android:text="@string/files_tab"
                     android:textColor="@color/discord_text_muted"
                     android:textSize="11sp"
                     android:fontFamily="@font/inter"/>
@@ -142,7 +142,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Links"
+                    android:text="@string/links_tab"
                     android:textColor="@color/discord_text_muted"
                     android:textSize="11sp"
                     android:fontFamily="@font/inter"/>
@@ -191,7 +191,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Mute Notifications"
+                    android:text="@string/mute_notifications"
                     android:textColor="@color/discord_text_primary"
                     android:textSize="15sp"
                     android:fontFamily="@font/inter" />
@@ -237,7 +237,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Search in Chat"
+                    android:text="@string/search_in_chat"
                     android:textColor="@color/discord_text_primary"
                     android:textSize="15sp"
                     android:fontFamily="@font/inter" />
@@ -279,7 +279,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Tin nhắn đã ghim"
+                    android:text="@string/pinned_messages_title"
                     android:textColor="@color/discord_text_primary"
                     android:textSize="15sp"
                     android:fontFamily="@font/inter" />
@@ -319,11 +319,11 @@
                     app:tint="@color/discord_text_secondary" />
 
                 <TextView
-                    android:layout_width="0dp"
                     android:layout_weight="1"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:text="Biệt danh &amp; Thành viên"
+                    android:text="@string/nicknames_and_members"
                     android:textColor="@color/discord_text_primary"
                     android:textSize="15sp"
                     android:fontFamily="@font/inter" />

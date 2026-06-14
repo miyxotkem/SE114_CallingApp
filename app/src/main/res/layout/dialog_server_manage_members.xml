@@ -27,7 +27,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Manage Members"
+            android:text="@string/manage_members_title"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -96,7 +96,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
-                android:hint="Tìm kiếm thành viên..."
+                android:hint="@string/search_members_hint"
                 android:textColor="@color/discord_text_primary"
                 android:textColorHint="@color/discord_text_muted"
                 android:textSize="14sp"

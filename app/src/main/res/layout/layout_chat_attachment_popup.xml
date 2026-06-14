@@ -36,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="Hình ảnh"
+                android:text="@string/attachment_image"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter" />
@@ -63,7 +63,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="Tài liệu"
+                android:text="@string/attachment_document"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter" />
@@ -90,7 +90,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="Ảnh GIF"
+                android:text="@string/attachment_gif"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter" />
@@ -117,7 +117,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="Lời nhắc"
+                android:text="@string/attachment_reminder"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter" />

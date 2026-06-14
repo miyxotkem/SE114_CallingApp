@@ -118,9 +118,9 @@ public class ProfileFragment extends Fragment {
             binding.btnLogout.setOnClickListener(v -> {
                 com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
                         requireContext(),
-                        "Đăng xuất",
-                        "Bạn có chắc chắn muốn đăng xuất không?",
-                        "Đăng xuất",
+                        getString(R.string.logout_confirm_title),
+                        getString(R.string.logout_confirm_message),
+                        getString(R.string.logout),
                         "#F23F42",
                         () -> {
                             if (getContext() != null) {
@@ -134,6 +134,33 @@ public class ProfileFragment extends Fragment {
                         }
                 );
             });
+
+            // Update current language display
+            if (binding.tvCurrentLanguage != null) {
+                androidx.core.os.LocaleListCompat currentLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales();
+                String currentLang = currentLocales.isEmpty() ? "vi" : currentLocales.get(0).getLanguage();
+                if ("en".equals(currentLang)) {
+                    binding.tvCurrentLanguage.setText("English");
+                } else {
+                    binding.tvCurrentLanguage.setText("Tiếng Việt");
+                }
+            }
+
+            // Set language selector click listener
+            if (binding.llLanguageSettings != null) {
+                binding.llLanguageSettings.setOnClickListener(v -> {
+                    com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
+                            requireContext(),
+                            getString(R.string.select_language),
+                            new String[]{"Tiếng Việt", "English"},
+                            (index, option) -> {
+                                String localeCode = (index == 0) ? "vi" : "en";
+                                androidx.core.os.LocaleListCompat localeList = androidx.core.os.LocaleListCompat.forLanguageTags(localeCode);
+                                androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(localeList);
+                            }
+                    );
+                });
+            }
         } else {
             binding.tvSubscriptionHeader.setVisibility(View.GONE);
             binding.cardUpgradePlan.setVisibility(View.GONE);

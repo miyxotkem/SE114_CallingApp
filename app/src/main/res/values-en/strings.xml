@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CallingApp</string>
+    <string name="user_settings">User Settings</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="language">Language</string>
+    <string name="current_language_display">English</string>
+    <string name="select_language">Select Language</string>
+    <string name="logout">Log Out</string>
+    <string name="logout_confirm_title">Log Out</string>
+    <string name="logout_confirm_message">Are you sure you want to log out?</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Add Friend Dialog -->
+    <string name="add_friend_title">Add Friend</string>
+    <string name="add_friend_desc">Enter your friend\'s email to send a friend request.</string>
+    <string name="email_hint">Friend\'s email</string>
+    <string name="send_friend_request">Send Friend Request</string>
+
+    <!-- Create Server Dialog -->
+    <string name="create_server_title">Create New Server</string>
+    <string name="create_server_desc">Give your community a catchy name.</string>
+    <string name="server_name_hint">Server Name</string>
+    <string name="continue_text">Continue</string>
+    <string name="server_purpose_title">Server Purpose</string>
+    <string name="server_purpose_desc">Share a bit about the server\'s topic so others can join easily.</string>
+    <string name="server_purpose_hint">Tell us a bit about the server</string>
+    <string name="back_text">Back</string>
+    <string name="invite_friends_title">Invite Friends</string>
+    <string name="invite_friends_desc">All set! Now let\'s invite some friends to join the fun.</string>
+    <string name="copy_invite_code">Copy Invite Code</string>
+    <string name="create_server_action">Create Server</string>
+
+    <!-- Add Server Member Dialog -->
+    <string name="add_member_title">Add Friends to Server</string>
+    <string name="add_member_desc">Select friends to add them to the server.</string>
+    <string name="copy_server_invite_code">Copy Server Invite Code</string>
+    <string name="add_to_server">Add to Server</string>
+
+    <!-- Login Screen -->
+    <string name="login_welcome">Welcome back!</string>
+    <string name="login_subtitle">We\'re so excited to see you again!</string>
+    <string name="login_button">Log In</string>
+    <string name="login_or">OR</string>
+    <string name="login_with_google">Sign in with Google</string>
+    <string name="need_account">Need an account? </string>
+    <string name="register_now">Register</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Create an account</string>
+    <string name="register_button">Register</string>
+    <string name="already_have_account">Already have an account? </string>
+    <string name="username_label">Username</string>
+
+    <!-- Home Screen -->
+    <string name="home_online">Online</string>
+    <string name="home_friends">Friends</string>
+    <string name="direct_messages">DIRECT MESSAGES</string>
+    <string name="no_dms_yet">No direct messages yet</string>
+    <string name="notifications_title">Notifications</string>
+
+    <!-- Manage Friends Screen -->
+    <string name="friend_requests">Friend Requests</string>
+    <string name="no_friend_requests">No friend requests yet</string>
+    <string name="all_friends">All Friends</string>
+    <string name="no_friends_yet">No friends yet</string>
+    <string name="connect_desc">Connect and start chatting with people.</string>
+    <string name="add_friend_now">Add Friend Now</string>
+
+    <!-- Chat Screen -->
+    <string name="pinned_messages_title">Pinned Messages</string>
+    <string name="no_pinned_messages">No pinned messages in this room yet.</string>
+    <string name="typing_indicator">is typing...</string>
+    <string name="several_people_typing">Several people are typing...</string>
+    <string name="replying_to">Replying to</string>
+    <string name="send_text">Send</string>
+    <string name="record_swipe_hint">Swipe on the recording to play from any point.</string>
+
+    <!-- Server Screen -->
+    <string name="text_channels">TEXT CHANNELS</string>
+    <string name="voice_channels">VOICE CHANNELS</string>
+    <string name="post_channels">POST CHANNELS</string>
+
+    <!-- Upgrade Plan Screen -->
+    <string name="upgrade_plan_title">Upgrade Plan</string>
+    <string name="choose_your_plan">Choose Your Plan</string>
+    <string name="plan_renew_desc">Your plan renews on the 1st of every month.</string>
+    <string name="basic_plan">Basic Plan</string>
+    <string name="free_price">Free</string>
+    <string name="standard_plan">Standard Plan</string>
+    <string name="standard_price">$4.99 / month</string>
+    <string name="pro_plan">Pro Plan</string>
+    <string name="pro_price">$9.99 / month</string>
+    <string name="plan_features">Plan Features</string>
+    <string name="upgrade_now_button">Upgrade Now</string>
+
+    <!-- Create Channel Dialog -->
+    <string name="create_channel_title">Create New Channel</string>
+    <string name="create_channel_desc">Channels are where members chat and share with each other.</string>
+    <string name="channel_name_hint">Channel Name</string>
+    <string name="create_channel_action">Create Channel</string>
+
+    <!-- Server Settings Dialog -->
+    <string name="server_settings_title">Server Settings</string>
+    <string name="remove_picture">Remove Picture</string>
+    <string name="server_identity">Server Identity</string>
+    <string name="server_name_label">SERVER NAME</string>
+    <string name="description_label">DESCRIPTION</string>
+    <string name="description_hint">Add a short description...</string>
+    <string name="save">Save</string>
+    <string name="manage_members">Manage members</string>
+    <string name="change_accent_color">Change accent color</string>
+    <string name="danger_zone">Danger Zone</string>
+    <string name="leave_server">Leave server</string>
+    <string name="delete_server">Delete server</string>
+
+    <!-- Manage Members Dialog -->
+    <string name="manage_members_title">Manage Members</string>
+    <string name="search_members_hint">Search members...</string>
+
+    <!-- Change Color Theme Dialog -->
+    <string name="choose_theme_title">Choose Theme</string>
+    <string name="theme_preview_label">THEME PREVIEW</string>
+    <string name="select_accent_color_label">SELECT ACCENT COLOR</string>
+    <string name="apply_theme_button">Apply Theme</string>
+    <string name="theme_preview_msg_received">Hi! How do you like this new theme?</string>
+    <string name="theme_preview_msg_sent">It looks absolutely stunning! ✨</string>
+
+    <!-- Custom Status Dialog -->
+    <string name="custom_status_title">Set a Custom Status</string>
+    <string name="custom_status_question">What\'s on your mind?</string>
+    <string name="custom_status_hint">Support emojis too 🍕</string>
+
+    <!-- Chat Message Bottom Sheet Menu Options -->
+    <string name="remove_reaction">Remove reaction</string>
+    <string name="pin_message">Pin message</string>
+    <string name="set_message_reminder">Set message reminder</string>
+    <string name="delete_message">Delete message</string>
+
+    <!-- Chat Attachment Popup Options -->
+    <string name="attachment_image">Image</string>
+    <string name="attachment_document">Document</string>
+    <string name="attachment_gif">GIF</string>
+    <string name="attachment_reminder">Reminder</string>
+
+    <!-- Video Filter Bottom Sheet -->
+    <string name="video_filter_title">Video Background Filter</string>
+    <string name="bg_normal">None (Normal)</string>
+    <string name="bg_blur">Blur Background</string>
+    <string name="bg_dark">Discord Style Dark Background</string>
+
+    <!-- Generic Confirmation Dialog -->
+    <string name="default_confirm_message">Are you sure you want to do this?</string>
+    <string name="confirm">Confirm</string>
+
+    <!-- Channel Settings Info Screen -->
+    <string name="channel_settings_title">Channel Settings</string>
+    <string name="media_tab">Media</string>
+    <string name="files_tab">Files</string>
+    <string name="links_tab">Links</string>
+    <string name="mute_notifications">Mute Notifications</string>
+    <string name="search_in_chat">Search in Chat</string>
+    <string name="nicknames_and_members">Nicknames &amp; Members</string>
+
+    <!-- User Profile & Edit Profile Screens -->
+    <string name="status_hint">Set a custom status...</string>
+    <string name="about_me_header">About Me</string>
+    <string name="bio_label">Bio</string>
+    <string name="no_bio">This user has no bio.</string>
+    <string name="work_education_label">Work / Education</string>
+    <string name="not_updated">Not updated</string>
+    <string name="hobbies_label">Hobbies</string>
+    <string name="empty_value">Empty</string>
+    <string name="dob_label">Date of Birth</string>
+    <string name="friend_actions_header">Friend Actions</string>
+    <string name="send_message_button">Send Message</string>
+    <string name="subscription_header">Subscription</string>
+    <string name="current_plan_prefix">Current: </string>
+    <string name="account_actions_header">Account Actions</string>
+    
+    <string name="profile_preview_label">Profile Preview</string>
+    <string name="edit_images_hint">Tap banner or avatar to edit images</string>
+    <string name="user_details_label">User Details</string>
+    <string name="display_name_hint">Display Name</string>
+    <string name="about_me_bio_hint">About Me (Bio)</string>
+    <string name="save_changes_button">Save Changes</string>
+
+    <!-- Post Create -->
+    <string name="create_post_title">Create Post</string>
+    <string name="post_action">Post</string>
+    <string name="post_hint">What\'s on your mind?</string>
+
+    <!-- Post Comment -->
+    <string name="comments_title">Comments</string>
+    <string name="replying_to_dots">Replying...</string>
+    <string name="write_comment_hint">Write a comment...</string>
+
+    <!-- Post Channel -->
+    <string name="post_channel_default_title">📰 Post Channel</string>
+    <string name="no_posts_yet">No posts yet</string>
+    <string name="no_posts_desc">Be the first to share interesting updates or pictures in this post channel!</string>
+    <string name="create_new_post">Create new post</string>
+
+    <!-- Home Notifications -->
+    <string name="notifications_empty_title">You\'re all caught up!</string>
+    <string name="notifications_empty_desc">Any mentions or notification history in servers will appear here.</string>
+
+    <!-- Home Fragment -->
+    <string name="find_or_start_conversation">Find or start a conversation</string>
+
+    <!-- Friend Manage -->
+    <string name="search_friends_hint">Search friends...</string>
+
+    <!-- Friend Profile -->
+    <string name="edit_profile_desc">Customize your banner, avatar, bio...</string>
+
+    <!-- Chat Search -->
+    <string name="search_in_conversation_hint">Search in conversation...</string>
+    <string name="enter_keyword_to_search">Enter keywords to search messages</string>
+
+    <!-- Chat Fragment -->
+    <string name="someone_is_typing">Someone is typing...</string>
+    <string name="chat_input_hint_dm">Message %s</string>
+    <string name="chat_input_hint_channel">Message #%s</string>
+
+    <!-- Voice Call -->
+    <string name="voice_channel_default_title">Voice Channel</string>
+    <string name="waiting_for_others">Waiting for others to join...</string>
+
+    <!-- Post Share Dialog -->
+    <string name="share_post_to_chat_channel">Share post to Chat Channel</string>
+
+    <!-- Payment Method Dialog -->
+    <string name="select_payment_method">Select Payment Method</string>
+    <string name="qr_code">QR Code</string>
+    <string name="credit_card">Credit Card</string>
+    <string name="scan_banking_app_hint">Scan using any banking app</string>
+    <string name="card_number">Card Number</string>
+    <string name="expiry_date">Expiry (MM/YY)</string>
+    <string name="cvv">CVV</string>
+    <string name="complete_upgrade">Complete Upgrade</string>
+
+    <!-- Upgrade Plan Dynamic Strings -->
+    <string name="plan_renew_date_format">Your plan renews on %s.</string>
+    <string name="already_on_plan">You are already on the %s plan.</string>
+    <string name="plan_upgraded">Plan upgraded to %s!</string>
+    <string name="plan_desc_basic">• Up to 2 channels per category (call, chat, post)\n• Text-only custom status (max 30 chars)\n• Basic static profile avatar</string>
+    <string name="plan_desc_standard">• Up to 5 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Exclusive ⭐ Profile Badge</string>
+    <string name="plan_desc_pro">• Up to 10 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Premium ✨ Profile Badge\n• Exclusive Gold Avatar Border</string>
+</resources>
+

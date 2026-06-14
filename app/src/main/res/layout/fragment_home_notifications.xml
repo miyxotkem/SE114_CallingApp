@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="start|center_vertical"
             android:layout_marginStart="24dp"
-            android:text="Notifications"
+            android:text="@string/notifications_title"
             android:textColor="@color/discord_text_primary"
             android:textSize="18sp"
             android:fontFamily="@font/inter" android:textStyle="bold" />
@@ -68,7 +68,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="You're all caught up!"
+            android:text="@string/notifications_empty_title"
             android:textColor="@color/discord_text_primary"
             android:textSize="20sp"
             android:fontFamily="@font/inter" android:textStyle="bold"
@@ -77,7 +77,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Any mentions or notification history in servers will appear here."
+            android:text="@string/notifications_empty_desc"
             android:textColor="@color/discord_text_muted"
             android:textSize="14sp"
             android:fontFamily="@font/inter"

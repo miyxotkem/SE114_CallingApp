@@ -17,7 +17,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Chia sẻ bài viết vào Kênh Chat"
+        android:text="@string/share_post_to_chat_channel"
         android:textColor="@color/text_primary"
         android:textSize="18sp"
         android:textStyle="bold"

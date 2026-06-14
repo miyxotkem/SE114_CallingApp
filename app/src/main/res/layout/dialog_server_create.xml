@@ -80,7 +80,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tạo Server Mới"
+                android:text="@string/create_server_title"
                 android:textAlignment="center"
                 android:textSize="22sp"
                 android:fontFamily="@font/inter"
@@ -91,7 +91,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Đặt một cái tên thật kêu cho cộng đồng của bạn nhé."
+                android:text="@string/create_server_desc"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter"
@@ -112,7 +112,7 @@
                 app:boxBackgroundColor="@color/discord_dark_elevated"
                 app:startIconDrawable="@drawable/ic_logo_home"
                 app:startIconTint="@color/discord_text_secondary"
-                android:hint="Tên Server"
+                android:hint="@string/server_name_hint"
                 android:fontFamily="@font/inter">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -129,7 +129,7 @@
                 android:id="@+id/btnNext1"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="Tiếp tục"
+                android:text="@string/continue_text"
                 android:textSize="16sp"
                 android:textAllCaps="false"
                 android:fontFamily="@font/inter"
@@ -165,7 +165,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mục đích Server"
+                android:text="@string/server_purpose_title"
                 android:textAlignment="center"
                 android:textSize="22sp"
                 android:fontFamily="@font/inter"
@@ -176,7 +176,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Chia sẻ đôi chút về chủ đề của Server để mọi người dễ dàng tham gia nhé."
+                android:text="@string/server_purpose_desc"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter"
@@ -195,7 +195,7 @@
                 app:boxStrokeColor="@color/discord_blurple"
                 app:hintTextColor="@color/discord_blurple"
                 app:boxBackgroundColor="@color/discord_dark_elevated"
-                android:hint="Giới thiệu đôi chút về server"
+                android:hint="@string/server_purpose_hint"
                 android:fontFamily="@font/inter">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -221,7 +221,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="0.8"
                     android:layout_height="56dp"
-                    android:text="Quay lại"
+                    android:text="@string/back_text"
                     android:textSize="16sp"
                     android:textAllCaps="false"
                     android:fontFamily="@font/inter"
@@ -233,7 +233,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1.2"
                     android:layout_height="56dp"
-                    android:text="Tiếp tục"
+                    android:text="@string/continue_text"
                     android:textSize="16sp"
                     android:textAllCaps="false"
                     android:fontFamily="@font/inter"
@@ -271,7 +271,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Mời bạn bè"
+                android:text="@string/invite_friends_title"
                 android:textAlignment="center"
                 android:textSize="22sp"
                 android:fontFamily="@font/inter"
@@ -282,7 +282,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Đã xong! Giờ hãy mời vài người bạn vào chung vui nhé."
+                android:text="@string/invite_friends_desc"
                 android:textAlignment="center"
                 android:textSize="14sp"
                 android:fontFamily="@font/inter"
@@ -308,7 +308,7 @@
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="Copy Mã Mời"
+                android:text="@string/copy_invite_code"
                 android:textSize="16sp"
                 android:textAllCaps="false"
                 android:fontFamily="@font/inter"
@@ -334,7 +334,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="0.8"
                     android:layout_height="56dp"
-                    android:text="Quay lại"
+                    android:text="@string/back_text"
                     android:textSize="16sp"
                     android:textAllCaps="false"
                     android:fontFamily="@font/inter"
@@ -346,7 +346,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1.2"
                     android:layout_height="56dp"
-                    android:text="Tạo Server"
+                    android:text="@string/create_server_action"
                     android:textSize="16sp"
                     android:textAllCaps="false"
                     android:fontFamily="@font/inter"

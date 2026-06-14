@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:text="Bình luận"
+                android:text="@string/comments_title"
                 android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -106,7 +106,7 @@
                 android:layout_weight="1"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
-                android:text="Đang trả lời..."
+                android:text="@string/replying_to_dots"
                 android:fontFamily="@font/inter"/>
 
             <ImageView
@@ -145,7 +145,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@null"
-                    android:hint="Nhập bình luận..."
+                    android:hint="@string/write_comment_hint"
                     android:maxLines="4"
                     android:inputType="textMultiLine"
                     android:textColor="@color/text_primary"

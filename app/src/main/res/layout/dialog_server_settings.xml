@@ -108,7 +108,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Server Settings"
+                    android:text="@string/server_settings_title"
                     android:textColor="@color/discord_text_primary"
                     android:textSize="20sp"
                     android:fontFamily="@font/inter"
@@ -118,7 +118,7 @@
                     android:id="@+id/btnRemoveAvatar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Remove Picture"
+                    android:text="@string/remove_picture"
                     android:textColor="@color/danger"
                     android:textSize="12sp"
                     android:fontFamily="@font/inter"
@@ -154,7 +154,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Server Identity"
+                android:text="@string/server_identity"
                 android:textColor="@color/discord_text_primary"
                 android:textSize="13sp"
                 android:fontFamily="@font/inter"
@@ -165,7 +165,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SERVER NAME"
+                android:text="@string/server_name_label"
                 android:textColor="@color/discord_text_secondary"
                 android:textSize="11sp"
                 android:fontFamily="@font/inter"
@@ -187,7 +187,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:background="@android:color/transparent"
-                    android:hint="Server Name"
+                    android:hint="@string/server_name_hint"
                     android:inputType="text"
                     android:textColor="@color/discord_text_primary"
                     android:textColorHint="@color/discord_text_muted"
@@ -201,7 +201,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DESCRIPTION"
+                android:text="@string/description_label"
                 android:textColor="@color/discord_text_secondary"
                 android:textSize="11sp"
                 android:fontFamily="@font/inter"
@@ -223,7 +223,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
-                    android:hint="Add a short description..."
+                    android:hint="@string/description_hint"
                     android:inputType="textMultiLine"
                     android:minLines="2"
                     android:textColor="@color/discord_text_secondary"
@@ -239,7 +239,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="44dp"
                 android:layout_gravity="end"
-                android:text="Save"
+                android:text="@string/save"
                 app:cornerRadius="22dp"
                 android:backgroundTint="@color/discord_blurple"
                 android:textColor="@color/white"
@@ -288,7 +288,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:fontFamily="@font/inter"
-                    android:text="Manage members"
+                    android:text="@string/manage_members"
                     android:textColor="@color/discord_text_primary"
                     android:textSize="15sp" />
 
@@ -329,7 +329,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:fontFamily="@font/inter"
-                    android:text="Change accent color"
+                    android:text="@string/change_accent_color"
                     android:textColor="@color/discord_text_primary"
                     android:textSize="15sp" />
 
@@ -346,7 +346,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Danger Zone"
+        android:text="@string/danger_zone"
         android:textColor="@color/danger"
         android:textSize="11sp"
         android:fontFamily="@font/inter"
@@ -394,7 +394,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:fontFamily="@font/inter"
-                    android:text="Leave server"
+                    android:text="@string/leave_server"
                     android:textColor="@color/danger"
                     android:textSize="15sp" />
 
@@ -435,7 +435,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:fontFamily="@font/inter"
-                    android:text="Delete server"
+                    android:text="@string/delete_server"
                     android:textColor="@color/danger"
                     android:textSize="15sp" />
 

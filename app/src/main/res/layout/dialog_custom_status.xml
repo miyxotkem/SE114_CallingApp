@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/inter"
-            android:text="Set a Custom Status"
+            android:text="@string/custom_status_title"
             android:textColor="@color/discord_text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:fontFamily="@font/inter"
-        android:text="What's on your mind?"
+        android:text="@string/custom_status_question"
         android:textColor="@color/discord_text_secondary"
         android:textSize="14sp" />
 
@@ -55,7 +55,7 @@
         android:layout_marginBottom="24dp"
         android:background="@drawable/bg_edittext"
         android:fontFamily="@font/inter"
-        android:hint="Support emojis too 🍕"
+        android:hint="@string/custom_status_hint"
         android:paddingHorizontal="16dp"
         android:textColor="@color/discord_text_primary"
         android:textColorHint="@color/discord_text_muted"
@@ -75,7 +75,7 @@
             android:background="?android:attr/selectableItemBackground"
             android:gravity="center"
             android:paddingHorizontal="24dp"
-            android:text="Cancel"
+            android:text="@string/cancel"
             android:textColor="@color/discord_text_primary"
             android:textStyle="bold" />
 
@@ -86,7 +86,7 @@
             android:background="@drawable/bg_button_primary"
             android:fontFamily="@font/inter"
             android:paddingHorizontal="24dp"
-            android:text="Save"
+            android:text="@string/save"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textStyle="bold" />

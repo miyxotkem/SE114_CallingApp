@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CallingApp</string>
+    <string name="user_settings">Cài đặt người dùng</string>
+    <string name="edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="dark_mode">Chế độ tối</string>
+    <string name="language">Ngôn ngữ</string>
+    <string name="current_language_display">Tiếng Việt</string>
+    <string name="select_language">Chọn ngôn ngữ</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="logout_confirm_title">Đăng xuất</string>
+    <string name="logout_confirm_message">Bạn có chắc chắn muốn đăng xuất không?</string>
+    <string name="cancel">Hủy</string>
+
+    <!-- Add Friend Dialog -->
+    <string name="add_friend_title">Thêm Bạn Bè</string>
+    <string name="add_friend_desc">Nhập email của bạn bè để gửi lời mời kết bạn.</string>
+    <string name="email_hint">Email bạn bè</string>
+    <string name="send_friend_request">Gửi lời mời kết bạn</string>
+
+    <!-- Create Server Dialog -->
+    <string name="create_server_title">Tạo Server Mới</string>
+    <string name="create_server_desc">Đặt một cái tên thật kêu cho cộng đồng của bạn nhé.</string>
+    <string name="server_name_hint">Tên Server</string>
+    <string name="continue_text">Tiếp tục</string>
+    <string name="server_purpose_title">Mục đích Server</string>
+    <string name="server_purpose_desc">Chia sẻ đôi chút về chủ đề của Server để mọi người dễ dàng tham gia nhé.</string>
+    <string name="server_purpose_hint">Giới thiệu đôi chút về server</string>
+    <string name="back_text">Quay lại</string>
+    <string name="invite_friends_title">Mời bạn bè</string>
+    <string name="invite_friends_desc">Đã xong! Giờ hãy mời vài người bạn vào chung vui nhé.</string>
+    <string name="copy_invite_code">Copy Mã Mời</string>
+    <string name="create_server_action">Tạo Server</string>
+
+    <!-- Add Server Member Dialog -->
+    <string name="add_member_title">Thêm Bạn Vào Server</string>
+    <string name="add_member_desc">Chọn bạn bè để thêm họ vào server.</string>
+    <string name="copy_server_invite_code">Copy Mã Mời Server</string>
+    <string name="add_to_server">Thêm vào Server</string>
+
+    <!-- Login Screen -->
+    <string name="login_welcome">Chào mừng trở lại!</string>
+    <string name="login_subtitle">Chúng tôi rất vui khi gặp lại bạn!</string>
+    <string name="login_button">Đăng Nhập</string>
+    <string name="login_or">HOẶC</string>
+    <string name="login_with_google">Đăng nhập bằng Google</string>
+    <string name="need_account">Cần một tài khoản? </string>
+    <string name="register_now">Đăng ký ngay</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Mật khẩu</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Tạo tài khoản</string>
+    <string name="register_button">Đăng Ký</string>
+    <string name="already_have_account">Đã có tài khoản? </string>
+    <string name="username_label">Tên người dùng</string>
+
+    <!-- Home Screen -->
+    <string name="home_online">Trực tuyến</string>
+    <string name="home_friends">Bạn bè</string>
+    <string name="direct_messages">TIN NHẮN TRỰC TIẾP</string>
+    <string name="no_dms_yet">Chưa có cuộc hội thoại nào</string>
+    <string name="notifications_title">Thông báo</string>
+
+    <!-- Manage Friends Screen -->
+    <string name="friend_requests">Lời mời kết bạn</string>
+    <string name="no_friend_requests">Không có lời mời kết bạn nào</string>
+    <string name="all_friends">Tất cả bạn bè</string>
+    <string name="no_friends_yet">Chưa có người bạn nào</string>
+    <string name="connect_desc">Hãy kết nối và bắt đầu trò chuyện với mọi người.</string>
+    <string name="add_friend_now">Thêm bạn ngay</string>
+
+    <!-- Chat Screen -->
+    <string name="pinned_messages_title">Tin nhắn đã ghim</string>
+    <string name="no_pinned_messages">Chưa có tin nhắn ghim nào trong phòng này.</string>
+    <string name="typing_indicator">đang nhập...</string>
+    <string name="several_people_typing">Nhiều người đang nhập...</string>
+    <string name="replying_to">Đang trả lời</string>
+    <string name="send_text">Gửi</string>
+    <string name="record_swipe_hint">Trượt ngón tay trên bản ghi âm để phát từ bất kỳ điểm nào.</string>
+
+    <!-- Server Screen -->
+    <string name="text_channels">KÊNH VĂN BẢN</string>
+    <string name="voice_channels">KÊNH THOẠI</string>
+    <string name="post_channels">KÊNH BÀI VIẾT</string>
+
+    <!-- Upgrade Plan Screen -->
+    <string name="upgrade_plan_title">Nâng Cấp Gói</string>
+    <string name="choose_your_plan">Chọn Gói Của Bạn</string>
+    <string name="plan_renew_desc">Gói của bạn sẽ tự động gia hạn vào ngày 1 hàng tháng.</string>
+    <string name="basic_plan">Gói Cơ Bản (Basic)</string>
+    <string name="free_price">Miễn phí</string>
+    <string name="standard_plan">Gói Tiêu Chuẩn (Standard)</string>
+    <string name="standard_price">4.99 USD / tháng</string>
+    <string name="pro_plan">Gói Chuyên Nghiệp (Pro)</string>
+    <string name="pro_price">9.99 USD / tháng</string>
+    <string name="plan_features">Tính năng của gói</string>
+    <string name="upgrade_now_button">Nâng Cấp Ngay</string>
+
+    <!-- Create Channel Dialog -->
+    <string name="create_channel_title">Tạo Kênh Mới</string>
+    <string name="create_channel_desc">Kênh là nơi các thành viên trao đổi và chia sẻ với nhau.</string>
+    <string name="channel_name_hint">Tên Kênh</string>
+    <string name="create_channel_action">Tạo Kênh</string>
+
+    <!-- Server Settings Dialog -->
+    <string name="server_settings_title">Cài đặt Server</string>
+    <string name="remove_picture">Gỡ ảnh đại diện</string>
+    <string name="server_identity">Thông tin Server</string>
+    <string name="server_name_label">TÊN SERVER</string>
+    <string name="description_label">MÔ TẢ</string>
+    <string name="description_hint">Thêm mô tả ngắn...</string>
+    <string name="save">Lưu</string>
+    <string name="manage_members">Quản lý thành viên</string>
+    <string name="change_accent_color">Thay đổi màu sắc chủ đạo</string>
+    <string name="danger_zone">Khu vực nguy hiểm</string>
+    <string name="leave_server">Rời Server</string>
+    <string name="delete_server">Xóa Server</string>
+
+    <!-- Manage Members Dialog -->
+    <string name="manage_members_title">Quản lý thành viên</string>
+    <string name="search_members_hint">Tìm kiếm thành viên...</string>
+
+    <!-- Change Color Theme Dialog -->
+    <string name="choose_theme_title">Chọn giao diện</string>
+    <string name="theme_preview_label">XEM TRƯỚC GIAO DIỆN</string>
+    <string name="select_accent_color_label">CHỌN MÀU CHỦ ĐẠO</string>
+    <string name="apply_theme_button">Áp dụng giao diện</string>
+    <string name="theme_preview_msg_received">Chào cậu! Cậu thấy giao diện mới này thế nào?</string>
+    <string name="theme_preview_msg_sent">Trông lung linh xịn sò lắm luôn! ✨</string>
+
+    <!-- Custom Status Dialog -->
+    <string name="custom_status_title">Đặt trạng thái tùy chỉnh</string>
+    <string name="custom_status_question">Bạn đang nghĩ gì thế?</string>
+    <string name="custom_status_hint">Hỗ trợ cả emoji nữa 🍕</string>
+
+    <!-- Chat Message Bottom Sheet Menu Options -->
+    <string name="remove_reaction">Gỡ cảm xúc</string>
+    <string name="pin_message">Ghim tin nhắn</string>
+    <string name="set_message_reminder">Đặt lời nhắc cho tin nhắn</string>
+    <string name="delete_message">Thu hồi tin nhắn</string>
+
+    <!-- Chat Attachment Popup Options -->
+    <string name="attachment_image">Hình ảnh</string>
+    <string name="attachment_document">Tài liệu</string>
+    <string name="attachment_gif">Ảnh GIF</string>
+    <string name="attachment_reminder">Lời nhắc</string>
+
+    <!-- Video Filter Bottom Sheet -->
+    <string name="video_filter_title">Bộ lọc nền Video</string>
+    <string name="bg_normal">Không dùng (Bình thường)</string>
+    <string name="bg_blur">Làm mờ nền (Background Blur)</string>
+    <string name="bg_dark">Đổi màu nền tối (Discord Style)</string>
+
+    <!-- Generic Confirmation Dialog -->
+    <string name="default_confirm_message">Bạn có chắc chắn muốn thực hiện hành động này không?</string>
+    <string name="confirm">Xác nhận</string>
+
+    <!-- Channel Settings Info Screen -->
+    <string name="channel_settings_title">Cài đặt Kênh</string>
+    <string name="media_tab">Media</string>
+    <string name="files_tab">Tài liệu</string>
+    <string name="links_tab">Liên kết</string>
+    <string name="mute_notifications">Tắt thông báo</string>
+    <string name="search_in_chat">Tìm kiếm trong đoạn chat</string>
+    <string name="nicknames_and_members">Biệt danh &amp; Thành viên</string>
+
+    <!-- User Profile & Edit Profile Screens -->
+    <string name="status_hint">Đặt trạng thái tùy chỉnh...</string>
+    <string name="about_me_header">Giới thiệu bản thân</string>
+    <string name="bio_label">Tiểu sử</string>
+    <string name="no_bio">Người dùng này chưa có tiểu sử.</string>
+    <string name="work_education_label">Công việc / Học vấn</string>
+    <string name="not_updated">Chưa cập nhật</string>
+    <string name="hobbies_label">Sở thích</string>
+    <string name="empty_value">Trống</string>
+    <string name="dob_label">Ngày sinh</string>
+    <string name="friend_actions_header">Tương tác bạn bè</string>
+    <string name="send_message_button">Gửi tin nhắn</string>
+    <string name="subscription_header">Gói dịch vụ</string>
+    <string name="current_plan_prefix">Gói hiện tại: </string>
+    <string name="account_actions_header">Tài khoản</string>
+    
+    <string name="profile_preview_label">Xem trước hồ sơ</string>
+    <string name="edit_images_hint">Chạm vào ảnh bìa hoặc ảnh đại diện để thay đổi</string>
+    <string name="user_details_label">Chi tiết người dùng</string>
+    <string name="display_name_hint">Tên hiển thị</string>
+    <string name="about_me_bio_hint">Giới thiệu bản thân (Tiểu sử)</string>
+    <string name="save_changes_button">Lưu thay đổi</string>
+
+    <!-- Post Create -->
+    <string name="create_post_title">Tạo Bài Viết</string>
+    <string name="post_action">Đăng</string>
+    <string name="post_hint">Bạn đang nghĩ gì?</string>
+
+    <!-- Post Comment -->
+    <string name="comments_title">Bình luận</string>
+    <string name="replying_to_dots">Đang trả lời...</string>
+    <string name="write_comment_hint">Nhập bình luận...</string>
+
+    <!-- Post Channel -->
+    <string name="post_channel_default_title">📰 Kênh Bài Viết</string>
+    <string name="no_posts_yet">Chưa có bài viết nào</string>
+    <string name="no_posts_desc">Hãy là người đầu tiên chia sẻ thông tin hoặc hình ảnh thú vị trong kênh bài viết này nhé!</string>
+    <string name="create_new_post">Tạo bài viết mới</string>
+
+    <!-- Home Notifications -->
+    <string name="notifications_empty_title">Bạn đã xem hết thông báo!</string>
+    <string name="notifications_empty_desc">Bất kỳ lượt nhắc tên hoặc lịch sử thông báo nào trong server sẽ xuất hiện ở đây.</string>
+
+    <!-- Home Fragment -->
+    <string name="find_or_start_conversation">Tìm hoặc bắt đầu một cuộc trò chuyện</string>
+
+    <!-- Friend Manage -->
+    <string name="search_friends_hint">Tìm kiếm bạn bè...</string>
+
+    <!-- Friend Profile -->
+    <string name="edit_profile_desc">Tùy chỉnh ảnh bìa, ảnh đại diện, tiểu sử...</string>
+
+    <!-- Chat Search -->
+    <string name="search_in_conversation_hint">Tìm kiếm trong cuộc trò chuyện...</string>
+    <string name="enter_keyword_to_search">Nhập từ khóa để tìm kiếm tin nhắn</string>
+
+    <!-- Chat Fragment -->
+    <string name="someone_is_typing">Ai đó đang nhập...</string>
+    <string name="chat_input_hint_dm">Nhắn tin cho %s</string>
+    <string name="chat_input_hint_channel">Nhắn tin vào #%s</string>
+
+    <!-- Voice Call -->
+    <string name="voice_channel_default_title">Kênh thoại</string>
+    <string name="waiting_for_others">Đang chờ người khác tham gia...</string>
+
+    <!-- Post Share Dialog -->
+    <string name="share_post_to_chat_channel">Chia sẻ bài viết vào Kênh Chat</string>
+
+    <!-- Payment Method Dialog -->
+    <string name="select_payment_method">Chọn phương thức thanh toán</string>
+    <string name="qr_code">Mã QR</string>
+    <string name="credit_card">Thẻ tín dụng</string>
+    <string name="scan_banking_app_hint">Quét mã bằng ứng dụng ngân hàng bất kỳ</string>
+    <string name="card_number">Số thẻ</string>
+    <string name="expiry_date">Hạn dùng (Tháng/Năm)</string>
+    <string name="cvv">CVV</string>
+    <string name="complete_upgrade">Hoàn tất nâng cấp</string>
+
+    <!-- Upgrade Plan Dynamic Strings -->
+    <string name="plan_renew_date_format">Gói của bạn sẽ gia hạn vào ngày %s.</string>
+    <string name="already_on_plan">Bạn đang sử dụng gói %s rồi.</string>
+    <string name="plan_upgraded">Đã nâng cấp lên gói %s!</string>
+    <string name="plan_desc_basic">• Tối đa 2 kênh mỗi danh mục (gọi, chat, bài viết)\n• Trạng thái tùy chỉnh dạng văn bản (tối đa 30 ký tự)\n• Ảnh đại diện tĩnh cơ bản</string>
+    <string name="plan_desc_standard">• Tối đa 5 kênh mỗi danh mục (gọi, chat, bài viết)\n• Không giới hạn độ dài trạng thái tùy chỉnh\n• Hỗ trợ emoji động trong trạng thái\n• Ảnh bìa hồ sơ tùy chỉnh\n• Hỗ trợ ảnh đại diện GIF động\n• Huy hiệu hồ sơ đặc biệt ⭐</string>
+    <string name="plan_desc_pro">• Tối đa 10 kênh mỗi danh mục (gọi, chat, bài viết)\n• Không giới hạn độ dài trạng thái tùy chỉnh\n• Hỗ trợ emoji động trong trạng thái\n• Ảnh bìa hồ sơ tùy chỉnh\n• Hỗ trợ ảnh đại diện GIF động\n• Huy hiệu hồ sơ cao cấp ✨\n• Khung ảnh đại diện màu vàng độc quyền</string>
+</resources>
+

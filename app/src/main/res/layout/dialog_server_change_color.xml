@@ -27,7 +27,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Choose Theme"
+            android:text="@string/choose_theme_title"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -46,7 +46,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="THEME PREVIEW"
+        android:text="@string/theme_preview_label"
         android:textColor="@color/text_secondary"
         android:textSize="11sp"
         android:textStyle="bold"
@@ -197,7 +197,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Hi! How do you like this new theme?"
+                            android:text="@string/theme_preview_msg_received"
                             android:textColor="@color/bubble_text_received"
                             android:background="@drawable/bg_chat_left"
                             android:paddingHorizontal="12dp"
@@ -212,7 +212,7 @@
                     android:id="@+id/tvSentMessage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="It looks absolutely stunning! ✨"
+                    android:text="@string/theme_preview_msg_sent"
                     android:textColor="@color/bubble_text_sent"
                     android:background="@drawable/border_chat"
                     android:paddingHorizontal="12dp"
@@ -228,7 +228,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SELECT ACCENT COLOR"
+        android:text="@string/select_accent_color_label"
         android:textColor="@color/text_secondary"
         android:textSize="11sp"
         android:textStyle="bold"
@@ -485,7 +485,7 @@
         android:layout_height="50dp"
         android:layout_marginHorizontal="20dp"
         android:layout_marginBottom="8dp"
-        android:text="Apply Theme"
+        android:text="@string/apply_theme_button"
         android:textColor="@color/text_on_accent"
         android:backgroundTint="@color/accent"
         app:cornerRadius="14dp"
