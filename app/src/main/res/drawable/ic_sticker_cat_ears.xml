@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="80dp"
+    android:viewportWidth="200"
+    android:viewportHeight="80">
+    <!-- Left Ear Outer -->
+    <path
+        android:fillColor="#3A3C40"
+        android:pathData="M20,70 L50,15 L75,65 Z" />
+    <!-- Left Ear Inner -->
+    <path
+        android:fillColor="#FFC0CB"
+        android:pathData="M30,65 L50,25 L65,60 Z" />
+    <!-- Right Ear Outer -->
+    <path
+        android:fillColor="#3A3C40"
+        android:pathData="M180,70 L150,15 L125,65 Z" />
+    <!-- Right Ear Inner -->
+    <path
+        android:fillColor="#FFC0CB"
+        android:pathData="M170,65 L150,25 L135,60 Z" />
+</vector>

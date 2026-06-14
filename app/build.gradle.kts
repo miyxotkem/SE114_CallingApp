@@ -76,6 +76,7 @@ dependencies {
     implementation("com.github.chrisbanes:PhotoView:2.3.0")
     implementation("io.agora.rtc:full-sdk:4.6.3")
     implementation("io.agora.rtc:full-virtual-background:4.6.3") // Extension xóa phông
+    implementation("com.google.mlkit:face-detection:16.1.7")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 

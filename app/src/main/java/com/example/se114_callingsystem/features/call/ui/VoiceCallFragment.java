@@ -17,6 +17,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.FrameLayout;
+import io.agora.rtc2.video.VideoCanvas;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -38,6 +42,9 @@ import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcConnection;
 import io.agora.rtc2.RtcEngine;
 import io.agora.rtc2.RtcEngineConfig;
+import io.agora.rtc2.video.BeautyOptions;
+import io.agora.rtc2.video.ColorEnhanceOptions;
+import io.agora.rtc2.video.LowLightEnhanceOptions;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +61,8 @@ public class VoiceCallFragment extends Fragment {
     public static String sServerId;
     public static boolean isMinimized = false;
     public static final androidx.lifecycle.MutableLiveData<Boolean> minimizedCallEvent = new androidx.lifecycle.MutableLiveData<>(false);
+    public static String sSelectedFilter = "Normal";
+    public static String sSelectedSticker = "None";
 
     private RtcEngine mRtcEngine;
     private int uid;
@@ -63,6 +72,10 @@ public class VoiceCallFragment extends Fragment {
     private final int SCREEN_SHARE_UID_OFFSET = 1000;
     private boolean isSharingScreen = false;
     private boolean isUiVisible = true;
+    private boolean isBeautyEnabled = false;
+    private boolean isColorEnhanceEnabled = false;
+    private boolean isLowlightEnabled = false;
+    private boolean isDeafened = false;
 
     private FragmentCallVoiceBinding binding;
     private ParticipantAdapter adapter;
@@ -293,6 +306,7 @@ public class VoiceCallFragment extends Fragment {
         adapter = new ParticipantAdapter(requireContext(), participantList, mRtcEngine);
         adapter.setLocalUid(uid);
         adapter.setServerMembers(serverMembers);
+        adapter.setOnParticipantClickListener(this::showParticipantSettingsDialog);
         binding.rvParticipants.setAdapter(adapter);
         updateGridLayout();
     }
@@ -831,6 +845,387 @@ public class VoiceCallFragment extends Fragment {
         super.onDestroy();
     }
 
+    private void showParticipantSettingsDialog(Participant participant) {
+        if (getContext() == null || mRtcEngine == null) return;
+
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = 
+                new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        
+        View view = getLayoutInflater().inflate(R.layout.dialog_call_participant_settings, null);
+        bottomSheetDialog.setContentView(view);
+        
+        try {
+            View bottomSheet = (View) view.getParent();
+            bottomSheet.setBackgroundResource(android.R.color.transparent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        TextView tvTitle = view.findViewById(R.id.tvSettingsTitle);
+        tvTitle.setText("Cài đặt: " + participant.name);
+
+        // Map views
+        View llViewProfile = view.findViewById(R.id.llViewProfile);
+        View llMute = view.findViewById(R.id.llMute);
+        TextView tvMuteLabel = view.findViewById(R.id.tvMuteLabel);
+        com.google.android.material.checkbox.MaterialCheckBox cbMute = view.findViewById(R.id.cbMute);
+        View dividerMute = view.findViewById(R.id.dividerMute);
+
+        View llDeafen = view.findViewById(R.id.llDeafen);
+        com.google.android.material.checkbox.MaterialCheckBox cbDeafen = view.findViewById(R.id.cbDeafen);
+        View dividerDeafen = view.findViewById(R.id.dividerDeafen);
+
+        View llCamera = view.findViewById(R.id.llCamera);
+        TextView tvCameraLabel = view.findViewById(R.id.tvCameraLabel);
+        com.google.android.material.checkbox.MaterialCheckBox cbCamera = view.findViewById(R.id.cbCamera);
+        View dividerCamera = view.findViewById(R.id.dividerCamera);
+
+        View llPreviewCamera = view.findViewById(R.id.llPreviewCamera);
+        View dividerPreviewCamera = view.findViewById(R.id.dividerPreviewCamera);
+
+        View llVoiceSettings = view.findViewById(R.id.llVoiceSettings);
+
+        // Determine if this participant is Me (local user)
+        boolean isMe = (participant.uid == this.uid) || participant.name.contains("Me");
+
+        if (isMe) {
+            // Options for local user (Me)
+            tvMuteLabel.setText("Tắt âm");
+            cbMute.setChecked(binding.btnMute.isSelected());
+            
+            cbDeafen.setChecked(isDeafened);
+
+            tvCameraLabel.setText("Hiển Thị Camera Của Bản Thân");
+            cbCamera.setChecked(!participant.isVideoOff);
+
+            llViewProfile.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null) {
+                    showUserProfileSheet(com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid());
+                }
+            });
+
+            llMute.setOnClickListener(v -> {
+                boolean checked = !cbMute.isChecked();
+                cbMute.setChecked(checked);
+                mRtcEngine.muteLocalAudioStream(checked);
+                binding.btnMute.setSelected(checked);
+                updateMuteButtonUI(checked);
+                participant.isMuted = checked;
+                if (adapter != null) adapter.notifyItemChanged(0, "state_update");
+            });
+
+            llDeafen.setOnClickListener(v -> {
+                boolean checked = !cbDeafen.isChecked();
+                cbDeafen.setChecked(checked);
+                isDeafened = checked;
+                mRtcEngine.muteAllRemoteAudioStreams(checked);
+                Toast.makeText(getContext(), checked ? "Đã tắt tiếng cuộc gọi" : "Đã bật tiếng cuộc gọi", Toast.LENGTH_SHORT).show();
+            });
+
+            llCamera.setOnClickListener(v -> {
+                boolean checked = !cbCamera.isChecked();
+                cbCamera.setChecked(checked);
+                boolean isVideoOff = !checked;
+                mRtcEngine.muteLocalVideoStream(isVideoOff);
+                binding.btnToggleVideo.setSelected(isVideoOff);
+                if (!isVideoOff) {
+                    mRtcEngine.startPreview();
+                    binding.btnSwitchCamera.setVisibility(View.VISIBLE);
+                } else {
+                    if (!isSharingScreen) {
+                        mRtcEngine.stopPreview();
+                    }
+                    binding.btnSwitchCamera.setVisibility(View.GONE);
+                }
+                updateVideoButtonUI(isVideoOff);
+                participant.isVideoOff = isVideoOff;
+                sortParticipantList();
+                updateGridLayout();
+                if (adapter != null) adapter.notifyDataSetChanged();
+            });
+
+            llPreviewCamera.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                showCameraPreviewDialog();
+            });
+
+            llVoiceSettings.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                showVirtualBgDialog();
+            });
+
+        } else {
+            // Options for remote user
+            tvMuteLabel.setText("Tắt âm cục bộ");
+            cbMute.setChecked(participant.isMutedLocally);
+
+            tvCameraLabel.setText("Ẩn video");
+            cbCamera.setChecked(participant.isVideoMutedLocally);
+
+            llDeafen.setVisibility(View.GONE);
+            dividerDeafen.setVisibility(View.GONE);
+            llPreviewCamera.setVisibility(View.GONE);
+            dividerPreviewCamera.setVisibility(View.GONE);
+            llVoiceSettings.setVisibility(View.GONE);
+
+            llViewProfile.setOnClickListener(v -> {
+                bottomSheetDialog.dismiss();
+                String targetUserId = resolveUserIdForAgoraUid(participant.uid);
+                if (targetUserId != null) {
+                    showUserProfileSheet(targetUserId);
+                } else {
+                    Toast.makeText(getContext(), "Không tìm thấy thông tin thành viên", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            llMute.setOnClickListener(v -> {
+                boolean checked = !cbMute.isChecked();
+                cbMute.setChecked(checked);
+                participant.isMutedLocally = checked;
+                mRtcEngine.muteRemoteAudioStream(participant.uid, checked);
+                if (adapter != null) {
+                    int idx = participantList.indexOf(participant);
+                    if (idx != -1) {
+                        adapter.notifyItemChanged(idx, "state_update");
+                    }
+                }
+            });
+
+            llCamera.setOnClickListener(v -> {
+                boolean checked = !cbCamera.isChecked();
+                cbCamera.setChecked(checked);
+                participant.isVideoMutedLocally = checked;
+                mRtcEngine.muteRemoteVideoStream(participant.uid, checked);
+                sortParticipantList();
+                updateGridLayout();
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+            });
+        }
+
+        bottomSheetDialog.show();
+    }
+
+    private String resolveUserIdForAgoraUid(int agoraUid) {
+        String currentMyUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+            
+        int targetUid = agoraUid;
+        if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) + SCREEN_SHARE_UID_OFFSET == agoraUid) {
+            return currentMyUid;
+        } else if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) == agoraUid) {
+            return currentMyUid;
+        }
+
+        if (serverMembers != null) {
+            for (ServerMember m : serverMembers) {
+                if (m.getUserId() != null) {
+                    int memberHash = m.getUserId().hashCode() & 0x7FFFFFFF;
+                    if (memberHash == targetUid || memberHash + SCREEN_SHARE_UID_OFFSET == targetUid) {
+                        return m.getUserId();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private void showUserProfileSheet(String userId) {
+        if (getContext() == null) return;
+        
+        com.google.android.material.bottomsheet.BottomSheetDialog profileSheet = 
+                new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        
+        View view = getLayoutInflater().inflate(R.layout.dialog_call_user_profile, null);
+        profileSheet.setContentView(view);
+        
+        try {
+            View bottomSheet = (View) view.getParent();
+            bottomSheet.setBackgroundResource(android.R.color.transparent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        ImageView ivCoverPhoto = view.findViewById(R.id.ivCoverPhoto);
+        com.google.android.material.imageview.ShapeableImageView ivAvatar = view.findViewById(R.id.ivAvatar);
+        View viewStatusIndicator = view.findViewById(R.id.viewStatusIndicator);
+        TextView tvUsername = view.findViewById(R.id.tvUsername);
+        TextView tvUserStatus = view.findViewById(R.id.tvUserStatus);
+        TextView tvBio = view.findViewById(R.id.tvBio);
+        TextView tvWorkplace = view.findViewById(R.id.tvWorkplace);
+        TextView tvHobbies = view.findViewById(R.id.tvHobbies);
+        TextView tvDob = view.findViewById(R.id.tvDob);
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("users").document(userId).get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists() && getContext() != null) {
+                    String username = documentSnapshot.getString("username");
+                    String status = documentSnapshot.getString("status");
+                    String bio = documentSnapshot.getString("bio");
+                    String workplace = documentSnapshot.getString("workplace");
+                    String hobbies = documentSnapshot.getString("hobbies");
+                    String dob = documentSnapshot.getString("dob");
+                    String profilePic = documentSnapshot.getString("profilePic");
+                    String coverPic = documentSnapshot.getString("coverPic");
+                    String plan = documentSnapshot.getString("plan");
+
+                    tvUsername.setText(username != null ? username : "User");
+                    
+                    if ("Pro".equals(plan)) {
+                        float density = getResources().getDisplayMetrics().density;
+                        ivAvatar.setStrokeWidth(3f * density);
+                        ivAvatar.setStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFD700")));
+                        int padding = (int)(3 * density);
+                        ivAvatar.setPadding(padding, padding, padding, padding);
+                    }
+
+                    if (bio != null && !bio.isEmpty()) {
+                        tvBio.setText(bio);
+                    } else {
+                        tvBio.setText("This user has no bio.");
+                    }
+
+                    if (workplace != null && !workplace.isEmpty()) {
+                        tvWorkplace.setText(workplace);
+                    } else {
+                        tvWorkplace.setText("Chưa cập nhật");
+                    }
+
+                    if (hobbies != null && !hobbies.isEmpty()) {
+                        tvHobbies.setText(hobbies);
+                    } else {
+                        tvHobbies.setText("Trống");
+                    }
+
+                    if (dob != null && !dob.isEmpty()) {
+                        tvDob.setText(dob);
+                    } else {
+                        tvDob.setText("Chưa cập nhật");
+                    }
+
+                    if (status == null) status = "online";
+                    int colorRes = R.color.discord_green;
+                    String displayText = "Online";
+                    switch (status.toLowerCase()) {
+                        case "idle":
+                        case "idling":
+                            colorRes = R.color.discord_yellow;
+                            displayText = "Idle";
+                            break;
+                        case "dnd":
+                        case "do not disturb":
+                            colorRes = R.color.discord_red;
+                            displayText = "Do Not Disturb";
+                            break;
+                        case "offline":
+                        case "invisible":
+                            colorRes = R.color.discord_text_muted;
+                            displayText = "Invisible";
+                            break;
+                        case "sleeping":
+                            colorRes = R.color.discord_blurple;
+                            displayText = "Sleeping 💤";
+                            break;
+                        case "eating":
+                            colorRes = R.color.discord_blurple;
+                            displayText = "Eating 🍕";
+                            break;
+                        default:
+                            if (!status.equalsIgnoreCase("online")) {
+                                colorRes = R.color.discord_blurple;
+                                displayText = status;
+                            }
+                            break;
+                    }
+                    tvUserStatus.setText(displayText);
+                    tvUserStatus.setTextColor(getResources().getColor(colorRes));
+                    viewStatusIndicator.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(colorRes)));
+
+                    try {
+                        if (profilePic != null && !profilePic.isEmpty()) {
+                            com.bumptech.glide.Glide.with(requireContext()).load(profilePic).placeholder(R.drawable.ic_user).into(ivAvatar);
+                        } else {
+                            ivAvatar.setImageResource(R.drawable.ic_user);
+                        }
+                        
+                        if (coverPic != null && !coverPic.isEmpty()) {
+                            com.bumptech.glide.Glide.with(requireContext()).load(coverPic).into(ivCoverPhoto);
+                        } else {
+                            ivCoverPhoto.setImageResource(0);
+                            ivCoverPhoto.setBackgroundColor(getResources().getColor(R.color.discord_blurple));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+        profileSheet.show();
+    }
+
+    private void showCameraPreviewDialog() {
+        if (getContext() == null || mRtcEngine == null || participantList.isEmpty()) return;
+
+        com.google.android.material.bottomsheet.BottomSheetDialog previewDialog = 
+                new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        
+        View view = getLayoutInflater().inflate(R.layout.dialog_call_camera_preview, null);
+        previewDialog.setContentView(view);
+        
+        try {
+            View bottomSheet = (View) view.getParent();
+            bottomSheet.setBackgroundResource(android.R.color.transparent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        FrameLayout previewContainer = view.findViewById(R.id.previewContainer);
+        com.google.android.material.button.MaterialButton btnStartCamera = view.findViewById(R.id.btnStartCamera);
+        com.google.android.material.button.MaterialButton btnCancel = view.findViewById(R.id.btnCancel);
+
+        android.view.TextureView textureView = new android.view.TextureView(requireContext());
+        previewContainer.addView(textureView);
+
+        mRtcEngine.setupLocalVideo(new VideoCanvas(textureView, VideoCanvas.RENDER_MODE_HIDDEN, 0));
+        mRtcEngine.startPreview();
+
+        btnCancel.setOnClickListener(v -> previewDialog.dismiss());
+
+        btnStartCamera.setOnClickListener(v -> {
+            previewDialog.dismiss();
+            
+            mRtcEngine.muteLocalVideoStream(false);
+            binding.btnToggleVideo.setSelected(false);
+            mRtcEngine.startPreview();
+            binding.btnSwitchCamera.setVisibility(View.VISIBLE);
+            
+            updateVideoButtonUI(false);
+            
+            if (!participantList.isEmpty()) {
+                participantList.get(0).isVideoOff = false;
+                sortParticipantList();
+                updateGridLayout();
+                if (adapter != null) adapter.notifyDataSetChanged();
+            }
+        });
+
+        previewDialog.setOnDismissListener(dialog -> {
+            if (!participantList.isEmpty() && participantList.get(0).isVideoOff) {
+                mRtcEngine.stopPreview();
+                mRtcEngine.setupLocalVideo(new VideoCanvas(null, VideoCanvas.RENDER_MODE_HIDDEN, 0));
+            } else {
+                if (adapter != null) {
+                    adapter.notifyItemChanged(0);
+                }
+            }
+        });
+
+        previewDialog.show();
+    }
+
     private void showVirtualBgDialog() {
         if (getContext() == null || mRtcEngine == null) return;
         
@@ -899,8 +1294,190 @@ public class VoiceCallFragment extends Fragment {
             }
             bottomSheetDialog.dismiss();
         });
+
+        view.findViewById(R.id.btnBgStudy).setOnClickListener(v -> {
+            applyImageVirtualBackground("bg_cozy_study.png", "Phòng Làm Việc Ấm Áp");
+            bottomSheetDialog.dismiss();
+        });
+
+        view.findViewById(R.id.btnBgGaming).setOnClickListener(v -> {
+            applyImageVirtualBackground("bg_cyberpunk_office.png", "Góc Gaming Cyberpunk");
+            bottomSheetDialog.dismiss();
+        });
+
+        view.findViewById(R.id.btnBgNature).setOnClickListener(v -> {
+            applyImageVirtualBackground("bg_misty_forest.png", "Rừng Thông Sương Mù");
+            bottomSheetDialog.dismiss();
+        });
+
+        // Setup Filter Buttons
+        java.util.List<com.google.android.material.card.MaterialCardView> filterButtons = java.util.Arrays.asList(
+            view.findViewById(R.id.btnFilterNormal),
+            view.findViewById(R.id.btnFilterApeFace),
+            view.findViewById(R.id.btnFilterBigEyes),
+            view.findViewById(R.id.btnFilterBigMouth),
+            view.findViewById(R.id.btnFilterAlien),
+            view.findViewById(R.id.btnFilterSmallEyes),
+            view.findViewById(R.id.btnFilterSmallMouth)
+        );
+        java.util.List<String> filterNames = java.util.Arrays.asList(
+            "Normal", "ApeFace", "BigEyes", "BigMouth", "Alien", "SmallEyes", "SmallMouth"
+        );
+
+        for (int i = 0; i < filterButtons.size(); i++) {
+            final int index = i;
+            com.google.android.material.card.MaterialCardView btn = filterButtons.get(i);
+            if (btn == null) continue;
+            String name = filterNames.get(i);
+            
+            // Set initial stroke state
+            if (name.equals(sSelectedFilter)) {
+                btn.setStrokeWidth(dpToPx(2));
+                btn.setStrokeColor(Color.parseColor("#5865F2")); // Discord Accent Blue
+            } else {
+                btn.setStrokeWidth(0);
+            }
+
+            btn.setOnClickListener(v -> {
+                sSelectedFilter = name;
+                for (int j = 0; j < filterButtons.size(); j++) {
+                    com.google.android.material.card.MaterialCardView b = filterButtons.get(j);
+                    if (b != null) {
+                        b.setStrokeWidth(filterNames.get(j).equals(sSelectedFilter) ? dpToPx(2) : 0);
+                        b.setStrokeColor(Color.parseColor("#5865F2"));
+                    }
+                }
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+                Toast.makeText(getContext(), "Đã chọn bộ lọc: " + getFilterDisplayName(name), Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        // Setup Sticker Buttons
+        com.google.android.material.card.MaterialCardView btnStickerNone = view.findViewById(R.id.btnStickerNone);
+        com.google.android.material.card.MaterialCardView btnStickerCrown = view.findViewById(R.id.btnStickerCrown);
+        com.google.android.material.card.MaterialCardView btnStickerGlasses = view.findViewById(R.id.btnStickerGlasses);
+        com.google.android.material.card.MaterialCardView btnStickerCatEars = view.findViewById(R.id.btnStickerCatEars);
+        com.google.android.material.card.MaterialCardView btnStickerFrame = view.findViewById(R.id.btnStickerFrame);
+
+        java.util.List<com.google.android.material.card.MaterialCardView> stickerButtons = java.util.Arrays.asList(
+            btnStickerNone, btnStickerCrown, btnStickerGlasses, btnStickerCatEars, btnStickerFrame
+        );
+        java.util.List<String> stickerNames = java.util.Arrays.asList(
+            "None", "Crown", "Glasses", "CatEars", "Frame"
+        );
+
+        for (int i = 0; i < stickerButtons.size(); i++) {
+            final int index = i;
+            com.google.android.material.card.MaterialCardView btn = stickerButtons.get(i);
+            if (btn == null) continue;
+            String name = stickerNames.get(i);
+            
+            // Set initial stroke state
+            if (name.equals(sSelectedSticker)) {
+                btn.setStrokeWidth(dpToPx(2));
+                btn.setStrokeColor(Color.parseColor("#5865F2"));
+            } else {
+                btn.setStrokeWidth(0);
+            }
+
+            btn.setOnClickListener(v -> {
+                sSelectedSticker = name;
+                for (int j = 0; j < stickerButtons.size(); j++) {
+                    com.google.android.material.card.MaterialCardView b = stickerButtons.get(j);
+                    if (b != null) {
+                        b.setStrokeWidth(stickerNames.get(j).equals(sSelectedSticker) ? dpToPx(2) : 0);
+                        b.setStrokeColor(Color.parseColor("#5865F2"));
+                    }
+                }
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+                Toast.makeText(getContext(), "Đã chọn trang trí: " + getStickerDisplayName(name), Toast.LENGTH_SHORT).show();
+            });
+        }
         
         bottomSheetDialog.show();
+    }
+
+    private void applyImageVirtualBackground(String assetFileName, String displayName) {
+        if (mRtcEngine == null) return;
+        if (mRtcEngine.isFeatureAvailableOnDevice(io.agora.rtc2.Constants.FEATURE_VIDEO_VIRTUAL_BACKGROUND) == false) {
+            Toast.makeText(getContext(), "Máy của bạn (hoặc máy ảo) không hỗ trợ tính năng này do phần cứng.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String imagePath = getAssetBgPath(assetFileName);
+        if (imagePath == null) {
+            Toast.makeText(getContext(), "Lỗi tải ảnh nền", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        io.agora.rtc2.video.VirtualBackgroundSource source = new io.agora.rtc2.video.VirtualBackgroundSource();
+        source.backgroundSourceType = io.agora.rtc2.video.VirtualBackgroundSource.BACKGROUND_IMG;
+        source.source = imagePath;
+
+        io.agora.rtc2.video.SegmentationProperty segProperty = new io.agora.rtc2.video.SegmentationProperty();
+        segProperty.modelType = io.agora.rtc2.video.SegmentationProperty.SEG_MODEL_AI;
+
+        int res = mRtcEngine.enableVirtualBackground(true, source, segProperty);
+        if (res == 0) {
+            Toast.makeText(getContext(), "Đã bật hình nền: " + displayName, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getContext(), "Lỗi kích hoạt: " + res, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String getAssetBgPath(String assetFileName) {
+        if (getContext() == null) return null;
+        java.io.File file = new java.io.File(getContext().getCacheDir(), assetFileName);
+        if (file.exists()) {
+            return file.getAbsolutePath();
+        }
+        try {
+            java.io.InputStream is = getContext().getAssets().open(assetFileName);
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(file);
+            byte[] buffer = new byte[1024 * 4];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                fos.write(buffer, 0, read);
+            }
+            fos.flush();
+            fos.close();
+            is.close();
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String getFilterDisplayName(String name) {
+        switch (name) {
+            case "ApeFace": return "Mặt Vượn";
+            case "BigEyes": return "Mắt To";
+            case "BigMouth": return "Mồm Rộng";
+            case "Alien": return "Mặt Alien";
+            case "SmallEyes": return "Mắt Híp";
+            case "SmallMouth": return "Mồm Nhỏ";
+            default: return "Gốc";
+        }
+    }
+
+    private String getStickerDisplayName(String name) {
+        switch (name) {
+            case "Crown": return "Vương miện";
+            case "Glasses": return "Kính ngầu";
+            case "CatEars": return "Tai mèo";
+            case "Frame": return "Trái tim";
+            default: return "Không dùng";
+        }
+    }
+
+    private int dpToPx(int dp) {
+        if (getContext() == null) return dp;
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 
     private String resolveNameForUid(int agoraUid) {

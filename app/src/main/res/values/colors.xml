@@ -6,6 +6,7 @@
     <color name="discord_green">#23A559</color>
     <color name="discord_red">#DA373C</color>
     <color name="discord_yellow">#FEE75C</color>
+    <color name="discord_pink">#EB459E</color>
     
     <!-- Light Background Hierarchy (named dark for compatibility) -->
     <color name="discord_dark_base">#FFFFFF</color>       <!-- Main chat background -->

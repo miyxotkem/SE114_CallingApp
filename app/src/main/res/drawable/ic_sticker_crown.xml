@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Base crown -->
+    <path
+        android:fillColor="#FFD700"
+        android:strokeColor="#DAA520"
+        android:strokeWidth="2"
+        android:pathData="M10,80 L90,80 L80,45 L60,65 L50,30 L40,65 L20,45 Z" />
+    <!-- Jewels on the crown points -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M20,45 A4,4 0,1,0 20,37 A4,4 0,1,0 20,45" />
+    <path
+        android:fillColor="#0000FF"
+        android:pathData="M50,30 A4,4 0,1,0 50,22 A4,4 0,1,0 50,30" />
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M80,45 A4,4 0,1,0 80,37 A4,4 0,1,0 80,45" />
+    <!-- Bottom line of jewels -->
+    <path
+        android:fillColor="#00FF00"
+        android:pathData="M30,75 A3,3 0,1,0 30,69 A3,3 0,1,0 30,75" />
+    <path
+        android:fillColor="#FF00FF"
+        android:pathData="M50,75 A3,3 0,1,0 50,69 A3,3 0,1,0 50,75" />
+    <path
+        android:fillColor="#00FFFF"
+        android:pathData="M70,75 A3,3 0,1,0 70,69 A3,3 0,1,0 70,75" />
+</vector>

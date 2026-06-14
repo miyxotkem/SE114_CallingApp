@@ -1,0 +1,40 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="60dp"
+    android:viewportWidth="120"
+    android:viewportHeight="60">
+    <!-- Left lens -->
+    <path
+        android:fillColor="#000000"
+        android:strokeColor="#333333"
+        android:strokeWidth="3"
+        android:pathData="M15,20 C15,20 18,45 38,45 C58,45 60,20 60,20 Z" />
+    <!-- Right lens -->
+    <path
+        android:fillColor="#000000"
+        android:strokeColor="#333333"
+        android:strokeWidth="3"
+        android:pathData="M60,20 C60,20 62,45 82,45 C102,45 105,20 105,20 Z" />
+    <!-- Bridge -->
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="4"
+        android:pathData="M55,23 Q60,18 65,23" />
+    <!-- Left Temple/Arm hint -->
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="3"
+        android:pathData="M15,20 L5,15" />
+    <!-- Right Temple/Arm hint -->
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="3"
+        android:pathData="M105,20 L115,15" />
+    <!-- Lens reflection highlights -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,25 L35,25 L30,30 L20,30 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M65,25 L80,25 L75,30 L65,30 Z" />
+</vector>

@@ -67,6 +67,7 @@ public class ChatFragment extends Fragment {
     
     private ActivityResultLauncher<String> imagePickerLauncher;
     private ActivityResultLauncher<String> filePickerLauncher;
+    private ActivityResultLauncher<String> videoPickerLauncher;
     private Message messageToReply = null;
     private String lastMessageId = null;
 
@@ -112,6 +113,9 @@ public class ChatFragment extends Fragment {
         });
         filePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) uploadToCloudinary(uri, "file");
+        });
+        videoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) uploadToCloudinary(uri, "video");
         });
 
         requestAudioPermissionLauncher = registerForActivityResult(
@@ -329,15 +333,16 @@ public class ChatFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            String[] options = {"📷 Send Image", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
+            String[] options = {"📷 Send Image", "🎥 Send Video", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
             com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
                     requireContext(),
                     "Upload Media & Options",
                     options,
                     (index, option) -> {
                         if (index == 0) imagePickerLauncher.launch("image/*");
-                        else if (index == 1) filePickerLauncher.launch("*/*");
-                        else if (index == 2) showGifSearchDialog();
+                        else if (index == 1) videoPickerLauncher.launch("video/*");
+                        else if (index == 2) filePickerLauncher.launch("*/*");
+                        else if (index == 3) showGifSearchDialog();
                         else showReminderDialog(null, null);
                     }
             );
@@ -433,7 +438,8 @@ public class ChatFragment extends Fragment {
         ProgressDialog pd = new ProgressDialog(getContext());
         pd.setMessage("Uploading payload...");
         pd.show();
-        MediaManager.get().upload(fileUri).option("resource_type", "auto").callback(new UploadCallback() {
+        String resourceType = ("video".equals(type) || "audio".equals(type)) ? "video" : "auto";
+        MediaManager.get().upload(fileUri).option("resource_type", resourceType).callback(new UploadCallback() {
             @Override public void onStart(String requestId) {}
             @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
             @Override public void onSuccess(String requestId, Map resultData) {

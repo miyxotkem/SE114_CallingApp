@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Heart at Top-Left -->
+    <path
+        android:fillColor="#FF5C5C"
+        android:pathData="M12,12 C10,9 6,9 4,11 C2,13 2,17 5,20 L12,26 L19,20 C22,17 22,13 20,11 C18,9 14,9 12,12 Z" />
+    <!-- Heart at Top-Right -->
+    <path
+        android:fillColor="#FF5C5C"
+        android:pathData="M88,12 C86,9 82,9 80,11 C78,13 78,17 81,20 L88,26 L95,20 C98,17 98,13 96,11 C94,9 90,9 88,12 Z" />
+    <!-- Heart at Bottom-Left -->
+    <path
+        android:fillColor="#FF5C5C"
+        android:pathData="M12,88 C10,85 6,85 4,87 C2,89 2,93 5,96 L12,102 L19,96 C22,93 22,89 20,87 C18,85 14,85 12,88 Z" />
+    <!-- Heart at Bottom-Right -->
+    <path
+        android:fillColor="#FF5C5C"
+        android:pathData="M88,88 C86,85 82,85 80,87 C78,89 78,93 81,96 L88,102 L95,96 C98,93 98,89 96,87 C94,85 90,85 88,88 Z" />
+    <!-- Decorative Border Outline -->
+    <path
+        android:strokeColor="#FFB3B3"
+        android:strokeWidth="1.5"
+        android:pathData="M15,10 L85,10" />
+    <path
+        android:strokeColor="#FFB3B3"
+        android:strokeWidth="1.5"
+        android:pathData="M10,15 L10,85" />
+    <path
+        android:strokeColor="#FFB3B3"
+        android:strokeWidth="1.5"
+        android:pathData="M90,15 L90,85" />
+    <path
+        android:strokeColor="#FFB3B3"
+        android:strokeWidth="1.5"
+        android:pathData="M15,90 L85,90" />
+</vector>

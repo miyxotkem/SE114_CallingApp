@@ -228,6 +228,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         LinearLayout layoutWaveform;
         LinearLayout layoutFile, layoutPinnedIndicator, layoutAudio;
         View cardBubble, layoutRepliedContainer;
+        View layoutVideo;
+        ImageView ivVideoThumbnail;
 
         public SentMessageViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -247,10 +249,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             btnPlayPause = itemView.findViewById(R.id.btnPlayPause);
             layoutWaveform = itemView.findViewById(R.id.layoutWaveform);
             tvAudioTime = itemView.findViewById(R.id.tvAudioTime);
+            layoutVideo = itemView.findViewById(R.id.layoutVideo);
+            ivVideoThumbnail = itemView.findViewById(R.id.ivVideoThumbnail);
         }
 
         void bind(Message message, List<Message> messages, OnChatInteractListener listener, String currentUserId, boolean isLastInGroup, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, layoutAudio, btnPlayPause, layoutWaveform, tvAudioTime, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutVideo, ivVideoThumbnail, layoutFile, tvFileName, layoutAudio, btnPlayPause, layoutWaveform, tvAudioTime, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
 
             if (isLastInGroup && textTime != null) {
                 textTime.setVisibility(View.VISIBLE);
@@ -270,6 +274,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         LinearLayout layoutWaveform;
         LinearLayout layoutFile, layoutPinnedIndicator, layoutAudio;
         View cardBubble, layoutRepliedContainer;
+        View layoutVideo;
+        ImageView ivVideoThumbnail;
 
         public ReceivedMessageViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -291,6 +297,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             btnPlayPause = itemView.findViewById(R.id.btnPlayPause);
             layoutWaveform = itemView.findViewById(R.id.layoutWaveform);
             tvAudioTime = itemView.findViewById(R.id.tvAudioTime);
+            layoutVideo = itemView.findViewById(R.id.layoutVideo);
+            ivVideoThumbnail = itemView.findViewById(R.id.ivVideoThumbnail);
         }
 
         private void applyAvatarBorder(ImageView avatarImg, String plan) {
@@ -310,7 +318,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         void bind(Message message, List<Message> messages, boolean isFirstInGroup, boolean isLastInGroup, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
-            bindSharedLogic(message, messageText, ivMessageImage, layoutFile, tvFileName, layoutAudio, btnPlayPause, layoutWaveform, tvAudioTime, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
+            bindSharedLogic(message, messageText, ivMessageImage, layoutVideo, ivVideoThumbnail, layoutFile, tvFileName, layoutAudio, btnPlayPause, layoutWaveform, tvAudioTime, textReaction, layoutRepliedContainer, textRepliedTo, ivRepliedImage, cardBubble, layoutPinnedIndicator, tvReplyHeader, messages, listener, currentUserId, serverColor, serverMembers, highlightMessageId, adapter);
             
             if (isFirstInGroup && senderName != null) {
                 senderName.setVisibility(View.VISIBLE);
@@ -445,7 +453,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, LinearLayout layoutFile, TextView tvFileName, LinearLayout layoutAudio, ImageView btnPlayPause, LinearLayout layoutWaveform, TextView tvAudioTime, TextView textReaction, View layoutRepliedContainer, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, TextView tvReplyHeader, List<Message> messages, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
+    private static void bindSharedLogic(Message msg, TextView textMessage, ImageView ivMessageImage, View layoutVideo, ImageView ivVideoThumbnail, LinearLayout layoutFile, TextView tvFileName, LinearLayout layoutAudio, ImageView btnPlayPause, LinearLayout layoutWaveform, TextView tvAudioTime, TextView textReaction, View layoutRepliedContainer, TextView textRepliedTo, ImageView ivRepliedImage, View cardBubble, View layoutPinnedIndicator, TextView tvReplyHeader, List<Message> messages, OnChatInteractListener listener, String currentUserId, String serverColor, List<ServerMember> serverMembers, String highlightMessageId, ChatAdapter adapter) {
         Context ctx = textMessage.getContext();
         Typeface interTypeface = androidx.core.content.res.ResourcesCompat.getFont(ctx, R.font.inter);
         boolean isSentByMe = msg.getSenderId() != null && msg.getSenderId().equals(currentUserId);
@@ -541,6 +549,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else {
                 layoutPinnedIndicator.setVisibility(View.GONE);
             }
+        }
+
+        if (layoutVideo != null) {
+            layoutVideo.setVisibility(View.GONE);
         }
 
         if (msg.isDeleted()) {
@@ -699,6 +711,31 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
                     });
                 });
+            } else if ("video".equals(msg.getType())) {
+                textMessage.setVisibility(View.GONE);
+                if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
+                if (layoutFile != null) layoutFile.setVisibility(View.GONE);
+                if (layoutAudio != null) layoutAudio.setVisibility(View.GONE);
+
+                if (layoutVideo != null && ivVideoThumbnail != null) {
+                    layoutVideo.setVisibility(View.VISIBLE);
+                    Glide.with(ivVideoThumbnail.getContext())
+                            .load(msg.getContent())
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .apply(RequestOptions.bitmapTransform(new RoundedCorners(32)))
+                            .into(ivVideoThumbnail);
+
+                    layoutVideo.setOnClickListener(v -> {
+                        android.os.Bundle bundle = new android.os.Bundle();
+                        bundle.putString("VIDEO_URL", msg.getContent());
+                        androidx.navigation.Navigation.findNavController(layoutVideo).navigate(R.id.nav_core_video_viewer, bundle);
+                    });
+
+                    layoutVideo.setOnLongClickListener(v -> {
+                        cardBubble.performLongClick();
+                        return true;
+                    });
+                }
             } else if ("audio".equals(msg.getType())) {
                 textMessage.setVisibility(View.GONE);
                 if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
@@ -924,6 +961,19 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     if ("image".equals(repliedType)) {
                         if (textRepliedTo != null) {
                             textRepliedTo.setText("📷 Hình ảnh");
+                            textRepliedTo.setVisibility(View.VISIBLE);
+                        }
+                        if (ivRepliedImage != null) {
+                            ivRepliedImage.setVisibility(View.VISIBLE);
+                             Glide.with(ivRepliedImage.getContext())
+                                     .load(replyContent)
+                                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                     .apply(RequestOptions.bitmapTransform(new RoundedCorners(16)))
+                                     .into(ivRepliedImage);
+                        }
+                    } else if ("video".equals(repliedType)) {
+                        if (textRepliedTo != null) {
+                            textRepliedTo.setText("🎥 Video");
                             textRepliedTo.setVisibility(View.VISIBLE);
                         }
                         if (ivRepliedImage != null) {

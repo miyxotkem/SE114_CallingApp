@@ -387,4 +387,13 @@
         android:label="Upgrade Plan"
         tools:layout="@layout/fragment_upgrade_plan" />
 
+    <!-- 10. Xem video fullscreen -->
+    <fragment
+        android:id="@+id/nav_core_video_viewer"
+        android:name="com.example.se114_callingsystem.core.viewer.VideoViewerFragment"
+        android:label="Video Viewer"
+        tools:layout="@layout/fragment_core_video_viewer">
+        <argument android:name="VIDEO_URL" app:argType="string" />
+    </fragment>
+
 </navigation>

@@ -88,6 +88,29 @@
                 android:layout_marginHorizontal="16dp"/>
 
             <TextView
+                android:id="@+id/btnUploadVideo"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:text="Gửi Video"
+                android:drawableStart="@drawable/ic_videocam_on"
+                app:drawableTint="@color/discord_pink"
+                android:drawablePadding="12dp"
+                android:textColor="@color/discord_text_primary"
+                android:textSize="15sp"
+                android:fontFamily="@font/inter"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <TextView
                 android:id="@+id/btnSendGif"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"

@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet"
+    android:backgroundTint="@color/discord_dark_floating"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Drag handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/discord_divider"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Title / User Name -->
+    <TextView
+        android:id="@+id/tvSettingsTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cài đặt thành viên"
+        android:textColor="@color/discord_text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="@font/inter"/>
+
+    <!-- Actions Container -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/discord_dark_alt"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="4dp">
+
+            <!-- 1. View Profile -->
+            <LinearLayout
+                android:id="@+id/llViewProfile"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Xem Hồ Sơ"
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_user"
+                    app:tint="@color/discord_text_secondary" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/dividerProfile"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <!-- 2. Mute (Local Mute / Local Mic) -->
+            <LinearLayout
+                android:id="@+id/llMute"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/tvMuteLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Tắt âm"
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/cbMute"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    app:useMaterialThemeColors="true" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/dividerMute"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <!-- 3. Deafen (Self Only) -->
+            <LinearLayout
+                android:id="@+id/llDeafen"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Tắt tiếng"
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/cbDeafen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    app:useMaterialThemeColors="true" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/dividerDeafen"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <!-- 4. Camera (Show My Camera / Hide Video) -->
+            <LinearLayout
+                android:id="@+id/llCamera"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/tvCameraLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Hiển Thị Camera Của Bản Thân"
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter" />
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/cbCamera"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false"
+                    app:useMaterialThemeColors="true" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/dividerCamera"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <!-- 5. Preview Camera (Self Only) -->
+            <LinearLayout
+                android:id="@+id/llPreviewCamera"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Xem Trước Camera"
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_visibility"
+                    app:tint="@color/discord_text_secondary" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/dividerPreviewCamera"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/discord_divider"
+                android:layout_marginHorizontal="16dp"/>
+
+            <!-- 6. Voice Call Settings (Self Only) -->
+            <LinearLayout
+                android:id="@+id/llVoiceSettings"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Cài Đặt Cuộc Gọi Thoại..."
+                    android:textColor="@color/discord_text_primary"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/inter" />
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_settings"
+                    app:tint="@color/discord_text_secondary" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

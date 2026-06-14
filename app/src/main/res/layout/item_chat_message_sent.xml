@@ -84,6 +84,31 @@
                 android:layout_marginTop="2dp"
                 android:layout_marginBottom="2dp" />
 
+            <FrameLayout
+                android:id="@+id/layoutVideo"
+                android:layout_width="200dp"
+                android:layout_height="250dp"
+                android:visibility="gone"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp">
+
+                <ImageView
+                    android:id="@+id/ivVideoThumbnail"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop" />
+
+                <!-- Play button icon overlay -->
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_play"
+                    app:tint="@color/white"
+                    android:background="@drawable/bg_circle_dark_tint"
+                    android:padding="12dp" />
+            </FrameLayout>
+
             <LinearLayout
                 android:id="@+id/layoutFile"
                 android:layout_width="wrap_content"

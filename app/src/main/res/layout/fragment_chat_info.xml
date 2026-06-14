@@ -249,47 +249,7 @@
                     app:tint="@color/discord_text_muted" />
             </LinearLayout>
 
-            <View
-                android:id="@+id/dividerPinned"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/discord_divider"
-                android:layout_marginHorizontal="16dp" />
 
-            <!-- Pinned Messages Row -->
-            <LinearLayout
-                android:id="@+id/btnPinnedMessages"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
-                android:background="?android:attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_pin"
-                    app:tint="@color/discord_text_secondary" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="Tin nhắn đã ghim"
-                    android:textColor="@color/discord_text_primary"
-                    android:textSize="15sp"
-                    android:fontFamily="@font/inter" />
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="@color/discord_text_muted" />
-            </LinearLayout>
 
             <View
                 android:id="@+id/dividerNicknames"
