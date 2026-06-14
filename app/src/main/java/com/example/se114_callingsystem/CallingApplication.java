@@ -3,6 +3,7 @@ package com.example.se114_callingsystem;
 import android.app.Application;
 import com.cloudinary.android.MediaManager;
 import com.example.se114_callingsystem.network.BackendService;
+import com.example.se114_callingsystem.network.ApiClient;
 import com.example.se114_callingsystem.core.di.AppDependencyProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -17,6 +18,9 @@ public class CallingApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // Khởi tạo ApiClient với Application Context
+        ApiClient.init(this);
 
         // Khởi tạo AppDependencyProvider với Application Context
         AppDependencyProvider.init(this);

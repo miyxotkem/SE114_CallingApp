@@ -87,6 +87,11 @@ public class LoginFragment extends Fragment {
         });
         binding.btnGoogleLogin.setOnClickListener(v -> signInWithGoogle());
 
+        binding.ivLogo.setOnLongClickListener(v -> {
+            showServerConfigDialog();
+            return true;
+        });
+
         setupObservers();
     }
 
@@ -155,6 +160,48 @@ public class LoginFragment extends Fragment {
         if (binding == null || getView() == null) return;
         Navigation.findNavController(getView()).navigate(R.id.action_login_to_home);
         com.example.se114_callingsystem.core.util.ThemeHelper.applyTheme(requireContext());
+    }
+
+    private void showServerConfigDialog() {
+        if (getContext() == null) return;
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Configure Server IP");
+
+        final android.widget.EditText input = new android.widget.EditText(getContext());
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+        String currentUrl = com.example.se114_callingsystem.network.ApiClient.getBaseUrl();
+        input.setText(currentUrl);
+
+        int paddingPx = (int) (16 * getContext().getResources().getDisplayMetrics().density);
+        input.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        
+        android.widget.FrameLayout container = new android.widget.FrameLayout(getContext());
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.leftMargin = paddingPx;
+        params.rightMargin = paddingPx;
+        params.topMargin = paddingPx / 2;
+        params.bottomMargin = paddingPx / 2;
+        input.setLayoutParams(params);
+        container.addView(input);
+        
+        builder.setView(container);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newUrl = input.getText().toString().trim();
+            if (!newUrl.isEmpty()) {
+                com.example.se114_callingsystem.network.ApiClient.saveBaseUrl(newUrl);
+                Toast.makeText(getContext(), "Server URL updated to: " + newUrl, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "URL cannot be empty", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
     }
 
     @Override
