@@ -577,7 +577,7 @@ public class MessageNotificationService extends Service {
 
                         if ("ringing".equals(status)) {
                             playRingtone();
-                            showIncomingCallNotification(callerName, channelName, callType);
+                            showIncomingCallNotification(callerId, callerName, channelName, callType);
                             
                             Intent intent = new Intent("com.example.se114_callingsystem.INCOMING_CALL");
                             intent.putExtra("CALLER_ID", callerId);
@@ -638,12 +638,14 @@ public class MessageNotificationService extends Service {
         }
     }
 
-    private void showIncomingCallNotification(String callerName, String channelName, String callType) {
-        Intent answerIntent = new Intent(this, MessageNotificationService.class);
+    private void showIncomingCallNotification(String callerId, String callerName, String channelName, String callType) {
+        Intent answerIntent = new Intent(this, com.example.se114_callingsystem.features.call.ui.CallActivity.class);
         answerIntent.setAction("com.example.se114_callingsystem.ACTION_ANSWER_CALL");
         answerIntent.putExtra("CALL_CHANNEL_NAME", channelName);
         answerIntent.putExtra("CALL_TYPE", callType);
-        PendingIntent answerPendingIntent = PendingIntent.getService(
+        answerIntent.putExtra("IS_CALLER", false);
+        answerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent answerPendingIntent = PendingIntent.getActivity(
                 this,
                 101,
                 answerIntent,
@@ -660,7 +662,11 @@ public class MessageNotificationService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        Intent contentIntent = new Intent(this, MainActivity.class);
+        Intent contentIntent = new Intent(this, com.example.se114_callingsystem.features.call.ui.IncomingCallActivity.class);
+        contentIntent.putExtra("CALLER_ID", callerId);
+        contentIntent.putExtra("CALLER_NAME", callerName);
+        contentIntent.putExtra("CALL_CHANNEL_NAME", channelName);
+        contentIntent.putExtra("CALL_TYPE", callType);
         PendingIntent contentPendingIntent = PendingIntent.getActivity(
                 this,
                 103,
@@ -676,7 +682,7 @@ public class MessageNotificationService extends Service {
                 .setSmallIcon(android.R.drawable.stat_sys_phone_call)
                 .setContentTitle(title)
                 .setContentText(contentText)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setAutoCancel(false)
                 .setOngoing(true)

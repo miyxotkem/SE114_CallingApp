@@ -29,12 +29,13 @@ import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.databinding.FragmentChatBinding;
 import com.example.se114_callingsystem.core.model.Firebase;
 import com.example.se114_callingsystem.core.model.Message;
-import com.example.se114_callingsystem.core.di.AppDependencyProvider;
 import com.example.se114_callingsystem.core.model.ServerMember;
 import com.example.se114_callingsystem.features.chat.viewmodel.ChatViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import javax.inject.Inject;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -59,6 +60,12 @@ public class ChatFragment extends Fragment {
 
     private static final String TAG = "ChatFragment";
     public static String activeChatId = null;
+
+    @Inject
+    FirebaseAuth firebaseAuth;
+
+    @Inject
+    FirebaseFirestore firestore;
 
     private FragmentChatBinding binding;
     private ChatAdapter adapter;
@@ -106,7 +113,7 @@ public class ChatFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        senderId = AppDependencyProvider.getFirebaseAuth().getCurrentUser() != null ? AppDependencyProvider.getFirebaseAuth().getCurrentUser().getUid() : "UNKNOWN";
+        senderId = firebaseAuth.getCurrentUser() != null ? firebaseAuth.getCurrentUser().getUid() : "UNKNOWN";
 
         imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) uploadToCloudinary(uri, "image");
@@ -464,9 +471,16 @@ public class ChatFragment extends Fragment {
     }
 
     private void sendMediaMessage(String fileUrl, String type) {
+        sendMediaMessage(fileUrl, type, 0);
+    }
+
+    private void sendMediaMessage(String fileUrl, String type, long durationMs) {
         if (viewModel == null) return;
         Message model = new Message(senderId, groupId, fileUrl, System.currentTimeMillis());
         model.setType(type);
+        if ("audio".equals(type) && durationMs > 0) {
+            model.setFileUrl(String.valueOf(durationMs));
+        }
         if (messageToReply != null) {
             model.setRepliedToContent(messageToReply.getContent());
             model.setRepliedToType(messageToReply.getType());
@@ -826,7 +840,7 @@ public class ChatFragment extends Fragment {
             String uid = member.getUserId();
             holder.itemView.setTag(uid);
             
-            AppDependencyProvider.getFirestore().collection("users").document(uid).get()
+            firestore.collection("users").document(uid).get()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists() && uid.equals(holder.itemView.getTag()) && getContext() != null) {
                         String profilePic = doc.getString("profilePic");
@@ -1574,7 +1588,7 @@ public class ChatFragment extends Fragment {
         }
         
         if (audioFilePath != null) {
-            uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)));
+            uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)), totalRecordedDuration);
         }
         
         isPaused = false;
@@ -1585,7 +1599,7 @@ public class ChatFragment extends Fragment {
         binding.inputAreaPanel.setVisibility(View.VISIBLE);
     }
 
-    private void uploadAudioToCloudinary(Uri fileUri) {
+    private void uploadAudioToCloudinary(Uri fileUri, long durationMs) {
         if (getContext() == null) return;
         if (!com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
             Toast.makeText(getContext(), "Không có kết nối mạng. Không thể gửi tin nhắn thoại.", Toast.LENGTH_SHORT).show();
@@ -1599,7 +1613,7 @@ public class ChatFragment extends Fragment {
             @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
             @Override public void onSuccess(String requestId, Map resultData) {
                 pd.dismiss();
-                sendMediaMessage((String) resultData.get("secure_url"), "audio");
+                sendMediaMessage((String) resultData.get("secure_url"), "audio", durationMs);
                 try {
                     new java.io.File(audioFilePath).delete();
                 } catch (Exception ignored) {}

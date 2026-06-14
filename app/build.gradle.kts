@@ -84,6 +84,10 @@ dependencies {
     implementation(libs.hilt.android)
     annotationProcessor(libs.hilt.compiler)
 
+    // Room DB Caching
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+
     // Jetpack Lifecycle (ViewModel & LiveData)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.livedata)

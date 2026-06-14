@@ -115,6 +115,13 @@ public class HomeFragment extends Fragment {
             performFilter(currentSearchQuery);
         });
 
+        viewModel.getUnreadCounts().observe(getViewLifecycleOwner(), counts -> {
+            if (binding == null || counts == null) return;
+            if (dmAdapter != null) {
+                dmAdapter.setUnreadCounts(counts);
+            }
+        });
+
         viewModel.getUserStatus().observe(getViewLifecycleOwner(), status -> {
             if (binding == null || status == null || getContext() == null) return;
 

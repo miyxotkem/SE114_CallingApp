@@ -21,8 +21,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 public class ChatViewModel extends ViewModel {
 
     private final ChatRepository repository;
+    private final com.example.se114_callingsystem.features.chat.data.MessageDao messageDao;
 
-    private final MutableLiveData<List<Message>> messages = new MutableLiveData<>(new ArrayList<>());
+    private final androidx.lifecycle.MediatorLiveData<List<Message>> messages = new androidx.lifecycle.MediatorLiveData<>();
+    private LiveData<List<Message>> roomSource;
     private final MutableLiveData<List<ServerMember>> serverMembers = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<String>> typingUsers = new MutableLiveData<>(new ArrayList<>());
 
@@ -39,8 +41,9 @@ public class ChatViewModel extends ViewModel {
     private String currentSenderId;
 
     @Inject
-    public ChatViewModel(ChatRepository repository) {
+    public ChatViewModel(ChatRepository repository, com.example.se114_callingsystem.features.chat.data.MessageDao messageDao) {
         this.repository = repository;
+        this.messageDao = messageDao;
     }
 
     public LiveData<List<Message>> getMessages() {
@@ -63,6 +66,18 @@ public class ChatViewModel extends ViewModel {
         // Dọn dẹp listener cũ trước khi lắng nghe nhóm mới
         stopChatSession();
 
+        // Nạp tin nhắn từ database Room trước để hiển thị offline lập tức
+        roomSource = androidx.lifecycle.Transformations.map(messageDao.getMessagesForGroup(groupId), cachedList -> {
+            List<Message> list = new ArrayList<>();
+            for (com.example.se114_callingsystem.features.chat.data.CachedMessage cm : cachedList) {
+                list.add(cm.toMessage());
+            }
+            return list;
+        });
+        messages.addSource(roomSource, list -> {
+            messages.setValue(list);
+        });
+
         // 1. Lắng nghe tin nhắn mới thời gian thực
         messagesRef = repository.getMessagesRef(groupId);
         messagesListener = new ValueEventListener() {
@@ -76,7 +91,14 @@ public class ChatViewModel extends ViewModel {
                         list.add(m);
                     }
                 }
-                messages.setValue(list);
+                // Đồng bộ tin nhắn mới vào Room DB chạy ngầm
+                new Thread(() -> {
+                    List<com.example.se114_callingsystem.features.chat.data.CachedMessage> cachedList = new ArrayList<>();
+                    for (Message m : list) {
+                        cachedList.add(new com.example.se114_callingsystem.features.chat.data.CachedMessage(m));
+                    }
+                    messageDao.insertOrUpdateAll(cachedList);
+                }).start();
             }
 
             @Override
@@ -159,6 +181,11 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void stopChatSession() {
+        if (roomSource != null) {
+            messages.removeSource(roomSource);
+            roomSource = null;
+        }
+
         if (messagesRef != null && messagesListener != null) {
             messagesRef.removeEventListener(messagesListener);
             messagesRef = null;

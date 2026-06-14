@@ -23,6 +23,7 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
     private List<User> friendList;
     private OnFriendClickListener listener;
     private HomeViewModel viewModel;
+    private java.util.Map<String, Integer> unreadCounts = new java.util.HashMap<>();
 
     public interface OnFriendClickListener {
         void onFriendClick(User friend, View itemView);
@@ -32,6 +33,11 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
         this.friendList = friendList;
         this.viewModel = viewModel;
         this.listener = listener;
+    }
+
+    public void setUnreadCounts(java.util.Map<String, Integer> unreadCounts) {
+        this.unreadCounts = unreadCounts != null ? unreadCounts : new java.util.HashMap<>();
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -96,31 +102,11 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
 
         holder.viewStatusIndicator.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(context, colorRes)));
 
-        // Listen for unread notification count from this specific friend
-        if (holder.unreadListener != null) {
-            holder.unreadListener.remove();
-            holder.unreadListener = null;
-        }
-
-        String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
-                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
         String friendUid = friend.getUserId();
-
-        if (myUid != null && friendUid != null) {
-            holder.unreadListener = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                    .collection("users").document(myUid)
-                    .collection("notifications")
-                    .whereEqualTo("isRead", false)
-                    .whereEqualTo("senderId", friendUid)
-                    .addSnapshotListener((value, error) -> {
-                        if (error != null) return;
-                        if (value != null && !value.isEmpty()) {
-                            holder.tvUnreadBadge.setText(String.valueOf(value.size()));
-                            holder.tvUnreadBadge.setVisibility(View.VISIBLE);
-                        } else {
-                            holder.tvUnreadBadge.setVisibility(View.GONE);
-                        }
-                    });
+        int unreadCount = (friendUid != null && unreadCounts.containsKey(friendUid)) ? unreadCounts.get(friendUid) : 0;
+        if (unreadCount > 0) {
+            holder.tvUnreadBadge.setText(String.valueOf(unreadCount));
+            holder.tvUnreadBadge.setVisibility(View.VISIBLE);
         } else {
             holder.tvUnreadBadge.setVisibility(View.GONE);
         }
@@ -197,14 +183,7 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
         dialog.show();
     }
 
-    @Override
-    public void onViewRecycled(@NonNull DMViewHolder holder) {
-        super.onViewRecycled(holder);
-        if (holder.unreadListener != null) {
-            holder.unreadListener.remove();
-            holder.unreadListener = null;
-        }
-    }
+
 
     @Override
     public int getItemCount() {
@@ -218,7 +197,7 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
         View viewStatusIndicator;
         TextView tvUserName;
         TextView tvUnreadBadge;
-        com.google.firebase.firestore.ListenerRegistration unreadListener;
+
 
         public DMViewHolder(@NonNull View itemView) {
             super(itemView);

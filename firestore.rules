@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User profile rules
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Notifications: only owner can access
+      match /notifications/{notificationId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Incoming call signaling: only owner and caller can access
+      match /incomingCall/{callId} {
+        allow read, write: if request.auth != null && (
+          request.auth.uid == userId ||
+          (resource != null && resource.data.callerId == request.auth.uid) ||
+          (request.resource != null && request.resource.data.callerId == request.auth.uid)
+        );
+      }
+    }
+    
+    // Server rules
+    match /servers/{serverId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        request.auth.uid in resource.data.members || 
+        resource.data.ownerId == request.auth.uid
+      );
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      
+      // Members collection inside servers
+      match /members/{memberId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && (
+          get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId == request.auth.uid ||
+          request.auth.uid == memberId
+        );
+      }
+    }
+    
+    // Channels
+    match /Channels/{channelId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /CallChannels/{channelId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /PostChannels/{channelId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

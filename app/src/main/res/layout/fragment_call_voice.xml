@@ -46,6 +46,21 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvNetworkBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#E25C5C"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/inter"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Mất kết nối mạng. Đang chờ kết nối lại..."
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/callHeader" />
+
     <!-- Grid List of Voice Participants -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvParticipants"
@@ -53,7 +68,7 @@
         android:layout_height="0dp"
         android:padding="8dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/callHeader"
+        app:layout_constraintTop_toBottomOf="@id/tvNetworkBanner"
         app:layout_constraintBottom_toTopOf="@id/controlPanel" />
 
     <!-- Waiting Overlay for Voice Call (Single Participant Waiting) -->

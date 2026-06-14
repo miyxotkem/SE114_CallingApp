@@ -23,6 +23,19 @@ public class CallActivity extends AppCompatActivity {
             boolean isCaller = getIntent().getBooleanExtra("IS_CALLER", false);
             String callType = getIntent().getStringExtra("CALL_TYPE");
 
+            if ("com.example.se114_callingsystem.ACTION_ANSWER_CALL".equals(getIntent().getAction())) {
+                String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                        ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+                if (currentUserId != null) {
+                    com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(currentUserId)
+                            .collection("incomingCall")
+                            .document("activeCall")
+                            .update("status", "answered");
+                }
+            }
+
             VoiceCallFragment fragment = new VoiceCallFragment();
             Bundle args = new Bundle();
             args.putString("CALL_CHANNEL_NAME", channelName);

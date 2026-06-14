@@ -80,6 +80,7 @@ public class VoiceCallFragment extends Fragment {
     private FragmentCallVoiceBinding binding;
     private ParticipantAdapter adapter;
     private final List<Participant> participantList = new ArrayList<>();
+    private com.example.se114_callingsystem.core.util.NetworkMonitor networkMonitor;
 
     private static final int PERMISSION_REQ_ID = 22;
     private static final String[] REQUESTED_PERMISSIONS = {
@@ -253,6 +254,13 @@ public class VoiceCallFragment extends Fragment {
 
         viewModel.loadServerMembers(serverId);
         setupDmCallSignaling();
+
+        networkMonitor = new com.example.se114_callingsystem.core.util.NetworkMonitor(requireContext().getApplicationContext());
+        networkMonitor.getIsConnected().observe(getViewLifecycleOwner(), isConnected -> {
+            if (binding != null && binding.tvNetworkBanner != null) {
+                binding.tvNetworkBanner.setVisibility(isConnected ? View.GONE : View.VISIBLE);
+            }
+        });
     }
 
     private void setupObservers() {
@@ -963,6 +971,14 @@ public class VoiceCallFragment extends Fragment {
         isMinimized = false;
         minimizedCallEvent.setValue(false);
 
+        // Clear user's active call channel in Firestore
+        viewModel.clearVoiceChannel();
+
+        super.onDestroy();
+    }
+
+    @Override
+    public void onDestroyView() {
         // Huỷ đăng ký BroadcastReceiver
         if (getContext() != null) {
             try {
@@ -971,12 +987,10 @@ public class VoiceCallFragment extends Fragment {
                 Log.e(TAG, "Receiver unregister error: " + e.getMessage());
             }
         }
-
-        // Clear user's active call channel in Firestore
-        viewModel.clearVoiceChannel();
-
-        super.onDestroy();
+        binding = null;
+        super.onDestroyView();
     }
+
 
     private void showParticipantSettingsDialog(Participant participant) {
         if (getContext() == null || mRtcEngine == null) return;

@@ -25,7 +25,13 @@ requiredEnvVars.forEach(key => {
 });
 
 const app = express();
-app.use(cors());
+
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -36,6 +42,12 @@ app.use('/api/v1/cloudinary', cloudinaryRoutes);
 // 2. Backwards compatibility routes for older client versions
 app.use('/api/agora', agoraRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('❌ Unhandled Server Error:', err);
+  res.status(500).json({ error: 'Internal Server Error' });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
