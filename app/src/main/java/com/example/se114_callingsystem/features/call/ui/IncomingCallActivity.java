@@ -61,8 +61,32 @@ public class IncomingCallActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
             );
         }
-        
-        setContentView(R.layout.activity_incoming_call);
+
+        // Kiểm tra xem màn hình thiết bị có đang bị khóa hay không
+        boolean isLocked = false;
+        android.app.KeyguardManager km = (android.app.KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+        if (km != null) {
+            isLocked = km.isKeyguardLocked();
+        }
+
+        if (isLocked) {
+            // Trường hợp 1: Màn hình khóa -> Dùng giao diện toàn màn hình sang trọng
+            setContentView(R.layout.activity_incoming_call);
+        } else {
+            // Trường hợp 2 & 3: Không khóa (đang mở máy) -> Dùng giao diện floating banner ở trên cùng
+            android.view.Window window = getWindow();
+            if (window != null) {
+                window.setGravity(android.view.Gravity.TOP);
+                window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+                window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                
+                android.view.WindowManager.LayoutParams lp = window.getAttributes();
+                lp.y = (int) (16 * getResources().getDisplayMetrics().density);
+                window.setAttributes(lp);
+            }
+            setContentView(R.layout.layout_incoming_call_banner);
+        }
 
         // Đọc dữ liệu từ Intent
         callerId = getIntent().getStringExtra("CALLER_ID");

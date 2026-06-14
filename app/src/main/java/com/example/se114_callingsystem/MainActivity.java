@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private int systemBarsBottom = 0;
 
     private android.content.BroadcastReceiver localCallReceiver;
-    private com.google.android.material.bottomsheet.BottomSheetDialog activeCallDialog;
+    private android.app.Dialog activeCallDialog;
     private android.animation.AnimatorSet answerBtnAnimator;
 
     @Override
@@ -687,13 +687,20 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        activeCallDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
-        android.view.View view = getLayoutInflater().inflate(R.layout.layout_incoming_call, null);
+        activeCallDialog = new android.app.Dialog(this, R.style.InAppCallBannerDialog);
+        android.view.View view = getLayoutInflater().inflate(R.layout.layout_incoming_call_banner, null);
         activeCallDialog.setContentView(view);
 
-        android.view.View parent = (android.view.View) view.getParent();
-        if (parent != null) {
-            parent.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        android.view.Window window = activeCallDialog.getWindow();
+        if (window != null) {
+            window.setGravity(android.view.Gravity.TOP);
+            window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            
+            // Set margins
+            android.view.WindowManager.LayoutParams lp = window.getAttributes();
+            lp.y = (int) (16 * getResources().getDisplayMetrics().density); // Top margin
+            window.setAttributes(lp);
         }
 
         com.google.android.material.imageview.ShapeableImageView ivCallerAvatar = view.findViewById(R.id.ivCallerAvatar);
