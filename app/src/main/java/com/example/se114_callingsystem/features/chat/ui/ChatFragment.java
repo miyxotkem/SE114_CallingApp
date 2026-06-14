@@ -177,6 +177,8 @@ public class ChatFragment extends Fragment {
                     // Chat DM 1-1 (Private Chat)
                     binding.tvChannelHash.setVisibility(View.GONE);
                     binding.ivOnlineStatus.setVisibility(View.VISIBLE);
+                    binding.btnVoiceCall.setVisibility(View.VISIBLE);
+                    binding.btnVideoCall.setVisibility(View.VISIBLE);
                     binding.tvChannelName.setText(channelName);
                     binding.edtMessage.setHint(getString(R.string.chat_input_hint_dm, channelName));
                     loadDMParticipants();
@@ -184,6 +186,8 @@ public class ChatFragment extends Fragment {
                     // Chat Server Channel
                     binding.tvChannelHash.setVisibility(View.VISIBLE);
                     binding.ivOnlineStatus.setVisibility(View.GONE);
+                    binding.btnVoiceCall.setVisibility(View.GONE);
+                    binding.btnVideoCall.setVisibility(View.GONE);
                     binding.tvChannelName.setText(channelName.toLowerCase());
                     binding.edtMessage.setHint(getString(R.string.chat_input_hint_channel, channelName.toLowerCase()));
                 }
@@ -351,6 +355,9 @@ public class ChatFragment extends Fragment {
         binding.btnBack.setOnClickListener(v -> {
             Navigation.findNavController(v).popBackStack();
         });
+
+        binding.btnVoiceCall.setOnClickListener(v -> initiateDirectCall("voice"));
+        binding.btnVideoCall.setOnClickListener(v -> initiateDirectCall("video"));
 
         binding.btnSend.setOnClickListener(v -> sendMessage());
         
@@ -1878,6 +1885,58 @@ public class ChatFragment extends Fragment {
                 binding.edtMessage.setHint("Message " + nickname);
             }
         }
+    }
+
+    private void initiateDirectCall(String type) {
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String otherUid = null;
+        if (groupId != null && groupId.startsWith("dm_")) {
+            String[] parts = groupId.split("_");
+            if (parts.length == 3) {
+                otherUid = parts[1].equals(currentUid) ? parts[2] : parts[1];
+            }
+        }
+        if (otherUid == null || currentUid.isEmpty()) return;
+
+        String callerName = "Friend";
+        for (ServerMember member : serverMembers) {
+            if (currentUid.equals(member.getUserId())) {
+                callerName = member.getNickname() != null && !member.getNickname().isEmpty() ? 
+                    member.getNickname() : member.getUserName();
+                break;
+            }
+        }
+
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        java.util.Map<String, Object> callMap = new java.util.HashMap<>();
+        callMap.put("callerId", currentUid);
+        callMap.put("callerName", callerName);
+        callMap.put("channelName", groupId);
+        callMap.put("callType", type);
+        callMap.put("status", "ringing");
+        callMap.put("timestamp", System.currentTimeMillis());
+
+        String finalOtherUid = otherUid;
+        String finalCallerName = callerName;
+        db.collection("users").document(otherUid).collection("incomingCall").document("activeCall")
+            .set(callMap)
+            .addOnSuccessListener(aVoid -> {
+                if (getContext() != null) {
+                    Intent intent = new Intent(requireContext(), com.example.se114_callingsystem.features.call.ui.CallActivity.class);
+                    intent.putExtra("CALL_CHANNEL_NAME", groupId);
+                    intent.putExtra("SERVER_ID", (String) null);
+                    intent.putExtra("SERVER_COLOR", serverColor);
+                    intent.putExtra("IS_CALLER", true);
+                    intent.putExtra("CALL_TYPE", type);
+                    startActivity(intent);
+                }
+            })
+            .addOnFailureListener(e -> {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Không thể khởi tạo cuộc gọi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
     }
 
     @Override

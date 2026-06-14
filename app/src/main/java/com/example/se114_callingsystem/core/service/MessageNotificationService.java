@@ -48,16 +48,24 @@ public class MessageNotificationService extends Service {
     private final Map<String, ListenerRegistration> friendProfileListeners = new HashMap<>();
     private String currentUserUsername;
 
+    private ListenerRegistration incomingCallListener;
+    private android.media.MediaPlayer ringtonePlayer;
+    private static final int CALL_NOTIFICATION_ID = 10001;
+    private static final String CALL_CHANNEL_ID = "CallChannel";
+    private static final String CALL_CHANNEL_NAME = "Incoming Calls";
+
     @Override
     public void onCreate() {
         super.onCreate();
         serviceStartTime = System.currentTimeMillis();
         createNotificationChannel();
+        createCallNotificationChannel();
         createForegroundChannel();
         startForegroundService();
         listenToChannels();
         listenToDMs();
         loadCurrentUserUsername();
+        listenToIncomingCalls();
     }
 
     private void loadCurrentUserUsername() {
@@ -75,6 +83,17 @@ public class MessageNotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && intent.getAction() != null) {
+            String action = intent.getAction();
+            String channelName = intent.getStringExtra("CALL_CHANNEL_NAME");
+            String callType = intent.getStringExtra("CALL_TYPE");
+
+            if ("com.example.se114_callingsystem.ACTION_ANSWER_CALL".equals(action)) {
+                handleAnswerCall(channelName, callType);
+            } else if ("com.example.se114_callingsystem.ACTION_DECLINE_CALL".equals(action)) {
+                handleDeclineCall();
+            }
+        }
         return START_STICKY;
     }
 
@@ -85,6 +104,12 @@ public class MessageNotificationService extends Service {
         if (firestoreListener != null) {
             firestoreListener.remove();
         }
+        if (incomingCallListener != null) {
+            incomingCallListener.remove();
+            incomingCallListener = null;
+        }
+        stopRingtone();
+        cancelCallNotification();
         // Clean up Realtime Database listeners
         for (Map.Entry<String, ChildEventListener> entry : dbListeners.entrySet()) {
             DatabaseReference ref = Firebase.getMessagesRefByRoom(entry.getKey());
@@ -509,5 +534,218 @@ public class MessageNotificationService extends Service {
         if (alarmManager != null) {
             alarmManager.cancel(pendingIntent);
         }
+    }
+
+    private void createCallNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CALL_CHANNEL_ID,
+                    CALL_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Thông báo cuộc gọi đến");
+            channel.enableVibration(true);
+            channel.setSound(null, null);
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void listenToIncomingCalls() {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId == null) return;
+
+        incomingCallListener = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(currentUserId)
+                .collection("incomingCall")
+                .document("activeCall")
+                .addSnapshotListener((snapshot, e) -> {
+                    if (e != null) {
+                        Log.e(TAG, "Error listening to incoming calls", e);
+                        return;
+                    }
+                    if (snapshot != null && snapshot.exists()) {
+                        String status = snapshot.getString("status");
+                        String callerId = snapshot.getString("callerId");
+                        String callerName = snapshot.getString("callerName");
+                        String channelName = snapshot.getString("channelName");
+                        String callType = snapshot.getString("callType");
+
+                        if ("ringing".equals(status)) {
+                            playRingtone();
+                            showIncomingCallNotification(callerName, channelName, callType);
+                            
+                            Intent intent = new Intent("com.example.se114_callingsystem.INCOMING_CALL");
+                            intent.putExtra("CALLER_ID", callerId);
+                            intent.putExtra("CALLER_NAME", callerName);
+                            intent.putExtra("CALL_CHANNEL_NAME", channelName);
+                            intent.putExtra("CALL_TYPE", callType);
+                            intent.setPackage(getPackageName());
+                            sendBroadcast(intent);
+                        } else if ("ended".equals(status) || "rejected".equals(status) || "answered".equals(status)) {
+                            stopRingtone();
+                            cancelCallNotification();
+                            Intent intent = new Intent("com.example.se114_callingsystem.DISMISS_CALL_DIALOG");
+                            intent.setPackage(getPackageName());
+                            sendBroadcast(intent);
+                        }
+                    } else {
+                        stopRingtone();
+                        cancelCallNotification();
+                        Intent intent = new Intent("com.example.se114_callingsystem.DISMISS_CALL_DIALOG");
+                        intent.setPackage(getPackageName());
+                        sendBroadcast(intent);
+                    }
+                });
+    }
+
+    private void playRingtone() {
+        if (ringtonePlayer != null) return;
+        try {
+            android.net.Uri ringtoneUri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE);
+            if (ringtoneUri == null) {
+                ringtoneUri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION);
+            }
+            ringtonePlayer = new android.media.MediaPlayer();
+            ringtonePlayer.setDataSource(this, ringtoneUri);
+            ringtonePlayer.setAudioAttributes(new android.media.AudioAttributes.Builder()
+                    .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build());
+            ringtonePlayer.setLooping(true);
+            ringtonePlayer.prepare();
+            ringtonePlayer.start();
+        } catch (Exception e) {
+            Log.e(TAG, "Error playing ringtone", e);
+        }
+    }
+
+    private void stopRingtone() {
+        if (ringtonePlayer != null) {
+            try {
+                if (ringtonePlayer.isPlaying()) {
+                    ringtonePlayer.stop();
+                }
+                ringtonePlayer.release();
+            } catch (Exception e) {
+                Log.e(TAG, "Error stopping ringtone", e);
+            }
+            ringtonePlayer = null;
+        }
+    }
+
+    private void showIncomingCallNotification(String callerName, String channelName, String callType) {
+        Intent answerIntent = new Intent(this, MessageNotificationService.class);
+        answerIntent.setAction("com.example.se114_callingsystem.ACTION_ANSWER_CALL");
+        answerIntent.putExtra("CALL_CHANNEL_NAME", channelName);
+        answerIntent.putExtra("CALL_TYPE", callType);
+        PendingIntent answerPendingIntent = PendingIntent.getService(
+                this,
+                101,
+                answerIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        Intent declineIntent = new Intent(this, MessageNotificationService.class);
+        declineIntent.setAction("com.example.se114_callingsystem.ACTION_DECLINE_CALL");
+        declineIntent.putExtra("CALL_CHANNEL_NAME", channelName);
+        PendingIntent declinePendingIntent = PendingIntent.getService(
+                this,
+                102,
+                declineIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        Intent contentIntent = new Intent(this, MainActivity.class);
+        PendingIntent contentPendingIntent = PendingIntent.getActivity(
+                this,
+                103,
+                contentIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        String callTypeStr = "voice".equals(callType) ? "cuộc gọi thoại" : "cuộc gọi video";
+        String title = "Cuộc gọi đến từ " + callerName;
+        String contentText = "Đang mời bạn tham gia " + callTypeStr + "...";
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CALL_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.stat_sys_phone_call)
+                .setContentTitle(title)
+                .setContentText(contentText)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setContentIntent(contentPendingIntent)
+                .addAction(android.R.drawable.ic_menu_call, "Trả lời", answerPendingIntent)
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Từ chối", declinePendingIntent);
+
+        builder.setFullScreenIntent(contentPendingIntent, true);
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.notify(CALL_NOTIFICATION_ID, builder.build());
+        }
+    }
+
+    private void cancelCallNotification() {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel(CALL_NOTIFICATION_ID);
+        }
+    }
+
+    private void handleAnswerCall(String channelName, String callType) {
+        stopRingtone();
+        cancelCallNotification();
+
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId != null) {
+            FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(currentUserId)
+                    .collection("incomingCall")
+                    .document("activeCall")
+                    .update("status", "answered")
+                    .addOnFailureListener(e -> Log.e(TAG, "Error updating status to answered", e));
+        }
+
+        Intent callIntent = new Intent(this, com.example.se114_callingsystem.features.call.ui.CallActivity.class);
+        callIntent.putExtra("CALL_CHANNEL_NAME", channelName);
+        callIntent.putExtra("SERVER_ID", (String) null);
+        callIntent.putExtra("IS_CALLER", false);
+        callIntent.putExtra("CALL_TYPE", callType);
+        callIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(callIntent);
+
+        Intent broadcastIntent = new Intent("com.example.se114_callingsystem.DISMISS_CALL_DIALOG");
+        broadcastIntent.setPackage(getPackageName());
+        sendBroadcast(broadcastIntent);
+    }
+
+    private void handleDeclineCall() {
+        stopRingtone();
+        cancelCallNotification();
+
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId != null) {
+            FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(currentUserId)
+                    .collection("incomingCall")
+                    .document("activeCall")
+                    .update("status", "rejected")
+                    .addOnFailureListener(e -> Log.e(TAG, "Error updating status to rejected", e));
+        }
+
+        Intent broadcastIntent = new Intent("com.example.se114_callingsystem.DISMISS_CALL_DIALOG");
+        broadcastIntent.setPackage(getPackageName());
+        sendBroadcast(broadcastIntent);
     }
 }

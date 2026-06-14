@@ -20,12 +20,16 @@ public class CallActivity extends AppCompatActivity {
             String channelName = getIntent().getStringExtra("CALL_CHANNEL_NAME");
             String serverId = getIntent().getStringExtra("SERVER_ID");
             String serverColor = getIntent().getStringExtra("SERVER_COLOR");
+            boolean isCaller = getIntent().getBooleanExtra("IS_CALLER", false);
+            String callType = getIntent().getStringExtra("CALL_TYPE");
 
             VoiceCallFragment fragment = new VoiceCallFragment();
             Bundle args = new Bundle();
             args.putString("CALL_CHANNEL_NAME", channelName);
             args.putString("SERVER_ID", serverId);
             args.putString("SERVER_COLOR", serverColor);
+            args.putBoolean("IS_CALLER", isCaller);
+            args.putString("CALL_TYPE", callType);
             fragment.setArguments(args);
 
             getSupportFragmentManager().beginTransaction()

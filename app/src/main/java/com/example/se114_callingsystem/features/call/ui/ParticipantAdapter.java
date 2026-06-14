@@ -309,6 +309,17 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         int targetUid = participant.uid;
         if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) + 1000 == targetUid) {
             targetUid = currentMyUid.hashCode() & 0x7FFFFFFF;
+        } else if (VoiceCallFragment.sServerId == null) {
+            String otherUid = null;
+            if (VoiceCallFragment.sChannelName != null && VoiceCallFragment.sChannelName.startsWith("dm_")) {
+                String[] parts = VoiceCallFragment.sChannelName.split("_");
+                if (parts.length == 3) {
+                    otherUid = parts[1].equals(currentMyUid) ? parts[2] : parts[1];
+                }
+            }
+            if (otherUid != null && (otherUid.hashCode() & 0x7FFFFFFF) + 1000 == targetUid) {
+                targetUid = otherUid.hashCode() & 0x7FFFFFFF;
+            }
         } else if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
                 if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) + 1000 == targetUid) {
@@ -321,6 +332,17 @@ public class ParticipantAdapter extends RecyclerView.Adapter<ParticipantAdapter.
         String userId = null;
         if (currentMyUid != null && (currentMyUid.hashCode() & 0x7FFFFFFF) == targetUid) {
             userId = currentMyUid;
+        } else if (VoiceCallFragment.sServerId == null) {
+            String otherUid = null;
+            if (VoiceCallFragment.sChannelName != null && VoiceCallFragment.sChannelName.startsWith("dm_")) {
+                String[] parts = VoiceCallFragment.sChannelName.split("_");
+                if (parts.length == 3) {
+                    otherUid = parts[1].equals(currentMyUid) ? parts[2] : parts[1];
+                }
+            }
+            if (otherUid != null && (otherUid.hashCode() & 0x7FFFFFFF) == targetUid) {
+                userId = otherUid;
+            }
         } else if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
                 if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) == targetUid) {
