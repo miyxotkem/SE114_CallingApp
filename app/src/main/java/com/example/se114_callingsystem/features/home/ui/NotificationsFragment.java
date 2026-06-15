@@ -72,26 +72,71 @@ public class NotificationsFragment extends Fragment {
         adapter = new NotificationAdapter(notificationList, this::onNotificationClick);
         binding.rvNotifications.setAdapter(adapter);
 
+        // Setup swipe to dismiss
+        androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback swipeCallback = 
+                new androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(0, androidx.recyclerview.widget.ItemTouchHelper.LEFT | androidx.recyclerview.widget.ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull androidx.recyclerview.widget.RecyclerView recyclerView, 
+                                  @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, 
+                                  @NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull androidx.recyclerview.widget.RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                if (position >= 0 && position < notificationList.size()) {
+                    NotificationItem item = notificationList.get(position);
+                    viewModel.deleteNotification(item.getNotificationId());
+
+                    com.google.android.material.snackbar.Snackbar.make(binding.rvNotifications, "Đã xóa thông báo", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                            .setAction("Hoàn tác", v -> {
+                                viewModel.restoreNotification(item);
+                            })
+                            .setActionTextColor(android.graphics.Color.YELLOW)
+                            .show();
+                }
+            }
+        };
+        new androidx.recyclerview.widget.ItemTouchHelper(swipeCallback).attachToRecyclerView(binding.rvNotifications);
+
+        // Setup filter chips
+        binding.chipGroupFilters.setOnCheckedChangeListener((group, checkedId) -> {
+            applyFilter();
+        });
+
+        // Setup clear all button
+        binding.btnClearAll.setOnClickListener(v -> {
+            List<NotificationItem> currentNotifs = viewModel.getNotifications().getValue();
+            if (currentNotifs == null || currentNotifs.isEmpty()) {
+                Toast.makeText(getContext(), "Không có thông báo nào để xóa", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Xóa tất cả thông báo")
+                    .setMessage("Bạn có chắc chắn muốn xóa tất cả thông báo không?")
+                    .setPositiveButton("Xóa tất cả", (dialog, which) -> {
+                        List<String> ids = new ArrayList<>();
+                        for (NotificationItem item : currentNotifs) {
+                            if (item.getNotificationId() != null) {
+                                ids.add(item.getNotificationId());
+                            }
+                        }
+                        viewModel.clearAllNotifications(ids);
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
+        });
+
         setupObservers();
         viewModel.initNotifications();
+        viewModel.autoClearOldNotifications();
     }
 
     private void setupObservers() {
         viewModel.getNotifications().observe(getViewLifecycleOwner(), list -> {
-            if (binding == null || list == null) return;
-
-            notificationList.clear();
-            notificationList.addAll(list);
-            adapter.notifyDataSetChanged();
-
-            // Toggle empty state placeholder
-            if (notificationList.isEmpty()) {
-                binding.layoutNoNotifications.setVisibility(View.VISIBLE);
-                binding.rvNotifications.setVisibility(View.GONE);
-            } else {
-                binding.layoutNoNotifications.setVisibility(View.GONE);
-                binding.rvNotifications.setVisibility(View.VISIBLE);
-            }
+            applyFilter();
         });
 
         viewModel.getStatusMessage().observe(getViewLifecycleOwner(), message -> {
@@ -101,13 +146,78 @@ public class NotificationsFragment extends Fragment {
         });
     }
 
+    private void applyFilter() {
+        if (binding == null || viewModel == null) return;
+        List<NotificationItem> fullList = viewModel.getNotifications().getValue();
+        if (fullList == null) {
+            fullList = new ArrayList<>();
+        }
+
+        int checkedId = binding.chipGroupFilters.getCheckedChipId();
+        List<NotificationItem> filteredList = new ArrayList<>();
+
+        for (NotificationItem item : fullList) {
+            if (checkedId == R.id.chipAll) {
+                filteredList.add(item);
+            } else if (checkedId == R.id.chipUnread) {
+                if (!item.isRead()) {
+                    filteredList.add(item);
+                }
+            } else if (checkedId == R.id.chipMentions) {
+                if ("mention".equals(item.getType())) {
+                    filteredList.add(item);
+                }
+            } else if (checkedId == R.id.chipMissedCalls) {
+                if ("missed_call".equals(item.getType())) {
+                    filteredList.add(item);
+                }
+            } else {
+                filteredList.add(item);
+            }
+        }
+
+        notificationList.clear();
+        notificationList.addAll(filteredList);
+        adapter.notifyDataSetChanged();
+
+        if (notificationList.isEmpty()) {
+            binding.layoutNoNotifications.setVisibility(View.VISIBLE);
+            binding.rvNotifications.setVisibility(View.GONE);
+        } else {
+            binding.layoutNoNotifications.setVisibility(View.GONE);
+            binding.rvNotifications.setVisibility(View.VISIBLE);
+        }
+    }
+
     private void onNotificationClick(NotificationItem item) {
         if (item.getNotificationId() != null) {
             viewModel.markAsRead(item.getNotificationId());
         }
 
-        // Navigate based on notification type
-        if ("dm".equals(item.getType()) || "mention".equals(item.getType())) {
+        // Navigate or show dialog based on type
+        if ("missed_call".equals(item.getType())) {
+            showMissedCallActionDialog(item);
+        } else if ("reminder_alert".equals(item.getType())) {
+            Bundle args = new Bundle();
+            args.putString("CHAT_ID", item.getTargetId());
+            args.putString("CHAT_NAME", item.getSenderName() != null ? item.getSenderName() : "Reminder");
+            args.putString("SERVER_ID", null);
+            args.putString("SERVER_COLOR", "#5865F2");
+
+            if (getView() != null) {
+                Navigation.findNavController(getView()).navigate(R.id.action_notifications_to_chat_detail, args);
+            }
+        } else if ("new_post".equals(item.getType()) || "post_reply".equals(item.getType())) {
+            Bundle args = new Bundle();
+            args.putString("POST_ID", item.getTargetId());
+            args.putString("POST_AUTHOR_ID", item.getSenderId());
+            args.putString("SERVER_ID", null);
+            args.putString("SERVER_COLOR", "#5865F2");
+
+            if (getView() != null) {
+                Navigation.findNavController(getView()).navigate(R.id.action_notifications_to_post_comment, args);
+            }
+        } else if ("dm".equals(item.getType()) || "mention".equals(item.getType())) {
             Bundle args = new Bundle();
             args.putString("CHAT_ID", item.getTargetId());
             
@@ -133,6 +243,86 @@ public class NotificationsFragment extends Fragment {
                 Navigation.findNavController(getView()).navigate(R.id.action_notifications_to_manage_friends);
             }
         }
+    }
+
+    private void showMissedCallActionDialog(NotificationItem item) {
+        if (getContext() == null) return;
+
+        String friendUid = item.getSenderId();
+        String currentUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+
+        if (friendUid == null || friendUid.isEmpty() || currentUid.isEmpty()) return;
+
+        String chatRoomId = currentUid.compareTo(friendUid) < 0 
+                ? "dm_" + currentUid + "_" + friendUid 
+                : "dm_" + friendUid + "_" + currentUid;
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Cuộc gọi nhỡ")
+                .setMessage("Bạn muốn gọi lại cho " + item.getSenderName() + "?")
+                .setPositiveButton("Gọi lại", (dialog, which) -> {
+                    Toast.makeText(getContext(), "Đang chuẩn bị cuộc gọi...", Toast.LENGTH_SHORT).show();
+                    com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(currentUid)
+                            .get()
+                            .addOnSuccessListener(documentSnapshot -> {
+                                String currentUserName = "User";
+                                if (documentSnapshot.exists()) {
+                                    currentUserName = documentSnapshot.getString("username");
+                                    if (currentUserName == null || currentUserName.isEmpty()) {
+                                        currentUserName = "User";
+                                    }
+                                }
+                                startCallBack(currentUid, currentUserName, friendUid, chatRoomId);
+                            })
+                            .addOnFailureListener(e -> {
+                                startCallBack(currentUid, "User", friendUid, chatRoomId);
+                            });
+                })
+                .setNegativeButton("Nhắn tin", (dialog, which) -> {
+                    Bundle args = new Bundle();
+                    args.putString("CHAT_ID", chatRoomId);
+                    args.putString("CHAT_NAME", item.getSenderName());
+                    args.putString("SERVER_ID", null);
+                    args.putString("SERVER_COLOR", "#5865F2");
+
+                    if (getView() != null) {
+                        Navigation.findNavController(getView()).navigate(R.id.action_notifications_to_chat_detail, args);
+                    }
+                })
+                .setNeutralButton("Đóng", null)
+                .show();
+    }
+
+    private void startCallBack(String currentUid, String currentUserName, String otherUid, String chatRoomId) {
+        if (getContext() == null) return;
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        java.util.Map<String, Object> callMap = new java.util.HashMap<>();
+        callMap.put("callerId", currentUid);
+        callMap.put("callerName", currentUserName);
+        callMap.put("channelName", chatRoomId);
+        callMap.put("callType", "voice");
+        callMap.put("status", "ringing");
+        callMap.put("timestamp", System.currentTimeMillis());
+
+        db.collection("users").document(otherUid).collection("incomingCall").document("activeCall")
+                .set(callMap)
+                .addOnSuccessListener(aVoid -> {
+                    if (getContext() != null) {
+                        android.content.Intent intent = new android.content.Intent(requireContext(), com.example.se114_callingsystem.features.call.ui.CallActivity.class);
+                        intent.putExtra("CALL_CHANNEL_NAME", chatRoomId);
+                        intent.putExtra("SERVER_ID", (String) null);
+                        intent.putExtra("SERVER_COLOR", "#5865F2");
+                        intent.putExtra("IS_CALLER", true);
+                        intent.putExtra("CALL_TYPE", "voice");
+                        startActivity(intent);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Không thể khởi tạo cuộc gọi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     @Override

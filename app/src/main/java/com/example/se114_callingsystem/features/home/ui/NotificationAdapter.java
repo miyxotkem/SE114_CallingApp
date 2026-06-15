@@ -51,16 +51,30 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             );
         holder.tvTime.setText(timeAgo);
 
-        // Choose icon based on type
+        // Choose icon and color tint based on type
         int iconRes = R.drawable.ic_tab_notifications;
+        boolean isMissedCall = "missed_call".equals(item.getType());
+        
         if ("dm".equals(item.getType())) {
             iconRes = R.drawable.ic_chat_bubble;
         } else if ("mention".equals(item.getType())) {
             iconRes = R.drawable.ic_chat_bubble;
         } else if ("friend_request".equals(item.getType()) || "friend_accepted".equals(item.getType())) {
             iconRes = android.R.drawable.ic_menu_myplaces;
+        } else if (isMissedCall) {
+            iconRes = android.R.drawable.sym_call_missed;
+        } else if ("reminder_alert".equals(item.getType())) {
+            iconRes = android.R.drawable.ic_lock_idle_alarm;
+        } else if ("new_post".equals(item.getType()) || "post_reply".equals(item.getType())) {
+            iconRes = R.drawable.ic_file_modern;
         }
+        
         holder.ivIcon.setImageResource(iconRes);
+        if (isMissedCall) {
+            holder.ivIcon.setColorFilter(android.graphics.Color.parseColor("#F04747"));
+        } else {
+            holder.ivIcon.clearColorFilter();
+        }
 
         // Set unread status
         holder.viewUnread.setVisibility(item.isRead() ? View.GONE : View.VISIBLE);

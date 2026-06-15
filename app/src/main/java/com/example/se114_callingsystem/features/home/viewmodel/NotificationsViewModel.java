@@ -76,6 +76,76 @@ public class NotificationsViewModel extends ViewModel {
         });
     }
 
+    public void deleteNotification(String notificationId) {
+        FirebaseUser user = getCurrentUser();
+        if (user == null || notificationId == null) return;
+
+        repository.deleteNotification(user.getUid(), notificationId, new NotificationsRepository.RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                // Success updates list automatically
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                statusMessage.setValue("Failed to delete notification: " + e.getMessage());
+            }
+        });
+    }
+
+    public void restoreNotification(NotificationItem item) {
+        FirebaseUser user = getCurrentUser();
+        if (user == null || item == null) return;
+
+        repository.restoreNotification(user.getUid(), item, new NotificationsRepository.RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                // Success updates list automatically
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                statusMessage.setValue("Failed to restore notification: " + e.getMessage());
+            }
+        });
+    }
+
+    public void clearAllNotifications(List<String> notificationIds) {
+        FirebaseUser user = getCurrentUser();
+        if (user == null || notificationIds == null || notificationIds.isEmpty()) return;
+
+        repository.clearAllNotifications(user.getUid(), notificationIds, new NotificationsRepository.RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                statusMessage.setValue("Đã xóa tất cả thông báo");
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                statusMessage.setValue("Failed to clear notifications: " + e.getMessage());
+            }
+        });
+    }
+
+    public void autoClearOldNotifications() {
+        FirebaseUser user = getCurrentUser();
+        if (user == null) return;
+
+        repository.autoClearOldNotifications(user.getUid(), new NotificationsRepository.RepositoryCallback<Integer>() {
+            @Override
+            public void onSuccess(Integer count) {
+                if (count > 0) {
+                    statusMessage.setValue("Đã tự động dọn dẹp " + count + " thông báo cũ");
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                // Fail silently for background auto-clean
+            }
+        });
+    }
+
     public void resetStatus() {
         statusMessage.setValue(null);
     }

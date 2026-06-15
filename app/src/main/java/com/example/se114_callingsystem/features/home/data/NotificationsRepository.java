@@ -41,6 +41,7 @@ public class NotificationsRepository {
                 .document(userId)
                 .collection("notifications")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(50)
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
                         callback.onError(error);
@@ -71,6 +72,89 @@ public class NotificationsRepository {
                 .document(notificationId)
                 .update("isRead", true)
                 .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onFailure);
+    }
+
+    public void deleteNotification(String userId, String notificationId, RepositoryCallback<Void> callback) {
+        db.collection("users")
+                .document(userId)
+                .collection("notifications")
+                .document(notificationId)
+                .delete()
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onFailure);
+    }
+
+    public void restoreNotification(String userId, NotificationItem item, RepositoryCallback<Void> callback) {
+        if (item == null || item.getNotificationId() == null) {
+            callback.onFailure(new Exception("Invalid notification item"));
+            return;
+        }
+        db.collection("users")
+                .document(userId)
+                .collection("notifications")
+                .document(item.getNotificationId())
+                .set(item)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onFailure);
+    }
+
+    public void clearAllNotifications(String userId, List<String> notificationIds, RepositoryCallback<Void> callback) {
+        if (notificationIds == null || notificationIds.isEmpty()) {
+            callback.onSuccess(null);
+            return;
+        }
+        com.google.firebase.firestore.WriteBatch batch = db.batch();
+        for (String id : notificationIds) {
+            batch.delete(db.collection("users").document(userId).collection("notifications").document(id));
+        }
+        batch.commit()
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(callback::onFailure);
+    }
+
+    public void autoClearOldNotifications(String userId, RepositoryCallback<Integer> callback) {
+        long currentTime = System.currentTimeMillis();
+        long readCutOff = currentTime - (7L * 24 * 60 * 60 * 1000); // 7 days
+        long unreadCutOff = currentTime - (30L * 24 * 60 * 60 * 1000); // 30 days
+
+        db.collection("users")
+                .document(userId)
+                .collection("notifications")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (querySnapshot.isEmpty()) {
+                        callback.onSuccess(0);
+                        return;
+                    }
+
+                    com.google.firebase.firestore.WriteBatch batch = db.batch();
+                    int count = 0;
+
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        Boolean isRead = doc.getBoolean("isRead");
+                        Long timestamp = doc.getLong("timestamp");
+
+                        if (timestamp != null) {
+                            if (isRead != null && isRead && timestamp < readCutOff) {
+                                batch.delete(doc.getReference());
+                                count++;
+                            } else if ((isRead == null || !isRead) && timestamp < unreadCutOff) {
+                                batch.delete(doc.getReference());
+                                count++;
+                            }
+                        }
+                    }
+
+                    final int finalCount = count;
+                    if (count > 0) {
+                        batch.commit()
+                                .addOnSuccessListener(aVoid -> callback.onSuccess(finalCount))
+                                .addOnFailureListener(callback::onFailure);
+                    } else {
+                        callback.onSuccess(0);
+                    }
+                })
                 .addOnFailureListener(callback::onFailure);
     }
 }

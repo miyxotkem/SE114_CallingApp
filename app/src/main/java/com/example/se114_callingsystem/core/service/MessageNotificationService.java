@@ -47,6 +47,11 @@ public class MessageNotificationService extends Service {
     private final Map<String, String> channelNames = new HashMap<>();
     private final Map<String, ListenerRegistration> friendProfileListeners = new HashMap<>();
     private String currentUserUsername;
+    private boolean isRingingState = false;
+    private String currentCallCallerId = null;
+    private String currentCallCallerName = null;
+    private String currentCallChannelName = null;
+    private String currentCallType = null;
 
     private ListenerRegistration incomingCallListener;
     private android.media.MediaPlayer ringtonePlayer;
@@ -379,20 +384,47 @@ public class MessageNotificationService extends Service {
         FirebaseFirestore.getInstance().collection("users").document(senderId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     String senderName = "Ai đó";
+                    String avatarUrl = null;
                     if (documentSnapshot.exists()) {
                         String name = documentSnapshot.getString("username");
                         if (name != null && !name.isEmpty()) {
                             senderName = name;
                         }
+                        avatarUrl = documentSnapshot.getString("profilePic");
+                        if (avatarUrl == null || avatarUrl.isEmpty()) {
+                            avatarUrl = documentSnapshot.getString("avatarUrl");
+                        }
                     }
-                    sendNotification(chatId, chatName, senderName, message);
+                    
+                    final String finalSenderName = senderName;
+                    final String finalAvatarUrl = avatarUrl;
+                    new Thread(() -> {
+                        android.graphics.Bitmap avatarBitmap = null;
+                        if (finalAvatarUrl != null && !finalAvatarUrl.isEmpty()) {
+                            try {
+                                avatarBitmap = com.bumptech.glide.Glide.with(MessageNotificationService.this)
+                                        .asBitmap()
+                                        .load(finalAvatarUrl)
+                                        .circleCrop()
+                                        .submit()
+                                        .get();
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error loading sender avatar bitmap", e);
+                            }
+                        }
+                        
+                        android.graphics.Bitmap finalBitmap = avatarBitmap;
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                            sendNotification(chatId, chatName, finalSenderName, message, finalBitmap);
+                        });
+                    }).start();
                 })
                 .addOnFailureListener(e -> {
-                    sendNotification(chatId, chatName, "Ai đó", message);
+                    sendNotification(chatId, chatName, "Ai đó", message, null);
                 });
     }
 
-    private void sendNotification(String chatId, String chatName, String senderName, Message message) {
+    private void sendNotification(String chatId, String chatName, String senderName, Message message, android.graphics.Bitmap avatarBitmap) {
         String contentText;
         if ("image".equals(message.getType())) {
             contentText = "📷 Đã gửi một ảnh";
@@ -429,17 +461,34 @@ public class MessageNotificationService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
+        String groupKey = "com.example.se114_callingsystem.CHAT_GROUP";
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_notify_chat)
                 .setContentTitle(title)
                 .setContentText(contentText)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
+                .setGroup(groupKey)
                 .setContentIntent(pendingIntent);
+
+        if (avatarBitmap != null) {
+            builder.setLargeIcon(avatarBitmap);
+        }
+
+        NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.stat_notify_chat)
+                .setContentTitle("Tin nhắn mới")
+                .setContentText("Bạn có tin nhắn mới chưa đọc")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setGroup(groupKey)
+                .setGroupSummary(true)
+                .setAutoCancel(true);
 
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
             manager.notify(chatId.hashCode(), builder.build());
+            manager.notify(999, summaryBuilder.build());
         }
 
         // Save this notification event to Firestore history
@@ -576,6 +625,12 @@ public class MessageNotificationService extends Service {
                         String callType = snapshot.getString("callType");
 
                         if ("ringing".equals(status)) {
+                            isRingingState = true;
+                            currentCallCallerId = callerId;
+                            currentCallCallerName = callerName;
+                            currentCallChannelName = channelName;
+                            currentCallType = callType;
+
                             playRingtone();
                             showIncomingCallNotification(callerId, callerName, channelName, callType);
                             
@@ -587,6 +642,11 @@ public class MessageNotificationService extends Service {
                             intent.setPackage(getPackageName());
                             sendBroadcast(intent);
                         } else if ("ended".equals(status) || "rejected".equals(status) || "answered".equals(status)) {
+                            if (isRingingState && ("ended".equals(status) || "rejected".equals(status))) {
+                                recordMissedCall(currentCallCallerId, currentCallCallerName, currentCallChannelName, currentCallType);
+                            }
+                            isRingingState = false;
+
                             stopRingtone();
                             cancelCallNotification();
                             Intent intent = new Intent("com.example.se114_callingsystem.DISMISS_CALL_DIALOG");
@@ -594,6 +654,11 @@ public class MessageNotificationService extends Service {
                             sendBroadcast(intent);
                         }
                     } else {
+                        if (isRingingState) {
+                            recordMissedCall(currentCallCallerId, currentCallCallerName, currentCallChannelName, currentCallType);
+                        }
+                        isRingingState = false;
+
                         stopRingtone();
                         cancelCallNotification();
                         Intent intent = new Intent("com.example.se114_callingsystem.DISMISS_CALL_DIALOG");
@@ -601,6 +666,109 @@ public class MessageNotificationService extends Service {
                         sendBroadcast(intent);
                     }
                 });
+    }
+
+    private void recordMissedCall(String callerId, String callerName, String channelName, String callType) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null 
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+        if (currentUserId == null || callerId == null) return;
+        if (callerId.equals(currentUserId)) return;
+
+        String notifId = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(currentUserId)
+                .collection("notifications")
+                .document().getId();
+
+        String callTypeStr = "voice".equals(callType) ? "cuộc gọi thoại" : "cuộc gọi video";
+        String content = "Bạn có cuộc gọi nhỡ từ " + (callerName != null ? callerName : "Người dùng");
+
+        java.util.Map<String, Object> notifMap = new java.util.HashMap<>();
+        notifMap.put("notificationId", notifId);
+        notifMap.put("title", "Cuộc gọi nhỡ");
+        notifMap.put("content", content);
+        notifMap.put("type", "missed_call");
+        notifMap.put("senderId", callerId);
+        notifMap.put("senderName", callerName != null ? callerName : "Người dùng");
+        notifMap.put("targetId", channelName);
+        notifMap.put("timestamp", System.currentTimeMillis());
+        notifMap.put("isRead", false);
+
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(currentUserId)
+                .collection("notifications")
+                .document(notifId)
+                .set(notifMap)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Missed call recorded in Firestore"))
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to record missed call", e));
+
+        FirebaseFirestore.getInstance().collection("users").document(callerId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    String avatarUrl = null;
+                    if (documentSnapshot.exists()) {
+                        avatarUrl = documentSnapshot.getString("profilePic");
+                        if (avatarUrl == null || avatarUrl.isEmpty()) {
+                            avatarUrl = documentSnapshot.getString("avatarUrl");
+                        }
+                    }
+                    
+                    final String finalAvatarUrl = avatarUrl;
+                    new Thread(() -> {
+                        android.graphics.Bitmap avatarBitmap = null;
+                        if (finalAvatarUrl != null && !finalAvatarUrl.isEmpty()) {
+                            try {
+                                avatarBitmap = com.bumptech.glide.Glide.with(MessageNotificationService.this)
+                                        .asBitmap()
+                                        .load(finalAvatarUrl)
+                                        .circleCrop()
+                                        .submit()
+                                        .get();
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error loading caller avatar bitmap", e);
+                            }
+                        }
+                        
+                        android.graphics.Bitmap finalBitmap = avatarBitmap;
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                            showMissedCallNotification(callerName, callType, finalBitmap);
+                        });
+                    }).start();
+                })
+                .addOnFailureListener(e -> {
+                    showMissedCallNotification(callerName, callType, null);
+                });
+    }
+
+    private void showMissedCallNotification(String callerName, String callType, android.graphics.Bitmap avatarBitmap) {
+        String contentText = "Bạn có cuộc gọi nhỡ từ " + (callerName != null ? callerName : "Người dùng");
+        Intent intent = new Intent(this, com.example.se114_callingsystem.MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("OPEN_TAB", "notifications");
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                201,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.sym_call_missed)
+                .setContentTitle("Cuộc gọi nhỡ")
+                .setContentText(contentText)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent);
+
+        if (avatarBitmap != null) {
+            builder.setLargeIcon(avatarBitmap);
+        }
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.notify((int) System.currentTimeMillis(), builder.build());
+        }
     }
 
     private void playRingtone() {
@@ -678,6 +846,17 @@ public class MessageNotificationService extends Service {
         String title = "Cuộc gọi đến từ " + callerName;
         String contentText = "Đang mời bạn tham gia " + callTypeStr + "...";
 
+        androidx.core.app.Person caller = new androidx.core.app.Person.Builder()
+                .setName(callerName)
+                .build();
+
+        androidx.core.app.NotificationCompat.CallStyle callStyle = 
+                androidx.core.app.NotificationCompat.CallStyle.forIncomingCall(
+                        caller,
+                        declinePendingIntent,
+                        answerPendingIntent
+                );
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CALL_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_sys_phone_call)
                 .setContentTitle(title)
@@ -686,9 +865,8 @@ public class MessageNotificationService extends Service {
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setAutoCancel(false)
                 .setOngoing(true)
-                .setContentIntent(contentPendingIntent)
-                .addAction(android.R.drawable.ic_menu_call, "Trả lời", answerPendingIntent)
-                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Từ chối", declinePendingIntent);
+                .setStyle(callStyle)
+                .setContentIntent(contentPendingIntent);
 
         builder.setFullScreenIntent(contentPendingIntent, true);
 
