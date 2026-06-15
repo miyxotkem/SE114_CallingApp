@@ -253,6 +253,26 @@ public class HomeViewModel extends ViewModel {
         });
     }
 
+    public void deleteDirectMessage(String friendUid) {
+        FirebaseUser user = getCurrentUser();
+        if (user == null || friendUid == null) return;
+        String uid = user.getUid();
+        
+        String dmRoomId = uid.compareTo(friendUid) < 0 ? "dm_" + uid + "_" + friendUid : "dm_" + friendUid + "_" + uid;
+        Firebase.getMessagesRefByRoom(dmRoomId).removeValue();
+        
+        if (pinnedDMs.contains(friendUid)) {
+            pinnedDMs.remove(friendUid);
+            repository.updatePinnedDMs(uid, new ArrayList<>(pinnedDMs));
+        }
+        
+        // Also remove from friendLastMsgMap so it disappears from UI if it was there
+        friendLastMsgMap.remove(friendUid);
+        updateFriendList();
+        
+        operationStatus.setValue("Đã xóa tin nhắn");
+    }
+
     public void joinServer(String inviteCode) {
         FirebaseUser user = getCurrentUser();
         if (user == null) return;

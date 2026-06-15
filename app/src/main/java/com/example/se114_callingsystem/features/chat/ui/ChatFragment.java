@@ -344,24 +344,13 @@ public class ChatFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            String[] options = {"📷 Send Image", "🎥 Send Video", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
-            com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
-                    requireContext(),
-                    "Upload Media & Options",
-                    options,
-                    (index, option) -> {
-                        if (index == 0) imagePickerLauncher.launch("image/*");
-                        else if (index == 1) videoPickerLauncher.launch("video/*");
-                        else if (index == 2) filePickerLauncher.launch("*/*");
-                        else if (index == 3) showGifSearchDialog();
-                        else showReminderDialog(null, null);
-                    }
-            );
+            showAttachmentPopup(v);
         });
 
         binding.btnBack.setOnClickListener(v -> {
             Navigation.findNavController(v).popBackStack();
         });
+
 
         binding.btnVoiceCall.setOnClickListener(v -> initiateDirectCall("voice"));
         binding.btnVideoCall.setOnClickListener(v -> initiateDirectCall("video"));
@@ -403,6 +392,56 @@ public class ChatFragment extends Fragment {
             Navigation.findNavController(v).navigate(R.id.action_chat_to_chat_info, args);
         };
         binding.tvChannelName.setOnClickListener(toChatInfo);
+    }
+
+    private void showAttachmentPopup(View anchor) {
+        if (getContext() == null) return;
+        View popupView = getLayoutInflater().inflate(R.layout.layout_chat_attachment_popup, null);
+        
+        android.widget.PopupWindow popupWindow = new android.widget.PopupWindow(
+                popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
+                
+        popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setElevation(8f);
+        popupWindow.setOutsideTouchable(true);
+
+        popupView.findViewById(R.id.btnUploadImage).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            imagePickerLauncher.launch("image/*");
+        });
+        popupView.findViewById(R.id.btnUploadVideo).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            videoPickerLauncher.launch("video/*");
+        });
+        popupView.findViewById(R.id.btnUploadFile).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            filePickerLauncher.launch("*/*");
+        });
+        popupView.findViewById(R.id.btnSendGif).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            showGifSearchDialog();
+        });
+        popupView.findViewById(R.id.btnSetReminder).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            showReminderDialog(null, null);
+        });
+
+        popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int popupWidth = popupView.getMeasuredWidth();
+        int popupHeight = popupView.getMeasuredHeight();
+
+        int[] location = new int[2];
+        anchor.getLocationInWindow(location);
+        
+        int xOffset = location[0] + (anchor.getWidth() / 2) - (popupWidth / 2);
+        int yOffset = location[1] - popupHeight - 16;
+        
+        if (xOffset < 16) xOffset = 16;
+        
+        popupWindow.showAtLocation(anchor, android.view.Gravity.NO_GRAVITY, xOffset, yOffset);
     }
 
     private void sendMessage() {

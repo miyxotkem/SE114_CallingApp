@@ -179,6 +179,32 @@ public class HomeDMAdapter extends RecyclerView.Adapter<HomeDMAdapter.DMViewHold
             dialog.dismiss();
         });
         
+        // Delete DM
+        android.widget.TextView btnDelete = new android.widget.TextView(context);
+        btnDelete.setText("Xóa tin nhắn");
+        btnDelete.setTextColor(ContextCompat.getColor(context, R.color.discord_red));
+        btnDelete.setTextSize(16);
+        btnDelete.setGravity(android.view.Gravity.START | android.view.Gravity.CENTER_VERTICAL);
+        btnDelete.setPadding(48, 48, 48, 48);
+        btnDelete.setBackgroundResource(outValue.resourceId);
+        btnDelete.setClickable(true);
+        btnDelete.setFocusable(true);
+        layout.addView(btnDelete);
+        
+        btnDelete.setOnClickListener(v -> {
+            dialog.dismiss();
+            com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+                context,
+                "Xóa tin nhắn",
+                "Bạn có chắc chắn muốn xóa toàn bộ tin nhắn với " + (friend.getUsername() != null ? friend.getUsername() : "người này") + " không?",
+                "Xóa",
+                "#F23F42",
+                () -> {
+                    viewModel.deleteDirectMessage(friend.getUserId());
+                }
+            );
+        });
+        
         dialog.setContentView(layout);
         dialog.show();
     }
