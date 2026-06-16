@@ -84,6 +84,13 @@
             app:exitAnim="@anim/anim_exit"
             app:popEnterAnim="@anim/anim_pop_enter"
             app:popExitAnim="@anim/anim_pop_exit"/>
+        <action
+            android:id="@+id/action_notifications_to_post_comment"
+            app:destination="@id/nav_post_comment" 
+            app:enterAnim="@anim/anim_enter"
+            app:exitAnim="@anim/anim_exit"
+            app:popEnterAnim="@anim/anim_pop_enter"
+            app:popExitAnim="@anim/anim_pop_exit"/>
     </fragment>
 
     <fragment

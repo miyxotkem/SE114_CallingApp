@@ -63,6 +63,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-messaging")
     implementation(libs.firebase.storage)
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.facebook.shimmer:shimmer:0.5.0")

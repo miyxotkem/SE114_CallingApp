@@ -33,6 +33,9 @@ public class CallingApplication extends Application {
         // Khởi tạo Cloudinary MediaManager một lần duy nhất tại đây
         initCloudinary();
 
+        // Khởi tạo và đồng bộ FCM Token
+        initFcmToken();
+
         // Bật offline persistence cho Firebase
         initFirebaseOfflineSettings();
     }
@@ -94,6 +97,32 @@ public class CallingApplication extends Application {
             }, config);
         } catch (IllegalStateException e) {
             // Đã khởi tạo
+        }
+    }
+
+    private void initFcmToken() {
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        android.util.Log.w("CallingApplication", "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
+                    String token = task.getResult();
+                    android.util.Log.d("CallingApplication", "FCM Token: " + token);
+
+                    String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null 
+                            ? com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
+                    if (currentUserId != null) {
+                        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                                .document(currentUserId)
+                                .update("fcmToken", token)
+                                .addOnSuccessListener(aVoid -> android.util.Log.d("CallingApplication", "FCM token updated successfully"))
+                                .addOnFailureListener(e -> android.util.Log.e("CallingApplication", "Error updating FCM token", e));
+                    }
+                });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

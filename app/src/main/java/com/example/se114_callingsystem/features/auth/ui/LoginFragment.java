@@ -158,6 +158,21 @@ public class LoginFragment extends Fragment {
 
     private void goToHome() {
         if (binding == null || getView() == null) return;
+
+        // Cập nhật FCM Token khi đăng nhập thành công
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token -> {
+                String currentUserId = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : null;
+                if (currentUserId != null) {
+                    com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users")
+                            .document(currentUserId)
+                            .update("fcmToken", token);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         Navigation.findNavController(getView()).navigate(R.id.action_login_to_home);
         com.example.se114_callingsystem.core.util.ThemeHelper.applyTheme(requireContext());
     }

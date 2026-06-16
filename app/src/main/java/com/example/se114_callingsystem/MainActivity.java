@@ -147,6 +147,8 @@ public class MainActivity extends AppCompatActivity {
             NavController navController = navHostFragment.getNavController();
             NavigationUI.setupWithNavController(binding.bottomNav, navController);
             
+            handleNotificationIntent(getIntent());
+            
             navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
                 int id = destination.getId();
                 if (id == R.id.nav_home || id == R.id.nav_notifications || id == R.id.nav_profile || id == R.id.nav_server) {
@@ -221,11 +223,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleNotificationIntent(android.content.Intent intent) {
-        if (intent != null && intent.hasExtra("CHAT_ID")) {
+        if (intent == null) return;
+
+        String openTab = intent.getStringExtra("OPEN_TAB");
+        if ("notifications".equals(openTab)) {
+            NavHostFragment nhf = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+            if (nhf != null) {
+                NavController navController = nhf.getNavController();
+                try {
+                    navController.navigate(R.id.nav_notifications);
+                } catch (Exception e) {
+                    android.util.Log.e("MainActivity", "Error navigating to notifications tab", e);
+                }
+            }
+            return;
+        }
+
+        if (intent.hasExtra("CHAT_ID")) {
             String chatId = intent.getStringExtra("CHAT_ID");
             String chatName = intent.getStringExtra("CHAT_NAME");
             String serverColor = intent.getStringExtra("SERVER_COLOR");
             String serverId = intent.getStringExtra("SERVER_ID");
+
+            if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() == null) {
+                return;
+            }
 
             NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
                     .findFragmentById(R.id.nav_host_fragment);
@@ -237,7 +259,11 @@ public class MainActivity extends AppCompatActivity {
                 args.putString("SERVER_COLOR", serverColor != null ? serverColor : "#5865F2");
                 args.putString("SERVER_ID", serverId);
 
-                navController.navigate(R.id.nav_chat_detail, args);
+                try {
+                    navController.navigate(R.id.nav_chat_detail, args);
+                } catch (Exception e) {
+                    android.util.Log.e("MainActivity", "Error navigating to chat detail from notification", e);
+                }
             }
         }
     }
@@ -646,6 +672,8 @@ public class MainActivity extends AppCompatActivity {
         }
         binding.bottomNav.setPadding(paddingStart, 0, 0, systemBarsBottom);
     }
+
+
 
     private void registerCallReceiver() {
         if (localCallReceiver == null) {

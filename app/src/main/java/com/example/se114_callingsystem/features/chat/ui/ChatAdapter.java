@@ -331,6 +331,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     bundle.putString("USER_ID", uid);
                     androidx.navigation.Navigation.findNavController(v).navigate(R.id.nav_profile, bundle);
                 });
+                senderName.setOnLongClickListener(v -> {
+                    cardBubble.performLongClick();
+                    return true;
+                });
 
                 ServerMember foundMember = null;
                 if (serverMembers != null) {
@@ -1176,6 +1180,33 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
                 return true;
             });
+
+            // Forward long click from inner views of cardBubble to cardBubble
+            View.OnLongClickListener forwardLongClick = v -> cardBubble.performLongClick();
+            if (textMessage != null) {
+                textMessage.setOnLongClickListener(forwardLongClick);
+            }
+            if (layoutRepliedContainer != null) {
+                layoutRepliedContainer.setOnLongClickListener(forwardLongClick);
+            }
+            if (textRepliedTo != null) {
+                textRepliedTo.setOnLongClickListener(forwardLongClick);
+            }
+            if (ivRepliedImage != null) {
+                ivRepliedImage.setOnLongClickListener(forwardLongClick);
+            }
+            if (tvFileName != null) {
+                tvFileName.setOnLongClickListener(forwardLongClick);
+            }
+            if (btnPlayPause != null) {
+                btnPlayPause.setOnLongClickListener(forwardLongClick);
+            }
+            if (layoutWaveform != null) {
+                layoutWaveform.setOnLongClickListener(forwardLongClick);
+            }
+            if (tvAudioTime != null) {
+                tvAudioTime.setOnLongClickListener(forwardLongClick);
+            }
         }
     }
 
