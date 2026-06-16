@@ -103,6 +103,48 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void handleMessagePayload(Map<String, String> data) {
+        String senderId = data.get("senderId");
+        if (senderId != null && !senderId.isEmpty()) {
+            FirebaseFirestore.getInstance().collection("users").document(senderId).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        String avatarUrl = null;
+                        if (documentSnapshot.exists()) {
+                            avatarUrl = documentSnapshot.getString("profilePic");
+                            if (avatarUrl == null || avatarUrl.isEmpty()) {
+                                avatarUrl = documentSnapshot.getString("avatarUrl");
+                            }
+                        }
+                        
+                        final String finalAvatarUrl = avatarUrl;
+                        new Thread(() -> {
+                            android.graphics.Bitmap avatarBitmap = null;
+                            if (finalAvatarUrl != null && !finalAvatarUrl.isEmpty()) {
+                                try {
+                                    avatarBitmap = com.bumptech.glide.Glide.with(MyFirebaseMessagingService.this)
+                                            .asBitmap()
+                                            .load(finalAvatarUrl)
+                                            .circleCrop()
+                                            .submit()
+                                            .get();
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Error loading sender avatar bitmap", e);
+                                }
+                            }
+                            android.graphics.Bitmap finalBitmap = avatarBitmap;
+                            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                                sendNotification(data, finalBitmap);
+                            });
+                        }).start();
+                    })
+                    .addOnFailureListener(e -> {
+                        sendNotification(data, null);
+                    });
+        } else {
+            sendNotification(data, null);
+        }
+    }
+
+    private void sendNotification(Map<String, String> data, android.graphics.Bitmap avatarBitmap) {
         String title = data.get("title");
         String contentText = data.get("content");
         String chatId = data.get("chatId");
@@ -127,30 +169,86 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String groupKey = "com.example.se114_callingsystem.CHAT_GROUP";
         String notifId = data.get("notificationId") != null ? data.get("notificationId") : String.valueOf(System.currentTimeMillis());
 
-        Intent readIntent = new Intent(this, NotificationActionReceiver.class);
-        readIntent.setAction("com.example.se114_callingsystem.ACTION_MARK_AS_READ");
-        readIntent.putExtra("NOTIFICATION_ID", notifId);
-        readIntent.putExtra("CHAT_ID", chatId);
-        
-        PendingIntent readPendingIntent = PendingIntent.getBroadcast(
+        Intent likeIntent = new Intent(this, NotificationActionReceiver.class);
+        likeIntent.setAction("com.example.se114_callingsystem.ACTION_LIKE");
+        likeIntent.putExtra("CHAT_ID", chatId);
+        likeIntent.putExtra("CHAT_NAME", chatName);
+        likeIntent.putExtra("NOTIFICATION_ID", notifId);
+        PendingIntent likePendingIntent = PendingIntent.getBroadcast(
                 this,
-                notifId.hashCode(),
-                readIntent,
+                chatId != null ? chatId.hashCode() + 10 : 10,
+                likeIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
+        androidx.core.app.RemoteInput remoteInput = new androidx.core.app.RemoteInput.Builder("key_text_reply")
+                .setLabel("Trả lời...")
+                .build();
+
+        Intent replyIntent = new Intent(this, NotificationActionReceiver.class);
+        replyIntent.setAction("com.example.se114_callingsystem.ACTION_REPLY");
+        replyIntent.putExtra("CHAT_ID", chatId);
+        replyIntent.putExtra("CHAT_NAME", chatName);
+        replyIntent.putExtra("NOTIFICATION_ID", notifId);
+        PendingIntent replyPendingIntent = PendingIntent.getBroadcast(
+                this,
+                chatId != null ? chatId.hashCode() + 20 : 20,
+                replyIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE
+        );
+
+        NotificationCompat.Action replyAction = new NotificationCompat.Action.Builder(
+                0,
+                "Trả lời",
+                replyPendingIntent)
+                .addRemoteInput(remoteInput)
+                .build();
+
+        Intent muteIntent = new Intent(this, NotificationActionReceiver.class);
+        muteIntent.setAction("com.example.se114_callingsystem.ACTION_MUTE");
+        muteIntent.putExtra("CHAT_ID", chatId);
+        muteIntent.putExtra("CHAT_NAME", chatName);
+        muteIntent.putExtra("NOTIFICATION_ID", notifId);
+        PendingIntent mutePendingIntent = PendingIntent.getBroadcast(
+                this,
+                chatId != null ? chatId.hashCode() + 30 : 30,
+                muteIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        androidx.core.app.Person localUser = new androidx.core.app.Person.Builder()
+                .setName("Tôi")
+                .build();
+
+        androidx.core.app.Person.Builder personBuilder = new androidx.core.app.Person.Builder()
+                .setName(senderName);
+        if (avatarBitmap != null) {
+            personBuilder.setIcon(androidx.core.graphics.drawable.IconCompat.createWithBitmap(avatarBitmap));
+        }
+        androidx.core.app.Person sender = personBuilder.build();
+
+        androidx.core.app.NotificationCompat.MessagingStyle messagingStyle = 
+                new androidx.core.app.NotificationCompat.MessagingStyle(localUser)
+                        .setConversationTitle(chatId.startsWith("dm_") ? null : chatName)
+                        .addMessage(contentText, System.currentTimeMillis(), sender);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_notify_chat)
-                .setContentTitle(title)
-                .setContentText(contentText)
+                .setSmallIcon(com.example.se114_callingsystem.R.mipmap.ic_launcher)
+                .setStyle(messagingStyle)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setGroup(groupKey)
                 .setContentIntent(pendingIntent)
-                .addAction(android.R.drawable.checkbox_on_background, "Đã đọc", readPendingIntent);
+                .addAction(0, "Thích", likePendingIntent)
+                .addAction(replyAction)
+                .addAction(0, "Tắt thông báo", mutePendingIntent);
+
+        if (avatarBitmap != null) {
+            builder.setLargeIcon(avatarBitmap);
+        }
 
         NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_notify_chat)
+                .setSmallIcon(com.example.se114_callingsystem.R.mipmap.ic_launcher)
                 .setContentTitle("Tin nhắn mới")
                 .setContentText("Bạn có tin nhắn mới chưa đọc")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

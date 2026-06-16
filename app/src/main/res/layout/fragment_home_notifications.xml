@@ -77,24 +77,6 @@
                 android:textColor="@color/white"
                 app:chipBackgroundColor="@color/discord_dark_alt" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipMentions"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nhắc đến (@)"
-                android:textColor="@color/white"
-                app:chipBackgroundColor="@color/discord_dark_alt" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipMissedCalls"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cuộc gọi nhỡ"
-                android:textColor="@color/white"
-                app:chipBackgroundColor="@color/discord_dark_alt" />
-
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 

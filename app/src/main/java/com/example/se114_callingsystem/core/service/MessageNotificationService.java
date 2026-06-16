@@ -462,22 +462,88 @@ public class MessageNotificationService extends Service {
         );
 
         String groupKey = "com.example.se114_callingsystem.CHAT_GROUP";
+        String notifId = message.getMessageId() != null ? message.getMessageId() : String.valueOf(System.currentTimeMillis());
+
+        Intent likeIntent = new Intent(this, NotificationActionReceiver.class);
+        likeIntent.setAction("com.example.se114_callingsystem.ACTION_LIKE");
+        likeIntent.putExtra("CHAT_ID", chatId);
+        likeIntent.putExtra("CHAT_NAME", chatName);
+        likeIntent.putExtra("NOTIFICATION_ID", notifId);
+        PendingIntent likePendingIntent = PendingIntent.getBroadcast(
+                this,
+                chatId.hashCode() + 10,
+                likeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        androidx.core.app.RemoteInput remoteInput = new androidx.core.app.RemoteInput.Builder("key_text_reply")
+                .setLabel("Trả lời...")
+                .build();
+
+        Intent replyIntent = new Intent(this, NotificationActionReceiver.class);
+        replyIntent.setAction("com.example.se114_callingsystem.ACTION_REPLY");
+        replyIntent.putExtra("CHAT_ID", chatId);
+        replyIntent.putExtra("CHAT_NAME", chatName);
+        replyIntent.putExtra("NOTIFICATION_ID", notifId);
+        PendingIntent replyPendingIntent = PendingIntent.getBroadcast(
+                this,
+                chatId.hashCode() + 20,
+                replyIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE
+        );
+
+        NotificationCompat.Action replyAction = new NotificationCompat.Action.Builder(
+                0,
+                "Trả lời",
+                replyPendingIntent)
+                .addRemoteInput(remoteInput)
+                .build();
+
+        Intent muteIntent = new Intent(this, NotificationActionReceiver.class);
+        muteIntent.setAction("com.example.se114_callingsystem.ACTION_MUTE");
+        muteIntent.putExtra("CHAT_ID", chatId);
+        muteIntent.putExtra("CHAT_NAME", chatName);
+        muteIntent.putExtra("NOTIFICATION_ID", notifId);
+        PendingIntent mutePendingIntent = PendingIntent.getBroadcast(
+                this,
+                chatId.hashCode() + 30,
+                muteIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        androidx.core.app.Person localUser = new androidx.core.app.Person.Builder()
+                .setName("Tôi")
+                .build();
+
+        androidx.core.app.Person.Builder personBuilder = new androidx.core.app.Person.Builder()
+                .setName(senderName);
+        if (avatarBitmap != null) {
+            personBuilder.setIcon(androidx.core.graphics.drawable.IconCompat.createWithBitmap(avatarBitmap));
+        }
+        androidx.core.app.Person sender = personBuilder.build();
+
+        androidx.core.app.NotificationCompat.MessagingStyle messagingStyle = 
+                new androidx.core.app.NotificationCompat.MessagingStyle(localUser)
+                        .setConversationTitle(chatId.startsWith("dm_") ? null : chatName)
+                        .addMessage(contentText, System.currentTimeMillis(), sender);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_notify_chat)
-                .setContentTitle(title)
-                .setContentText(contentText)
+                .setSmallIcon(com.example.se114_callingsystem.R.mipmap.ic_launcher)
+                .setStyle(messagingStyle)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setGroup(groupKey)
-                .setContentIntent(pendingIntent);
+                .setContentIntent(pendingIntent)
+                .addAction(0, "Thích", likePendingIntent)
+                .addAction(replyAction)
+                .addAction(0, "Tắt thông báo", mutePendingIntent);
 
         if (avatarBitmap != null) {
             builder.setLargeIcon(avatarBitmap);
         }
 
         NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_notify_chat)
+                .setSmallIcon(com.example.se114_callingsystem.R.mipmap.ic_launcher)
                 .setContentTitle("Tin nhắn mới")
                 .setContentText("Bạn có tin nhắn mới chưa đọc")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

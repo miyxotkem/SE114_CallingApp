@@ -157,18 +157,19 @@ public class NotificationsFragment extends Fragment {
         List<NotificationItem> filteredList = new ArrayList<>();
 
         for (NotificationItem item : fullList) {
+            String type = item.getType();
+            if (!"friend_request".equals(type) &&
+                !"friend_accepted".equals(type) &&
+                !"mention".equals(type) &&
+                !"new_post".equals(type) &&
+                !"post_reply".equals(type)) {
+                continue;
+            }
+
             if (checkedId == R.id.chipAll) {
                 filteredList.add(item);
             } else if (checkedId == R.id.chipUnread) {
                 if (!item.isRead()) {
-                    filteredList.add(item);
-                }
-            } else if (checkedId == R.id.chipMentions) {
-                if ("mention".equals(item.getType())) {
-                    filteredList.add(item);
-                }
-            } else if (checkedId == R.id.chipMissedCalls) {
-                if ("missed_call".equals(item.getType())) {
                     filteredList.add(item);
                 }
             } else {
