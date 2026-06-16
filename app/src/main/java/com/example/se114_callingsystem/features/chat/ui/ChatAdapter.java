@@ -196,13 +196,16 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 
                 cardReminder.setOnLongClickListener(v -> {
                     if (message.getReminderTime() < System.currentTimeMillis()) {
-                        android.widget.Toast.makeText(v.getContext(), "Không thể sửa hoặc xóa lời nhắc đã qua", android.widget.Toast.LENGTH_SHORT).show();
+                        android.widget.Toast.makeText(v.getContext(), v.getContext().getString(R.string.past_reminder_error), android.widget.Toast.LENGTH_SHORT).show();
                         return true;
                     }
-                    String[] options = {"✏️ Sửa lời nhắc", "🗑️ Xóa lời nhắc"};
+                    String[] options = {
+                        v.getContext().getString(R.string.edit_reminder),
+                        v.getContext().getString(R.string.delete_reminder)
+                    };
                     com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
                             v.getContext(),
-                            "Tùy chọn lời nhắc",
+                            v.getContext().getString(R.string.reminder_options),
                             options,
                             (index, option) -> {
                                 if (index == 0) {
@@ -572,7 +575,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         if (msg.isDeleted()) {
             textMessage.setVisibility(View.VISIBLE);
-            textMessage.setText("Tin nhắn đã bị thu hồi");
+            textMessage.setText(ctx.getString(R.string.message_deleted));
             textMessage.setTypeface(interTypeface, Typeface.ITALIC);
             // Sent bubble has accent bg → use semi-transparent white
             // Received bubble has theme bg → use text_secondary
@@ -651,7 +654,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                     // Trích xuất tên file từ URL của Cloudinary (Thêm final để dùng trong GestureDetector)
                     final String fileUrl = msg.getContent();
-                    String extractedFileName = "Tài liệu đính kèm";
+                    String extractedFileName = ctx.getString(R.string.shared_document);
                     try {
                         extractedFileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
                     } catch (Exception e) {}
@@ -699,7 +702,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             } else if ("post_share".equals(msg.getType())) {
                 textMessage.setVisibility(View.VISIBLE);
-                textMessage.setText("📰 Đã chia sẻ một bài viết\n(Chạm để xem chi tiết)");
+                textMessage.setText(ctx.getString(R.string.shared_post_message));
                 textMessage.setTextColor(Color.parseColor("#5865F2"));
                 textMessage.setTypeface(interTypeface, Typeface.BOLD_ITALIC);
                 if (ivMessageImage != null) ivMessageImage.setVisibility(View.GONE);
@@ -718,11 +721,11 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                 bundle.putString("CHANNEL_ID", cId);
                                 bundle.putString("SERVER_ID", sId);
                                 bundle.putString("SERVER_COLOR", serverColor);
-                                bundle.putString("CHANNEL_NAME", "Bài Viết");
+                                bundle.putString("CHANNEL_NAME", ctx.getString(R.string.post_title));
                                 androidx.navigation.Navigation.findNavController(cardBubble).navigate(R.id.nav_post_channel, bundle);
                             }
                         } else {
-                            android.widget.Toast.makeText(ctx, "Bài viết đã bị xóa", android.widget.Toast.LENGTH_SHORT).show();
+                            android.widget.Toast.makeText(ctx, ctx.getString(R.string.post_deleted_toast), android.widget.Toast.LENGTH_SHORT).show();
                         }
                     });
                 });
@@ -963,7 +966,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                                 @Override
                                 public void onError(String error) {
-                                    android.widget.Toast.makeText(ctx, "Lỗi phát âm thanh: " + error, android.widget.Toast.LENGTH_SHORT).show();
+                                    android.widget.Toast.makeText(ctx, ctx.getString(R.string.audio_error_toast, error), android.widget.Toast.LENGTH_SHORT).show();
                                     adapter.notifyDataSetChanged();
                                 }
                             });
@@ -1035,7 +1038,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
                     if ("image".equals(repliedType)) {
                         if (textRepliedTo != null) {
-                            textRepliedTo.setText("📷 Hình ảnh");
+                            textRepliedTo.setText(ctx.getString(R.string.replied_image));
                             textRepliedTo.setVisibility(View.VISIBLE);
                         }
                         if (ivRepliedImage != null) {
@@ -1048,7 +1051,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
                     } else if ("video".equals(repliedType)) {
                         if (textRepliedTo != null) {
-                            textRepliedTo.setText("🎥 Video");
+                            textRepliedTo.setText(ctx.getString(R.string.replied_video));
                             textRepliedTo.setVisibility(View.VISIBLE);
                         }
                         if (ivRepliedImage != null) {
@@ -1061,12 +1064,12 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         }
                     } else if ("file".equals(repliedType)) {
                         // Reply to file - show file name with icon
-                        String fileName = "Tài liệu đính kèm";
+                        String fileName = ctx.getString(R.string.shared_document);
                         try {
                             fileName = replyContent.substring(replyContent.lastIndexOf('/') + 1);
                         } catch (Exception e) {}
                         if (textRepliedTo != null) {
-                            textRepliedTo.setText("📎 " + fileName);
+                            textRepliedTo.setText(ctx.getString(R.string.replied_file_prefix) + fileName);
                             textRepliedTo.setVisibility(View.VISIBLE);
                         }
                         if (ivRepliedImage != null) ivRepliedImage.setVisibility(View.GONE);
@@ -1145,9 +1148,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
 
                     if (msg.isPinned()) {
-                        btnPin.setText("Bỏ ghim tin nhắn");
+                        btnPin.setText(v.getContext().getString(R.string.unpin_message));
                     } else {
-                        btnPin.setText("Ghim tin nhắn");
+                        btnPin.setText(v.getContext().getString(R.string.pin_message));
                     }
                     btnPin.setOnClickListener(view -> {
                         listener.onPinToggle(msg);
@@ -1264,8 +1267,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (tvReplyHeader == null) return;
 
         Context ctx = tvReplyHeader.getContext();
-        String myName = "Bạn";
-        String otherName = "Ai đó";
+        String myName = ctx.getString(R.string.you);
+        String otherName = ctx.getString(R.string.someone);
 
         if (repliedToSenderId == null) {
             tvReplyHeader.setVisibility(View.GONE);
@@ -1288,7 +1291,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             }
         }
 
-        tvReplyHeader.setText(otherName + " đã trả lời");
+        tvReplyHeader.setText(ctx.getString(R.string.replied_header, otherName));
         tvReplyHeader.setVisibility(View.VISIBLE);
     }
 

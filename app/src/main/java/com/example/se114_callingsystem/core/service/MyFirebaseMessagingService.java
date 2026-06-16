@@ -232,8 +232,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         .setConversationTitle(chatId.startsWith("dm_") ? null : chatName)
                         .addMessage(contentText, System.currentTimeMillis(), sender);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(com.example.se114_callingsystem.R.mipmap.ic_launcher)
+         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(com.example.se114_callingsystem.R.drawable.ic_notification)
                 .setStyle(messagingStyle)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
@@ -248,7 +248,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         }
 
         NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(com.example.se114_callingsystem.R.mipmap.ic_launcher)
+                .setSmallIcon(com.example.se114_callingsystem.R.drawable.ic_notification)
                 .setContentTitle("Tin nhắn mới")
                 .setContentText("Bạn có tin nhắn mới chưa đọc")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

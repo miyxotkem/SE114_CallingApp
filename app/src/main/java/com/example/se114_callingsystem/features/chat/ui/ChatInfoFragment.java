@@ -93,7 +93,6 @@ public class ChatInfoFragment extends Fragment {
         setupNicknames();
         setupMuteNotifications();
         setupSearchInChat();
-        setupPinnedMessages();
     }
 
     private void initViews() {
@@ -231,34 +230,20 @@ public class ChatInfoFragment extends Fragment {
                         if (sId != null) {
                             serverId = sId;
                             loadServerMembers(sId);
-                            binding.btnPinnedMessages.setVisibility(View.VISIBLE);
-                            binding.dividerPinned.setVisibility(View.VISIBLE);
                         } else {
                             setupDMNicknamesButton();
                             loadDMParticipants();
-                            binding.btnPinnedMessages.setVisibility(View.GONE);
-                            binding.dividerPinned.setVisibility(View.GONE);
                         }
                     } else if (binding != null) {
                         setupDMNicknamesButton();
                         loadDMParticipants();
-                        binding.btnPinnedMessages.setVisibility(View.GONE);
-                        binding.dividerPinned.setVisibility(View.GONE);
                     }
                 });
         } else if (serverId != null) {
             loadServerMembers(serverId);
-            if (binding != null) {
-                binding.btnPinnedMessages.setVisibility(View.VISIBLE);
-                binding.dividerPinned.setVisibility(View.VISIBLE);
-            }
         } else {
             setupDMNicknamesButton();
             loadDMParticipants();
-            if (binding != null) {
-                binding.btnPinnedMessages.setVisibility(View.GONE);
-                binding.dividerPinned.setVisibility(View.GONE);
-            }
         }
     }
 
@@ -290,7 +275,7 @@ public class ChatInfoFragment extends Fragment {
         try {
             android.widget.TextView tvNicknames = (android.widget.TextView) binding.btnNicknames.getChildAt(1);
             if (tvNicknames != null) {
-                tvNicknames.setText("Đặt biệt danh");
+                tvNicknames.setText(getString(R.string.set_nickname));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -310,7 +295,7 @@ public class ChatInfoFragment extends Fragment {
         root.setBackgroundColor(Color.parseColor("#313338"));
         
         TextView tvTitle = new TextView(requireContext());
-        tvTitle.setText("Đặt biệt danh");
+        tvTitle.setText(getString(R.string.set_nickname));
         tvTitle.setTextColor(Color.WHITE);
         tvTitle.setTextSize(18);
         tvTitle.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -387,14 +372,14 @@ public class ChatInfoFragment extends Fragment {
         input.setSelection(input.getText().length());
         
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Đặt biệt danh")
-            .setMessage("Đặt biệt danh cho " + member.getUserName())
+            .setTitle(getString(R.string.set_nickname))
+            .setMessage(getString(R.string.set_nickname_for, member.getUserName()))
             .setView(input)
-            .setPositiveButton("Lưu", (d, w) -> {
+            .setPositiveButton(getString(R.string.save), (d, w) -> {
                 String nickname = input.getText().toString().trim();
                 saveDMNickname(member.getUserId(), nickname);
             })
-            .setNegativeButton("Hủy", null)
+            .setNegativeButton(getString(R.string.cancel), null)
             .show();
     }
 
@@ -502,10 +487,7 @@ public class ChatInfoFragment extends Fragment {
         }
     }
 
-    private void setupPinnedMessages() {
-        if (binding == null) return;
-        binding.btnPinnedMessages.setOnClickListener(v -> showPinnedMessages());
-    }
+
 
     private void showPinnedMessages() {
         if (getContext() == null) return;

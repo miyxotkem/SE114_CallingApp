@@ -250,5 +250,45 @@
     <string name="plan_desc_basic">• Tối đa 2 kênh mỗi danh mục (gọi, chat, bài viết)\n• Trạng thái tùy chỉnh dạng văn bản (tối đa 30 ký tự)\n• Ảnh đại diện tĩnh cơ bản</string>
     <string name="plan_desc_standard">• Tối đa 5 kênh mỗi danh mục (gọi, chat, bài viết)\n• Không giới hạn độ dài trạng thái tùy chỉnh\n• Hỗ trợ emoji động trong trạng thái\n• Ảnh bìa hồ sơ tùy chỉnh\n• Hỗ trợ ảnh đại diện GIF động\n• Huy hiệu hồ sơ đặc biệt ⭐</string>
     <string name="plan_desc_pro">• Tối đa 10 kênh mỗi danh mục (gọi, chat, bài viết)\n• Không giới hạn độ dài trạng thái tùy chỉnh\n• Hỗ trợ emoji động trong trạng thái\n• Ảnh bìa hồ sơ tùy chỉnh\n• Hỗ trợ ảnh đại diện GIF động\n• Huy hiệu hồ sơ cao cấp ✨\n• Khung ảnh đại diện màu vàng độc quyền</string>
+
+    <!-- Notification Fragment Strings -->
+    <string name="notification_deleted">Đã xóa thông báo</string>
+    <string name="undo">Hoàn tác</string>
+    <string name="clear_all_notifications_title">Xóa tất cả thông báo</string>
+    <string name="clear_all_notifications_message">Bạn có chắc chắn muốn xóa tất cả thông báo không?</string>
+    <string name="clear_all">Xóa tất cả</string>
+    <string name="no_notifications_to_clear">Không có thông báo nào để xóa</string>
+    <string name="preparing_call">Đang chuẩn bị cuộc gọi...</string>
+    <string name="missed_call_dialog_title">Cuộc gọi nhỡ</string>
+    <string name="callback_confirm_message">Bạn muốn gọi lại cho %s?</string>
+    <string name="callback">Gọi lại</string>
+    <string name="message">Nhắn tin</string>
+    <string name="close">Đóng</string>
+    <string name="call_init_failed">Không thể khởi tạo cuộc gọi: %s</string>
+    <string name="auto_cleaned_notifications">Đã tự động dọn dẹp %d thông báo cũ</string>
+    <string name="cleared_all_notifications_toast">Đã xóa tất cả thông báo</string>
+
+    <!-- Chat Info Fragment Strings -->
+    <string name="set_nickname">Đặt biệt danh</string>
+    <string name="set_nickname_for">Đặt biệt danh cho %s</string>
+
+    <!-- Chat Adapter Strings -->
+    <string name="edit_reminder">✏️ Sửa lời nhắc</string>
+    <string name="delete_reminder">🗑️ Xóa lời nhắc</string>
+    <string name="reminder_options">Tùy chọn lời nhắc</string>
+    <string name="message_deleted">Tin nhắn đã bị thu hồi</string>
+    <string name="shared_document">Tài liệu đính kèm</string>
+    <string name="shared_post_message">📰 Đã chia sẻ một bài viết\n(Chạm để xem chi tiết)</string>
+    <string name="post_deleted_toast">Bài viết đã bị xóa</string>
+    <string name="audio_error_toast">Lỗi phát âm thanh: %s</string>
+    <string name="replied_image">📷 Hình ảnh</string>
+    <string name="replied_video">🎥 Video</string>
+    <string name="replied_file_prefix">📎 </string>
+    <string name="replied_header">%s đã trả lời</string>
+    <string name="you">Bạn</string>
+    <string name="someone">Ai đó</string>
+    <string name="unpin_message">Bỏ ghim tin nhắn</string>
+    <string name="past_reminder_error">Không thể sửa hoặc xóa lời nhắc đã qua</string>
+    <string name="post_title">Bài Viết</string>
 </resources>
 

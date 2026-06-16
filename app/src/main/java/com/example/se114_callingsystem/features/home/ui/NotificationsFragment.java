@@ -89,8 +89,8 @@ public class NotificationsFragment extends Fragment {
                     NotificationItem item = notificationList.get(position);
                     viewModel.deleteNotification(item.getNotificationId());
 
-                    com.google.android.material.snackbar.Snackbar.make(binding.rvNotifications, "Đã xóa thông báo", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-                            .setAction("Hoàn tác", v -> {
+                    com.google.android.material.snackbar.Snackbar.make(binding.rvNotifications, getString(R.string.notification_deleted), com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                            .setAction(getString(R.string.undo), v -> {
                                 viewModel.restoreNotification(item);
                             })
                             .setActionTextColor(android.graphics.Color.YELLOW)
@@ -109,14 +109,14 @@ public class NotificationsFragment extends Fragment {
         binding.btnClearAll.setOnClickListener(v -> {
             List<NotificationItem> currentNotifs = viewModel.getNotifications().getValue();
             if (currentNotifs == null || currentNotifs.isEmpty()) {
-                Toast.makeText(getContext(), "Không có thông báo nào để xóa", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.no_notifications_to_clear), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Xóa tất cả thông báo")
-                    .setMessage("Bạn có chắc chắn muốn xóa tất cả thông báo không?")
-                    .setPositiveButton("Xóa tất cả", (dialog, which) -> {
+                    .setTitle(getString(R.string.clear_all_notifications_title))
+                    .setMessage(getString(R.string.clear_all_notifications_message))
+                    .setPositiveButton(getString(R.string.clear_all), (dialog, which) -> {
                         List<String> ids = new ArrayList<>();
                         for (NotificationItem item : currentNotifs) {
                             if (item.getNotificationId() != null) {
@@ -125,7 +125,7 @@ public class NotificationsFragment extends Fragment {
                         }
                         viewModel.clearAllNotifications(ids);
                     })
-                    .setNegativeButton("Hủy", null)
+                    .setNegativeButton(getString(R.string.cancel), null)
                     .show();
         });
 
@@ -141,7 +141,17 @@ public class NotificationsFragment extends Fragment {
 
         viewModel.getStatusMessage().observe(getViewLifecycleOwner(), message -> {
             if (message == null || getContext() == null) return;
-            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            String localizedMessage = message;
+            if ("Đã xóa tất cả thông báo".equals(message)) {
+                localizedMessage = getString(R.string.cleared_all_notifications_toast);
+            } else if (message.startsWith("Đã tự động dọn dẹp ") && message.endsWith(" thông báo cũ")) {
+                try {
+                    String countStr = message.replace("Đã tự động dọn dẹp ", "").replace(" thông báo cũ", "").trim();
+                    int count = Integer.parseInt(countStr);
+                    localizedMessage = getString(R.string.auto_cleaned_notifications, count);
+                } catch (Exception e) {}
+            }
+            Toast.makeText(getContext(), localizedMessage, Toast.LENGTH_SHORT).show();
             viewModel.resetStatus();
         });
     }
@@ -260,10 +270,10 @@ public class NotificationsFragment extends Fragment {
                 : "dm_" + friendUid + "_" + currentUid;
 
         new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Cuộc gọi nhỡ")
-                .setMessage("Bạn muốn gọi lại cho " + item.getSenderName() + "?")
-                .setPositiveButton("Gọi lại", (dialog, which) -> {
-                    Toast.makeText(getContext(), "Đang chuẩn bị cuộc gọi...", Toast.LENGTH_SHORT).show();
+                .setTitle(getString(R.string.missed_call_dialog_title))
+                .setMessage(getString(R.string.callback_confirm_message, item.getSenderName()))
+                .setPositiveButton(getString(R.string.callback), (dialog, which) -> {
+                    Toast.makeText(getContext(), getString(R.string.preparing_call), Toast.LENGTH_SHORT).show();
                     com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(currentUid)
                             .get()
                             .addOnSuccessListener(documentSnapshot -> {
@@ -280,7 +290,7 @@ public class NotificationsFragment extends Fragment {
                                 startCallBack(currentUid, "User", friendUid, chatRoomId);
                             });
                 })
-                .setNegativeButton("Nhắn tin", (dialog, which) -> {
+                .setNegativeButton(getString(R.string.message), (dialog, which) -> {
                     Bundle args = new Bundle();
                     args.putString("CHAT_ID", chatRoomId);
                     args.putString("CHAT_NAME", item.getSenderName());
@@ -291,7 +301,7 @@ public class NotificationsFragment extends Fragment {
                         Navigation.findNavController(getView()).navigate(R.id.action_notifications_to_chat_detail, args);
                     }
                 })
-                .setNeutralButton("Đóng", null)
+                .setNeutralButton(getString(R.string.close), null)
                 .show();
     }
 
@@ -321,7 +331,7 @@ public class NotificationsFragment extends Fragment {
                 })
                 .addOnFailureListener(e -> {
                     if (getContext() != null) {
-                        Toast.makeText(getContext(), "Không thể khởi tạo cuộc gọi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), getString(R.string.call_init_failed, e.getMessage()), Toast.LENGTH_SHORT).show();
                     }
                 });
     }

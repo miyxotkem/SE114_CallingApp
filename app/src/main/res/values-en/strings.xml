@@ -250,5 +250,45 @@
     <string name="plan_desc_basic">• Up to 2 channels per category (call, chat, post)\n• Text-only custom status (max 30 chars)\n• Basic static profile avatar</string>
     <string name="plan_desc_standard">• Up to 5 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Exclusive ⭐ Profile Badge</string>
     <string name="plan_desc_pro">• Up to 10 channels per category (call, chat, post)\n• Unlimited custom status length\n• Support for animated emojis in status\n• Custom Profile Cover Photo\n• Animated GIF Avatar support\n• Premium ✨ Profile Badge\n• Exclusive Gold Avatar Border</string>
+
+    <!-- Notification Fragment Strings -->
+    <string name="notification_deleted">Notification deleted</string>
+    <string name="undo">Undo</string>
+    <string name="clear_all_notifications_title">Clear All Notifications</string>
+    <string name="clear_all_notifications_message">Are you sure you want to clear all notifications?</string>
+    <string name="clear_all">Clear All</string>
+    <string name="no_notifications_to_clear">No notifications to clear</string>
+    <string name="preparing_call">Preparing call...</string>
+    <string name="missed_call_dialog_title">Missed Call</string>
+    <string name="callback_confirm_message">Do you want to call back %s?</string>
+    <string name="callback">Call back</string>
+    <string name="message">Message</string>
+    <string name="close">Close</string>
+    <string name="call_init_failed">Cannot initialize call: %s</string>
+    <string name="auto_cleaned_notifications">Automatically cleaned %d old notifications</string>
+    <string name="cleared_all_notifications_toast">All notifications cleared</string>
+
+    <!-- Chat Info Fragment Strings -->
+    <string name="set_nickname">Set Nickname</string>
+    <string name="set_nickname_for">Set nickname for %s</string>
+
+    <!-- Chat Adapter Strings -->
+    <string name="edit_reminder">✏️ Edit Reminder</string>
+    <string name="delete_reminder">🗑️ Delete Reminder</string>
+    <string name="reminder_options">Reminder Options</string>
+    <string name="message_deleted">This message was deleted</string>
+    <string name="shared_document">Attached document</string>
+    <string name="shared_post_message">📰 Shared a post\n(Tap to view details)</string>
+    <string name="post_deleted_toast">Post has been deleted</string>
+    <string name="audio_error_toast">Audio playback error: %s</string>
+    <string name="replied_image">📷 Image</string>
+    <string name="replied_video">🎥 Video</string>
+    <string name="replied_file_prefix">📎 </string>
+    <string name="replied_header">%s replied</string>
+    <string name="you">You</string>
+    <string name="someone">Someone</string>
+    <string name="unpin_message">Unpin message</string>
+    <string name="past_reminder_error">Cannot edit or delete past reminders</string>
+    <string name="post_title">Post</string>
 </resources>
 
