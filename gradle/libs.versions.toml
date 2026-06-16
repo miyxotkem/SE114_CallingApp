@@ -16,9 +16,12 @@ lottie = "6.0.0"
 hilt = "2.51.1"
 lifecycle = "2.8.1"
 markwon = "4.6.2"
+room = "2.6.1"
 
 [libraries]
 markwon = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

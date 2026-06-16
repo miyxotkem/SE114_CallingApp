@@ -46,6 +46,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<ServerMember> serverMembers = new java.util.ArrayList<>();
     private String highlightMessageId = null;
     private static final java.util.Map<String, String> avatarCache = new java.util.HashMap<>();
+    private static final java.util.Map<String, String> audioDurationCache = new java.util.HashMap<>();
 
     public void setHighlightMessageId(String messageId) {
         this.highlightMessageId = messageId;
@@ -755,6 +756,57 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     layoutAudio.setVisibility(View.VISIBLE);
                     final String audioUrl = msg.getContent();
 
+                    if (tvAudioTime != null) {
+                        tvAudioTime.setTag(msg.getMessageId());
+                    }
+
+                    String durationStr = msg.getFileUrl();
+                    String tempDuration = "00:00";
+                    if (durationStr != null && !durationStr.isEmpty()) {
+                        try {
+                            long durationMs = Long.parseLong(durationStr);
+                            tempDuration = formatTime((int) durationMs);
+                        } catch (Exception e) {
+                            tempDuration = "00:00";
+                        }
+                    } else {
+                        String cached = audioDurationCache.get(audioUrl);
+                        if (cached != null) {
+                            tempDuration = cached;
+                        } else {
+                            final String finalAudioUrl = audioUrl;
+                            final TextView finalTvAudioTime = tvAudioTime;
+                            final String finalMsgId = msg.getMessageId();
+                            new Thread(() -> {
+                                android.media.MediaMetadataRetriever retriever = new android.media.MediaMetadataRetriever();
+                                try {
+                                    retriever.setDataSource(finalAudioUrl, new java.util.HashMap<String, String>());
+                                    String time = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    if (time != null) {
+                                        long timeMs = Long.parseLong(time);
+                                        String formatted = formatTime((int) timeMs);
+                                        audioDurationCache.put(finalAudioUrl, formatted);
+                                        if (finalTvAudioTime != null) {
+                                            finalTvAudioTime.post(() -> {
+                                                if (finalMsgId.equals(finalTvAudioTime.getTag())) {
+                                                    boolean currentlyActive = finalAudioUrl.equals(com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentAudioUrl());
+                                                    if (!currentlyActive) {
+                                                        finalTvAudioTime.setText(formatted);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    // Log error silently, fallback to 00:00
+                                } finally {
+                                    try { retriever.release(); } catch (Exception ignored) {}
+                                }
+                            }).start();
+                        }
+                    }
+                    final String displayDuration = tempDuration;
+
                     final int activeColor = isSentByMe ? Color.WHITE : Color.parseColor(serverColor);
                     final int inactiveColor = isSentByMe ? Color.parseColor("#40FFFFFF") : Color.parseColor("#B9BBBE");
 
@@ -778,7 +830,9 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
 
                     boolean isPlaying = com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl);
-                    if (isPlaying) {
+                    boolean isActive = audioUrl.equals(com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentAudioUrl());
+
+                    if (isActive) {
                         if (btnPlayPause != null) {
                             btnPlayPause.setImageResource(R.drawable.ic_pause);
                         }
@@ -790,9 +844,14 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             Runnable updateProgressRunnable = new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl)) {
-                                        int current = com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentPosition();
-                                        int duration = com.example.se114_callingsystem.core.util.AudioPlayerManager.getDuration();
+                                    if (audioUrl.equals(com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentAudioUrl())) {
+                                        boolean playing = com.example.se114_callingsystem.core.util.AudioPlayerManager.isPlaying(audioUrl);
+                                        int current = 0;
+                                        int duration = 0;
+                                        if (playing) {
+                                            current = com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentPosition();
+                                            duration = com.example.se114_callingsystem.core.util.AudioPlayerManager.getDuration();
+                                        }
                                         
                                         float percent = 0f;
                                         if (duration > 0) {
@@ -827,7 +886,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                                 ((android.graphics.drawable.GradientDrawable) bg).setColor(inactiveColor);
                                             }
                                         }
-                                        tvAudioTime.setText("00:00");
+                                        tvAudioTime.setText(displayDuration);
                                     }
                                 }
                             };
@@ -854,7 +913,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                             }
                         }
                         if (tvAudioTime != null) {
-                            tvAudioTime.setText("00:00");
+                            tvAudioTime.setText(displayDuration);
                         }
                     }
 
@@ -877,7 +936,8 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
 
                     View.OnClickListener playPauseClick = v -> {
-                        if (isPlaying) {
+                        boolean currentlyActive = audioUrl.equals(com.example.se114_callingsystem.core.util.AudioPlayerManager.getCurrentAudioUrl());
+                        if (currentlyActive) {
                             com.example.se114_callingsystem.core.util.AudioPlayerManager.stop();
                             adapter.notifyDataSetChanged();
                         } else {
@@ -903,6 +963,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                                     adapter.notifyDataSetChanged();
                                 }
                             });
+                            adapter.notifyDataSetChanged();
                         }
                     };
 

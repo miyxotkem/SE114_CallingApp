@@ -34,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
     private com.google.firebase.firestore.ListenerRegistration sidebarServersListener;
     private int systemBarsBottom = 0;
 
+    private android.content.BroadcastReceiver localCallReceiver;
+    private android.app.Dialog activeCallDialog;
+    private android.animation.AnimatorSet answerBtnAnimator;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         com.example.se114_callingsystem.core.util.ThemeHelper.applyTheme(this);
@@ -279,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         resetIdleTimer();
         setupNotificationBadgeListener();
+        registerCallReceiver();
         
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
         if (navHostFragment != null) {
@@ -299,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
         setAppStatus("offline");
         removeNotificationBadgeListener();
         removeSidebarListeners();
+        unregisterCallReceiver();
     }
 
     private void setAppStatus(String appState) {
@@ -641,6 +647,141 @@ public class MainActivity extends AppCompatActivity {
         binding.bottomNav.setPadding(paddingStart, 0, 0, systemBarsBottom);
     }
 
+    private void registerCallReceiver() {
+        if (localCallReceiver == null) {
+            localCallReceiver = new android.content.BroadcastReceiver() {
+                @Override
+                public void onReceive(android.content.Context context, android.content.Intent intent) {
+                    String action = intent.getAction();
+                    if ("com.example.se114_callingsystem.INCOMING_CALL".equals(action)) {
+                        String callerId = intent.getStringExtra("CALLER_ID");
+                        String callerName = intent.getStringExtra("CALLER_NAME");
+                        String channelName = intent.getStringExtra("CALL_CHANNEL_NAME");
+                        String callType = intent.getStringExtra("CALL_TYPE");
+                        showIncomingCallDialog(callerId, callerName, channelName, callType);
+                    } else if ("com.example.se114_callingsystem.DISMISS_CALL_DIALOG".equals(action)) {
+                        dismissIncomingCallDialog();
+                    }
+                }
+            };
+            android.content.IntentFilter filter = new android.content.IntentFilter();
+            filter.addAction("com.example.se114_callingsystem.INCOMING_CALL");
+            filter.addAction("com.example.se114_callingsystem.DISMISS_CALL_DIALOG");
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                registerReceiver(localCallReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(localCallReceiver, filter);
+            }
+        }
+    }
+
+    private void unregisterCallReceiver() {
+        if (localCallReceiver != null) {
+            unregisterReceiver(localCallReceiver);
+            localCallReceiver = null;
+        }
+    }
+
+    private void showIncomingCallDialog(String callerId, String callerName, String channelName, String callType) {
+        if (activeCallDialog != null && activeCallDialog.isShowing()) {
+            return;
+        }
+
+        activeCallDialog = new android.app.Dialog(this, R.style.InAppCallBannerDialog);
+        android.view.View view = getLayoutInflater().inflate(R.layout.layout_incoming_call_banner, null);
+        activeCallDialog.setContentView(view);
+
+        android.view.Window window = activeCallDialog.getWindow();
+        if (window != null) {
+            window.setGravity(android.view.Gravity.TOP);
+            window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            
+            // Set margins
+            android.view.WindowManager.LayoutParams lp = window.getAttributes();
+            lp.y = (int) (16 * getResources().getDisplayMetrics().density); // Top margin
+            window.setAttributes(lp);
+        }
+
+        com.google.android.material.imageview.ShapeableImageView ivCallerAvatar = view.findViewById(R.id.ivCallerAvatar);
+        android.widget.TextView tvCallerName = view.findViewById(R.id.tvCallerName);
+        android.widget.TextView tvCallTypeDesc = view.findViewById(R.id.tvCallTypeDesc);
+        com.google.android.material.card.MaterialCardView btnDeclineCall = view.findViewById(R.id.btnDeclineCall);
+        com.google.android.material.card.MaterialCardView btnAnswerCall = view.findViewById(R.id.btnAnswerCall);
+
+        tvCallerName.setText(callerName);
+        String desc = "voice".equals(callType) ? "Cuộc gọi thoại đến..." : "Cuộc gọi video đến...";
+        tvCallTypeDesc.setText(desc);
+
+        if (callerId != null) {
+            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(callerId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && binding != null) {
+                        String avatarUrl = documentSnapshot.getString("avatarUrl");
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            com.bumptech.glide.Glide.with(this)
+                                .load(avatarUrl)
+                                .placeholder(R.drawable.ic_user)
+                                .into(ivCallerAvatar);
+                        }
+                    }
+                });
+        }
+
+        btnDeclineCall.setOnClickListener(v -> {
+            android.content.Intent declineIntent = new android.content.Intent(this, com.example.se114_callingsystem.core.service.MessageNotificationService.class);
+            declineIntent.setAction("com.example.se114_callingsystem.ACTION_DECLINE_CALL");
+            declineIntent.putExtra("CALL_CHANNEL_NAME", channelName);
+            startService(declineIntent);
+            dismissIncomingCallDialog();
+        });
+
+        btnAnswerCall.setOnClickListener(v -> {
+            android.content.Intent answerIntent = new android.content.Intent(this, com.example.se114_callingsystem.core.service.MessageNotificationService.class);
+            answerIntent.setAction("com.example.se114_callingsystem.ACTION_ANSWER_CALL");
+            answerIntent.putExtra("CALL_CHANNEL_NAME", channelName);
+            answerIntent.putExtra("CALL_TYPE", callType);
+            startService(answerIntent);
+            dismissIncomingCallDialog();
+        });
+
+        // Add premium pulsing scale animation to the answer button
+        try {
+            android.animation.ObjectAnimator scaleX = android.animation.ObjectAnimator.ofFloat(btnAnswerCall, "scaleX", 1f, 1.15f, 1f);
+            android.animation.ObjectAnimator scaleY = android.animation.ObjectAnimator.ofFloat(btnAnswerCall, "scaleY", 1f, 1.15f, 1f);
+            scaleX.setDuration(1200);
+            scaleY.setDuration(1200);
+            scaleX.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            scaleY.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            
+            answerBtnAnimator = new android.animation.AnimatorSet();
+            answerBtnAnimator.playTogether(scaleX, scaleY);
+            answerBtnAnimator.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        activeCallDialog.show();
+    }
+
+    private void dismissIncomingCallDialog() {
+        if (answerBtnAnimator != null) {
+            try {
+                answerBtnAnimator.cancel();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            answerBtnAnimator = null;
+        }
+        if (activeCallDialog != null && activeCallDialog.isShowing()) {
+            activeCallDialog.dismiss();
+        }
+        activeCallDialog = null;
+    }
+
 
 
     @Override
@@ -648,6 +789,8 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         removeNotificationBadgeListener();
         removeSidebarListeners();
+        unregisterCallReceiver();
+        dismissIncomingCallDialog();
         binding = null;
     }
 }

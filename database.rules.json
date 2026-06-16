@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "users": {
+      "$userId": {
+        "status": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid == $userId"
+        }
+      }
+    },
+    "friends": {
+      "$userId": {
+        ".read": "auth != null && auth.uid == $userId",
+        ".write": "auth != null && auth.uid == $userId"
+      }
+    },
+    "chat_typing": {
+      "$groupId": {
+        ".read": "auth != null",
+        "$userId": {
+          ".write": "auth != null && auth.uid == $userId"
+        }
+      }
+    },
+    "chats": {
+      "$roomId": {
+        ".read": "auth != null && (!$roomId.startsWith('dm_') || $roomId.contains(auth.uid))",
+        ".write": "auth != null && (!$roomId.startsWith('dm_') || $roomId.contains(auth.uid))"
+      }
+    }
+  }
+}

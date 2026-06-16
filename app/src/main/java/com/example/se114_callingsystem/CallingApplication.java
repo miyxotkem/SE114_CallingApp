@@ -3,24 +3,30 @@ package com.example.se114_callingsystem;
 import android.app.Application;
 import com.cloudinary.android.MediaManager;
 import com.example.se114_callingsystem.network.BackendService;
-import com.example.se114_callingsystem.core.di.AppDependencyProvider;
+import com.example.se114_callingsystem.network.ApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import java.util.HashMap;
 import java.util.Map;
+import javax.inject.Inject;
 import dagger.hilt.android.HiltAndroidApp;
 
 @HiltAndroidApp
 public class CallingApplication extends Application {
 
+    @Inject
+    FirebaseAuth firebaseAuth;
+
+    @Inject
+    BackendService backendService;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
-        // Khởi tạo AppDependencyProvider với Application Context
-        AppDependencyProvider.init(this);
-
+        // Khởi tạo ApiClient với Application Context
+        ApiClient.init(this);
         // Force Dark Mode globally by default
         androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
 
@@ -57,18 +63,16 @@ public class CallingApplication extends Application {
                 @Override
                 public com.cloudinary.android.signed.Signature provideSignature(Map options) {
                     try {
-                        FirebaseAuth auth = AppDependencyProvider.getFirebaseAuth();
-                        if (auth.getCurrentUser() == null) return null;
+                        if (firebaseAuth.getCurrentUser() == null) return null;
                         String idToken = com.google.android.gms.tasks.Tasks.await(
-                                auth.getCurrentUser().getIdToken(true)
+                                firebaseAuth.getCurrentUser().getIdToken(true)
                         ).getToken();
                         long timestamp = System.currentTimeMillis() / 1000L;
                         
-                        BackendService service = AppDependencyProvider.getBackendService();
                         Map<String, Object> body = new HashMap<>();
                         body.put("timestamp", timestamp);
                         retrofit2.Response<BackendService.CloudinarySignatureResponse> response = 
-                                service.getCloudinarySignature("Bearer " + idToken, body).execute();
+                                backendService.getCloudinarySignature("Bearer " + idToken, body).execute();
                         
                         if (response.isSuccessful() && response.body() != null) {
                             return new com.cloudinary.android.signed.Signature(

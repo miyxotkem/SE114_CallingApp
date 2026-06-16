@@ -179,4 +179,27 @@ public class HomeRepository {
             }
         }).addOnFailureListener(callback::onFailure);
     }
+
+    public ListenerRegistration listenToUnreadNotifications(String userId, RealtimeCallback<java.util.Map<String, Integer>> callback) {
+        return db.collection("users").document(userId)
+                .collection("notifications")
+                .whereEqualTo("isRead", false)
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+                    if (snapshots != null) {
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : snapshots.getDocuments()) {
+                            String senderId = doc.getString("senderId");
+                            if (senderId != null) {
+                                counts.put(senderId, counts.getOrDefault(senderId, 0) + 1);
+                            }
+                        }
+                    }
+                    callback.onData(counts);
+                });
+    }
 }
+

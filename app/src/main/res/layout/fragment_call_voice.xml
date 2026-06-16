@@ -46,6 +46,21 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvNetworkBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#E25C5C"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/inter"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Mất kết nối mạng. Đang chờ kết nối lại..."
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/callHeader" />
+
     <!-- Grid List of Voice Participants -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvParticipants"
@@ -53,7 +68,7 @@
         android:layout_height="0dp"
         android:padding="8dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/callHeader"
+        app:layout_constraintTop_toBottomOf="@id/tvNetworkBanner"
         app:layout_constraintBottom_toTopOf="@id/controlPanel" />
 
     <!-- Waiting Overlay for Voice Call (Single Participant Waiting) -->
@@ -69,21 +84,42 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:visibility="gone">
 
-        <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/lottieRinging"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            app:lottie_rawRes="@raw/lottie_ringing"
-            app:lottie_autoPlay="true"
-            app:lottie_loop="true" />
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lottieRinging"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                app:lottie_rawRes="@raw/lottie_ringing"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivWaitingAvatar"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_gravity="center"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_user"
+                app:strokeColor="@color/discord_blurple"
+                app:strokeWidth="3dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize50Percent"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <TextView
+            android:id="@+id/tvWaitingStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/waiting_for_others"
             android:textColor="@color/white"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:fontFamily="@font/inter"
+            android:textStyle="bold"
             android:layout_marginTop="16dp" />
     </LinearLayout>
 
@@ -151,6 +187,20 @@
                 app:tint="@color/discord_text_secondary"
                 android:contentDescription="Toggle audio" />
 
+            <!-- Speaker Toggle -->
+            <ImageButton
+                android:id="@+id/btnSpeaker"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="@color/call_control_bg"
+                android:src="@drawable/ic_volume_up"
+                android:scaleType="centerInside"
+                android:padding="14dp"
+                app:tint="@color/discord_text_secondary"
+                android:contentDescription="Toggle Speaker" />
+
             <!-- Screen Share Toggle -->
             <ImageButton
                 android:id="@+id/btnShareScreen"
@@ -164,6 +214,7 @@
                 android:padding="14dp"
                 app:tint="@color/discord_text_secondary"
                 android:contentDescription="Share screen" />
+
 
             <!-- More Options Toggle (3 dots) -->
             <ImageButton

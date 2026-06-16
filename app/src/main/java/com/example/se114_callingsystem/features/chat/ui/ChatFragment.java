@@ -29,12 +29,13 @@ import com.example.se114_callingsystem.R;
 import com.example.se114_callingsystem.databinding.FragmentChatBinding;
 import com.example.se114_callingsystem.core.model.Firebase;
 import com.example.se114_callingsystem.core.model.Message;
-import com.example.se114_callingsystem.core.di.AppDependencyProvider;
 import com.example.se114_callingsystem.core.model.ServerMember;
 import com.example.se114_callingsystem.features.chat.viewmodel.ChatViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import javax.inject.Inject;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -59,6 +60,12 @@ public class ChatFragment extends Fragment {
 
     private static final String TAG = "ChatFragment";
     public static String activeChatId = null;
+
+    @Inject
+    FirebaseAuth firebaseAuth;
+
+    @Inject
+    FirebaseFirestore firestore;
 
     private FragmentChatBinding binding;
     private ChatAdapter adapter;
@@ -106,7 +113,7 @@ public class ChatFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        senderId = AppDependencyProvider.getFirebaseAuth().getCurrentUser() != null ? AppDependencyProvider.getFirebaseAuth().getCurrentUser().getUid() : "UNKNOWN";
+        senderId = firebaseAuth.getCurrentUser() != null ? firebaseAuth.getCurrentUser().getUid() : "UNKNOWN";
 
         imagePickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) uploadToCloudinary(uri, "image");
@@ -177,6 +184,8 @@ public class ChatFragment extends Fragment {
                     // Chat DM 1-1 (Private Chat)
                     binding.tvChannelHash.setVisibility(View.GONE);
                     binding.ivOnlineStatus.setVisibility(View.VISIBLE);
+                    binding.btnVoiceCall.setVisibility(View.VISIBLE);
+                    binding.btnVideoCall.setVisibility(View.VISIBLE);
                     binding.tvChannelName.setText(channelName);
                     binding.edtMessage.setHint(getString(R.string.chat_input_hint_dm, channelName));
                     loadDMParticipants();
@@ -184,6 +193,8 @@ public class ChatFragment extends Fragment {
                     // Chat Server Channel
                     binding.tvChannelHash.setVisibility(View.VISIBLE);
                     binding.ivOnlineStatus.setVisibility(View.GONE);
+                    binding.btnVoiceCall.setVisibility(View.GONE);
+                    binding.btnVideoCall.setVisibility(View.GONE);
                     binding.tvChannelName.setText(channelName.toLowerCase());
                     binding.edtMessage.setHint(getString(R.string.chat_input_hint_channel, channelName.toLowerCase()));
                 }
@@ -333,24 +344,16 @@ public class ChatFragment extends Fragment {
 
     private void setupClickListeners() {
         binding.btnAttachHome.setOnClickListener(v -> {
-            String[] options = {"📷 Send Image", "🎥 Send Video", "📎 Send File", "🎬 Tìm và gửi ảnh GIF", "⏰ Đặt lời nhắc"};
-            com.example.se114_callingsystem.core.util.BottomSheetUtils.showListDialog(
-                    requireContext(),
-                    "Upload Media & Options",
-                    options,
-                    (index, option) -> {
-                        if (index == 0) imagePickerLauncher.launch("image/*");
-                        else if (index == 1) videoPickerLauncher.launch("video/*");
-                        else if (index == 2) filePickerLauncher.launch("*/*");
-                        else if (index == 3) showGifSearchDialog();
-                        else showReminderDialog(null, null);
-                    }
-            );
+            showAttachmentPopup(v);
         });
 
         binding.btnBack.setOnClickListener(v -> {
             Navigation.findNavController(v).popBackStack();
         });
+
+
+        binding.btnVoiceCall.setOnClickListener(v -> initiateDirectCall("voice"));
+        binding.btnVideoCall.setOnClickListener(v -> initiateDirectCall("video"));
 
         binding.btnSend.setOnClickListener(v -> sendMessage());
         
@@ -389,6 +392,56 @@ public class ChatFragment extends Fragment {
             Navigation.findNavController(v).navigate(R.id.action_chat_to_chat_info, args);
         };
         binding.tvChannelName.setOnClickListener(toChatInfo);
+    }
+
+    private void showAttachmentPopup(View anchor) {
+        if (getContext() == null) return;
+        View popupView = getLayoutInflater().inflate(R.layout.layout_chat_attachment_popup, null);
+        
+        android.widget.PopupWindow popupWindow = new android.widget.PopupWindow(
+                popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
+                
+        popupWindow.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setElevation(8f);
+        popupWindow.setOutsideTouchable(true);
+
+        popupView.findViewById(R.id.btnUploadImage).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            imagePickerLauncher.launch("image/*");
+        });
+        popupView.findViewById(R.id.btnUploadVideo).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            videoPickerLauncher.launch("video/*");
+        });
+        popupView.findViewById(R.id.btnUploadFile).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            filePickerLauncher.launch("*/*");
+        });
+        popupView.findViewById(R.id.btnSendGif).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            showGifSearchDialog();
+        });
+        popupView.findViewById(R.id.btnSetReminder).setOnClickListener(v -> {
+            popupWindow.dismiss();
+            showReminderDialog(null, null);
+        });
+
+        popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int popupWidth = popupView.getMeasuredWidth();
+        int popupHeight = popupView.getMeasuredHeight();
+
+        int[] location = new int[2];
+        anchor.getLocationInWindow(location);
+        
+        int xOffset = location[0] + (anchor.getWidth() / 2) - (popupWidth / 2);
+        int yOffset = location[1] - popupHeight - 16;
+        
+        if (xOffset < 16) xOffset = 16;
+        
+        popupWindow.showAtLocation(anchor, android.view.Gravity.NO_GRAVITY, xOffset, yOffset);
     }
 
     private void sendMessage() {
@@ -457,9 +510,16 @@ public class ChatFragment extends Fragment {
     }
 
     private void sendMediaMessage(String fileUrl, String type) {
+        sendMediaMessage(fileUrl, type, 0);
+    }
+
+    private void sendMediaMessage(String fileUrl, String type, long durationMs) {
         if (viewModel == null) return;
         Message model = new Message(senderId, groupId, fileUrl, System.currentTimeMillis());
         model.setType(type);
+        if ("audio".equals(type) && durationMs > 0) {
+            model.setFileUrl(String.valueOf(durationMs));
+        }
         if (messageToReply != null) {
             model.setRepliedToContent(messageToReply.getContent());
             model.setRepliedToType(messageToReply.getType());
@@ -819,7 +879,7 @@ public class ChatFragment extends Fragment {
             String uid = member.getUserId();
             holder.itemView.setTag(uid);
             
-            AppDependencyProvider.getFirestore().collection("users").document(uid).get()
+            firestore.collection("users").document(uid).get()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists() && uid.equals(holder.itemView.getTag()) && getContext() != null) {
                         String profilePic = doc.getString("profilePic");
@@ -1567,7 +1627,7 @@ public class ChatFragment extends Fragment {
         }
         
         if (audioFilePath != null) {
-            uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)));
+            uploadAudioToCloudinary(Uri.fromFile(new java.io.File(audioFilePath)), totalRecordedDuration);
         }
         
         isPaused = false;
@@ -1578,7 +1638,7 @@ public class ChatFragment extends Fragment {
         binding.inputAreaPanel.setVisibility(View.VISIBLE);
     }
 
-    private void uploadAudioToCloudinary(Uri fileUri) {
+    private void uploadAudioToCloudinary(Uri fileUri, long durationMs) {
         if (getContext() == null) return;
         if (!com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
             Toast.makeText(getContext(), "Không có kết nối mạng. Không thể gửi tin nhắn thoại.", Toast.LENGTH_SHORT).show();
@@ -1592,7 +1652,7 @@ public class ChatFragment extends Fragment {
             @Override public void onProgress(String requestId, long bytes, long totalBytes) {}
             @Override public void onSuccess(String requestId, Map resultData) {
                 pd.dismiss();
-                sendMediaMessage((String) resultData.get("secure_url"), "audio");
+                sendMediaMessage((String) resultData.get("secure_url"), "audio", durationMs);
                 try {
                     new java.io.File(audioFilePath).delete();
                 } catch (Exception ignored) {}
@@ -1878,6 +1938,58 @@ public class ChatFragment extends Fragment {
                 binding.edtMessage.setHint("Message " + nickname);
             }
         }
+    }
+
+    private void initiateDirectCall(String type) {
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null ? 
+            FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+        String otherUid = null;
+        if (groupId != null && groupId.startsWith("dm_")) {
+            String[] parts = groupId.split("_");
+            if (parts.length == 3) {
+                otherUid = parts[1].equals(currentUid) ? parts[2] : parts[1];
+            }
+        }
+        if (otherUid == null || currentUid.isEmpty()) return;
+
+        String callerName = "Friend";
+        for (ServerMember member : serverMembers) {
+            if (currentUid.equals(member.getUserId())) {
+                callerName = member.getNickname() != null && !member.getNickname().isEmpty() ? 
+                    member.getNickname() : member.getUserName();
+                break;
+            }
+        }
+
+        com.google.firebase.firestore.FirebaseFirestore db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        java.util.Map<String, Object> callMap = new java.util.HashMap<>();
+        callMap.put("callerId", currentUid);
+        callMap.put("callerName", callerName);
+        callMap.put("channelName", groupId);
+        callMap.put("callType", type);
+        callMap.put("status", "ringing");
+        callMap.put("timestamp", System.currentTimeMillis());
+
+        String finalOtherUid = otherUid;
+        String finalCallerName = callerName;
+        db.collection("users").document(otherUid).collection("incomingCall").document("activeCall")
+            .set(callMap)
+            .addOnSuccessListener(aVoid -> {
+                if (getContext() != null) {
+                    Intent intent = new Intent(requireContext(), com.example.se114_callingsystem.features.call.ui.CallActivity.class);
+                    intent.putExtra("CALL_CHANNEL_NAME", groupId);
+                    intent.putExtra("SERVER_ID", (String) null);
+                    intent.putExtra("SERVER_COLOR", serverColor);
+                    intent.putExtra("IS_CALLER", true);
+                    intent.putExtra("CALL_TYPE", type);
+                    startActivity(intent);
+                }
+            })
+            .addOnFailureListener(e -> {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Không thể khởi tạo cuộc gọi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
     }
 
     @Override

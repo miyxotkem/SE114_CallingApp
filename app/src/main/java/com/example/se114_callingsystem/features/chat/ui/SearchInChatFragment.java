@@ -35,7 +35,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+@dagger.hilt.android.AndroidEntryPoint
 public class SearchInChatFragment extends Fragment {
+
+    @javax.inject.Inject
+    public com.example.se114_callingsystem.features.chat.data.MessageDao messageDao;
 
     private String chatId, chatName, serverId, serverColor;
     private EditText edtSearch;
@@ -141,21 +145,49 @@ public class SearchInChatFragment extends Fragment {
 
     private void loadMessages() {
         if (chatId == null) return;
-        DatabaseReference chatRef = Firebase.getDatabase().getReference("chats").child(chatId);
+        
+        // 1. Nạp từ Room DB trước để có dữ liệu tìm kiếm lập tức (offline-first)
+        new Thread(() -> {
+            if (messageDao == null) return;
+            androidx.lifecycle.LiveData<List<com.example.se114_callingsystem.features.chat.data.CachedMessage>> liveData = messageDao.getMessagesForGroup(chatId);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    liveData.observe(getViewLifecycleOwner(), cachedList -> {
+                        if (cachedList != null) {
+                            allMessages.clear();
+                            for (com.example.se114_callingsystem.features.chat.data.CachedMessage cm : cachedList) {
+                                allMessages.add(cm.toMessage());
+                            }
+                            performSearch(edtSearch.getText().toString());
+                        }
+                    });
+                });
+            }
+        }).start();
+
+        // 2. Nạp thêm từ Firebase (nếu online) để cập nhật Room DB
+        com.google.firebase.database.Query chatRef = Firebase.getDatabase().getReference("chats").child(chatId).limitToLast(1000);
         chatRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (getView() == null) return;
-                allMessages.clear();
+                List<Message> list = new ArrayList<>();
                 for (DataSnapshot data : snapshot.getChildren()) {
                     Message msg = data.getValue(Message.class);
                     if (msg != null) {
                         msg.setMessageId(data.getKey());
-                        allMessages.add(msg);
+                        list.add(msg);
                     }
                 }
-                // Update search once messages are loaded
-                performSearch(edtSearch.getText().toString());
+                if (!list.isEmpty()) {
+                    new Thread(() -> {
+                        if (messageDao == null) return;
+                        List<com.example.se114_callingsystem.features.chat.data.CachedMessage> cachedList = new ArrayList<>();
+                        for (Message m : list) {
+                            cachedList.add(new com.example.se114_callingsystem.features.chat.data.CachedMessage(m));
+                        }
+                        messageDao.insertOrUpdateAll(cachedList);
+                    }).start();
+                }
             }
 
             @Override
@@ -214,6 +246,7 @@ public class SearchInChatFragment extends Fragment {
     }
 
     private class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter.ViewHolder> {
+        private final java.util.Map<String, com.example.se114_callingsystem.core.model.User> userCache = new java.util.HashMap<>();
 
         @NonNull
         @Override
@@ -247,14 +280,16 @@ public class SearchInChatFragment extends Fragment {
                     displayName = foundMember.getUserName();
                 }
                 holder.tvSenderName.setText(displayName);
+            } else if (userCache.containsKey(uid)) {
+                com.example.se114_callingsystem.core.model.User cachedUser = userCache.get(uid);
+                if (cachedUser != null) {
+                    holder.tvSenderName.setText(cachedUser.getUsername());
+                } else {
+                    holder.tvSenderName.setText("Loading...");
+                }
             } else {
                 holder.tvSenderName.setText("Loading...");
-                FirebaseFirestore.getInstance().collection("users").document(uid).get()
-                    .addOnSuccessListener(doc -> {
-                        if (doc.exists() && uid.equals(holder.tvSenderName.getTag())) {
-                            holder.tvSenderName.setText(doc.getString("username"));
-                        }
-                    });
+                fetchUserAndCache(uid);
             }
 
             // Bind text
@@ -283,20 +318,19 @@ public class SearchInChatFragment extends Fragment {
                 holder.ivAvatar.setColorFilter(Color.parseColor("#FF007F"));
             }
 
-            FirebaseFirestore.getInstance().collection("users").document(uid).get()
-                .addOnSuccessListener(doc -> {
-                    if (doc.exists() && uid.equals(holder.ivAvatar.getTag()) && getContext() != null) {
-                        String profilePic = doc.getString("profilePic");
-                        if (profilePic != null && !profilePic.isEmpty()) {
-                            holder.ivAvatar.setColorFilter(null);
-                            Glide.with(holder.itemView.getContext())
-                                .load(profilePic)
-                                .placeholder(R.drawable.ic_user)
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .into(holder.ivAvatar);
-                        }
-                    }
-                });
+            if (userCache.containsKey(uid)) {
+                com.example.se114_callingsystem.core.model.User cachedUser = userCache.get(uid);
+                if (cachedUser != null && cachedUser.getProfilePic() != null && !cachedUser.getProfilePic().isEmpty() && getContext() != null) {
+                    holder.ivAvatar.setColorFilter(null);
+                    Glide.with(holder.itemView.getContext())
+                        .load(cachedUser.getProfilePic())
+                        .placeholder(R.drawable.ic_user)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .into(holder.ivAvatar);
+                }
+            } else {
+                fetchUserAndCache(uid);
+            }
 
             holder.itemView.setOnClickListener(v -> {
                 NavController navController = Navigation.findNavController(requireView());
@@ -305,6 +339,21 @@ public class SearchInChatFragment extends Fragment {
                 }
                 navController.popBackStack();
             });
+        }
+
+        private void fetchUserAndCache(String uid) {
+            if (uid == null || userCache.containsKey(uid)) return;
+            userCache.put(uid, null); // Placeholder to prevent duplicate calls
+            FirebaseFirestore.getInstance().collection("users").document(uid).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        com.example.se114_callingsystem.core.model.User user = doc.toObject(com.example.se114_callingsystem.core.model.User.class);
+                        if (user != null) {
+                            userCache.put(uid, user);
+                            notifyDataSetChanged();
+                        }
+                    }
+                });
         }
 
         @Override

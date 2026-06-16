@@ -80,6 +80,7 @@ public class VoiceCallFragment extends Fragment {
     private FragmentCallVoiceBinding binding;
     private ParticipantAdapter adapter;
     private final List<Participant> participantList = new ArrayList<>();
+    private com.example.se114_callingsystem.core.util.NetworkMonitor networkMonitor;
 
     private static final int PERMISSION_REQ_ID = 22;
     private static final String[] REQUESTED_PERMISSIONS = {
@@ -92,6 +93,65 @@ public class VoiceCallFragment extends Fragment {
     private String serverId;
     private final List<ServerMember> serverMembers = new ArrayList<>();
     private VoiceCallViewModel viewModel;
+
+    private boolean isCaller = false;
+    private String callType = "voice";
+    private String otherUid = null;
+    private String otherUsername = "Bạn bè";
+    private com.google.firebase.firestore.ListenerRegistration dbCallListener;
+
+    private boolean isSpeakerOn = true;
+    private int callDurationSeconds = 0;
+    private boolean isTimerRunning = false;
+    private final android.os.Handler timerHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isTimerRunning) {
+                callDurationSeconds++;
+                int mins = callDurationSeconds / 60;
+                int secs = callDurationSeconds % 60;
+                String timeStr = String.format(java.util.Locale.US, "%02d:%02d", mins, secs);
+                if (binding != null) {
+                    binding.tvParticipantCount.setText(timeStr);
+                }
+                timerHandler.postDelayed(this, 1000);
+            }
+        }
+    };
+
+    private void startCallTimer() {
+        if (!isTimerRunning) {
+            isTimerRunning = true;
+            callDurationSeconds = 0;
+            timerHandler.post(timerRunnable);
+        }
+    }
+
+    private void stopCallTimer() {
+        if (isTimerRunning) {
+            isTimerRunning = false;
+            timerHandler.removeCallbacks(timerRunnable);
+        }
+    }
+
+    private android.media.ToneGenerator ringbackToneGenerator;
+    private boolean isRingbackPlaying = false;
+    private final android.os.Handler ringbackHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+
+    private final Runnable ringbackRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isRingbackPlaying && ringbackToneGenerator != null) {
+                try {
+                    ringbackToneGenerator.startTone(android.media.ToneGenerator.TONE_SUP_RINGTONE, 2000);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error playing ringback tone", e);
+                }
+                ringbackHandler.postDelayed(this, 4000);
+            }
+        }
+    };
 
     private androidx.appcompat.app.AlertDialog reconnectDialog;
     private final android.os.Handler reconnectHandler = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -153,6 +213,8 @@ public class VoiceCallFragment extends Fragment {
                 channelName = passedChannel;
                 binding.tvCallChannelName.setText(channelName);
             }
+            isCaller = getArguments().getBoolean("IS_CALLER", false);
+            callType = getArguments().getString("CALL_TYPE", "voice");
         }
 
         setupObservers();
@@ -191,6 +253,14 @@ public class VoiceCallFragment extends Fragment {
         }
 
         viewModel.loadServerMembers(serverId);
+        setupDmCallSignaling();
+
+        networkMonitor = new com.example.se114_callingsystem.core.util.NetworkMonitor(requireContext().getApplicationContext());
+        networkMonitor.getIsConnected().observe(getViewLifecycleOwner(), isConnected -> {
+            if (binding != null && binding.tvNetworkBanner != null) {
+                binding.tvNetworkBanner.setVisibility(isConnected ? View.GONE : View.VISIBLE);
+            }
+        });
     }
 
     private void setupObservers() {
@@ -263,9 +333,18 @@ public class VoiceCallFragment extends Fragment {
             config.mContext = requireContext().getApplicationContext();
             config.mAppId = appId;
             config.mEventHandler = mRtcEventHandler;
-            config.addExtension("agora_segmentation_extension");
+            try {
+                config.addExtension("agora_segmentation_extension");
+            } catch (Throwable t) {
+                Log.e(TAG, "Failed to add extension: " + t.getMessage());
+            }
             mRtcEngine = RtcEngine.create(config);
-            mRtcEngine.enableExtension("agora_segmentation", "PortraitSegmentation", true);
+            try {
+                mRtcEngine.enableExtension("agora_segmentation", "PortraitSegmentation", true);
+            } catch (Throwable t) {
+                Log.e(TAG, "Failed to enable extension: " + t.getMessage());
+            }
+
 
             mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_COMMUNICATION);
             mRtcEngine.enableAudio();
@@ -277,7 +356,13 @@ public class VoiceCallFragment extends Fragment {
             mRtcEngine.setParameters("{\"che.audio.enable.ns\":true}");
 
             mRtcEngine.enableVideo();
-            mRtcEngine.muteLocalVideoStream(true);
+            
+            boolean startWithVideo = "video".equals(callType);
+            mRtcEngine.muteLocalVideoStream(!startWithVideo);
+            if (startWithVideo) {
+                mRtcEngine.startPreview();
+            }
+            
             mRtcEngine.enableAudioVolumeIndication(200, 3, true);
             mRtcEngine.setParameters("{\"rtc.force_unified_communication_mode\":true}");
 
@@ -364,17 +449,37 @@ public class VoiceCallFragment extends Fragment {
     private void updateParticipantCount() {
         if (binding != null) {
             int count = participantList.size();
-            binding.tvParticipantCount.setText(count + " người tham gia");
             
-            if (count == 0) {
-                binding.layoutWaiting.setVisibility(View.VISIBLE);
-                binding.rvParticipants.setVisibility(View.GONE);
+            if (serverId == null) {
+                // Direct Message (1-1) call
+                if (count <= 1) {
+                    binding.layoutWaiting.setVisibility(View.VISIBLE);
+                    binding.rvParticipants.setVisibility(View.GONE);
+                    stopCallTimer();
+                    if (isCaller) {
+                        binding.tvParticipantCount.setText("Đang đổ chuông...");
+                    } else {
+                        binding.tvParticipantCount.setText("Đang kết nối...");
+                    }
+                } else {
+                    binding.layoutWaiting.setVisibility(View.GONE);
+                    binding.rvParticipants.setVisibility(View.VISIBLE);
+                    startCallTimer();
+                }
             } else {
-                binding.layoutWaiting.setVisibility(View.GONE);
-                binding.rvParticipants.setVisibility(View.VISIBLE);
+                // Server voice channel call
+                binding.tvParticipantCount.setText(count + " người tham gia");
+                if (count == 0) {
+                    binding.layoutWaiting.setVisibility(View.VISIBLE);
+                    binding.rvParticipants.setVisibility(View.GONE);
+                } else {
+                    binding.layoutWaiting.setVisibility(View.GONE);
+                    binding.rvParticipants.setVisibility(View.VISIBLE);
+                }
             }
         }
     }
+
 
     private final IRtcEngineEventHandler mRtcEventHandler = new IRtcEngineEventHandler() {
         @Override
@@ -686,6 +791,19 @@ public class VoiceCallFragment extends Fragment {
         }
     }
 
+    private void updateSpeakerButtonUI(boolean isSpeakerOn) {
+        if (binding == null) return;
+        if (isSpeakerOn) {
+            binding.btnSpeaker.setImageResource(R.drawable.ic_volume_up);
+            binding.btnSpeaker.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor(serverColor)));
+            binding.btnSpeaker.setColorFilter(Color.WHITE);
+        } else {
+            binding.btnSpeaker.setImageResource(R.drawable.ic_volume_off);
+            binding.btnSpeaker.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getControlBgColor()));
+            binding.btnSpeaker.setColorFilter(Color.parseColor("#B5BAC1"));
+        }
+    }
+
     private void updateVideoButtonUI(boolean isVideoOff) {
         if (binding == null) return;
         if (isVideoOff) {
@@ -700,14 +818,33 @@ public class VoiceCallFragment extends Fragment {
     }
 
     private void setupControls() {
-        updateVideoButtonUI(true);
-        updateMuteButtonUI(true);
-        binding.btnMute.setSelected(true); // Mic ban đầu tắt
-        binding.btnToggleVideo.setSelected(true); // Video ban đầu tắt nên set selected = true để click lần đầu bật lên
+        boolean startWithVideo = "video".equals(callType);
+        updateVideoButtonUI(!startWithVideo);
+        binding.btnToggleVideo.setSelected(!startWithVideo);
+        binding.btnSwitchCamera.setVisibility(startWithVideo ? View.VISIBLE : View.GONE);
+
+        // Microphone BẬT mặc định khi bắt đầu cuộc gọi
+        updateMuteButtonUI(false);
+        binding.btnMute.setSelected(false);
+
+        // Loa ngoài BẬT mặc định khi bắt đầu cuộc gọi
+        isSpeakerOn = true;
+        updateSpeakerButtonUI(true);
 
         if (mRtcEngine != null) {
-            mRtcEngine.muteLocalAudioStream(true);
+            mRtcEngine.muteLocalAudioStream(false);
+            mRtcEngine.muteLocalVideoStream(!startWithVideo);
+            mRtcEngine.setEnableSpeakerphone(true);
         }
+
+        binding.btnSpeaker.setOnClickListener(v -> {
+            isSpeakerOn = !isSpeakerOn;
+            if (mRtcEngine != null) {
+                mRtcEngine.setEnableSpeakerphone(isSpeakerOn);
+            }
+            updateSpeakerButtonUI(isSpeakerOn);
+            Toast.makeText(getContext(), isSpeakerOn ? "Đã bật loa ngoài" : "Đã chuyển sang loa trong", Toast.LENGTH_SHORT).show();
+        });
 
         binding.btnMoreOptions.setOnClickListener(v -> {
             showVirtualBgDialog();
@@ -724,6 +861,7 @@ public class VoiceCallFragment extends Fragment {
             }
         });
 
+
         binding.btnToggleVideo.setOnClickListener(v -> {
             boolean isVideoOff = !v.isSelected();
             v.setSelected(isVideoOff);
@@ -731,11 +869,13 @@ public class VoiceCallFragment extends Fragment {
             if (!isVideoOff) {
                 mRtcEngine.startPreview();
                 binding.btnSwitchCamera.setVisibility(View.VISIBLE);
+                updateCallTypeFirestore("video");
             } else {
                 if (!isSharingScreen) {
                     mRtcEngine.stopPreview();
                 }
                 binding.btnSwitchCamera.setVisibility(View.GONE);
+                updateCallTypeFirestore("voice");
             }
             updateVideoButtonUI(isVideoOff);
             if (!participantList.isEmpty()) {
@@ -753,6 +893,7 @@ public class VoiceCallFragment extends Fragment {
         });
 
         binding.btnEndCall.setOnClickListener(v -> {
+            endCallSignaling();
             leaveAndExit();
         });
 
@@ -804,6 +945,15 @@ public class VoiceCallFragment extends Fragment {
 
     @Override
     public void onDestroy() {
+        stopCallTimer();
+        if (dbCallListener != null) {
+            dbCallListener.remove();
+            dbCallListener = null;
+        }
+        endCallSignaling();
+        stopRingbackTone();
+
+
         // Dừng Foreground Service
         if (getContext() != null) {
             Intent serviceIntent = new Intent(getContext(), com.example.se114_callingsystem.features.call.data.CallForegroundService.class);
@@ -830,6 +980,14 @@ public class VoiceCallFragment extends Fragment {
         isMinimized = false;
         minimizedCallEvent.setValue(false);
 
+        // Clear user's active call channel in Firestore
+        viewModel.clearVoiceChannel();
+
+        super.onDestroy();
+    }
+
+    @Override
+    public void onDestroyView() {
         // Huỷ đăng ký BroadcastReceiver
         if (getContext() != null) {
             try {
@@ -838,12 +996,10 @@ public class VoiceCallFragment extends Fragment {
                 Log.e(TAG, "Receiver unregister error: " + e.getMessage());
             }
         }
-
-        // Clear user's active call channel in Firestore
-        viewModel.clearVoiceChannel();
-
-        super.onDestroy();
+        binding = null;
+        super.onDestroyView();
     }
+
 
     private void showParticipantSettingsDialog(Participant participant) {
         if (getContext() == null || mRtcEngine == null) return;
@@ -1019,7 +1175,21 @@ public class VoiceCallFragment extends Fragment {
             return currentMyUid;
         }
 
-        if (serverMembers != null) {
+        if (serverId == null) {
+            String oUid = null;
+            if (channelName != null && channelName.startsWith("dm_")) {
+                String[] parts = channelName.split("_");
+                if (parts.length == 3) {
+                    oUid = parts[1].equals(currentMyUid) ? parts[2] : parts[1];
+                }
+            }
+            if (oUid != null) {
+                int otherHash = oUid.hashCode() & 0x7FFFFFFF;
+                if (otherHash == targetUid || otherHash + SCREEN_SHARE_UID_OFFSET == targetUid) {
+                    return oUid;
+                }
+            }
+        } else if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
                 if (m.getUserId() != null) {
                     int memberHash = m.getUserId().hashCode() & 0x7FFFFFFF;
@@ -1488,7 +1658,24 @@ public class VoiceCallFragment extends Fragment {
         boolean isScreenShare = false;
         int targetUid = agoraUid;
         
-        if (serverMembers != null) {
+        if (serverId == null) {
+            String currentMyUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+            String oUid = null;
+            if (channelName != null && channelName.startsWith("dm_")) {
+                String[] parts = channelName.split("_");
+                if (parts.length == 3) {
+                    oUid = parts[1].equals(currentMyUid) ? parts[2] : parts[1];
+                }
+            }
+            if (oUid != null) {
+                int otherHash = oUid.hashCode() & 0x7FFFFFFF;
+                if (otherHash + SCREEN_SHARE_UID_OFFSET == agoraUid) {
+                    isScreenShare = true;
+                    targetUid = otherHash;
+                }
+            }
+        } else if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
                 if (m.getUserId() != null) {
                     int memberHash = m.getUserId().hashCode() & 0x7FFFFFFF;
@@ -1520,7 +1707,20 @@ public class VoiceCallFragment extends Fragment {
             return isScreenShare ? "Màn hình của " + name : name + " (Me)";
         }
 
-        if (serverMembers != null) {
+        if (serverId == null) {
+            String currentMyUid = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null ? 
+                com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
+            String oUid = null;
+            if (channelName != null && channelName.startsWith("dm_")) {
+                String[] parts = channelName.split("_");
+                if (parts.length == 3) {
+                    oUid = parts[1].equals(currentMyUid) ? parts[2] : parts[1];
+                }
+            }
+            if (oUid != null && (oUid.hashCode() & 0x7FFFFFFF) == targetUid) {
+                return isScreenShare ? "Màn hình của " + otherUsername : otherUsername;
+            }
+        } else if (serverMembers != null) {
             for (ServerMember m : serverMembers) {
                 if (m.getUserId() != null && (m.getUserId().hashCode() & 0x7FFFFFFF) == targetUid) {
                     String name = m.getNickname();
@@ -1600,6 +1800,156 @@ public class VoiceCallFragment extends Fragment {
         });
     }
 
+    private void setupDmCallSignaling() {
+        if (serverId != null) return; // Only for DM calls
+
+        String currentUserId = viewModel.getCurrentUserId();
+        if (currentUserId == null) return;
+
+        if (channelName != null && channelName.startsWith("dm_")) {
+            String[] parts = channelName.split("_");
+            if (parts.length == 3) {
+                otherUid = parts[1].equals(currentUserId) ? parts[2] : parts[1];
+            }
+        }
+        if (otherUid == null) return;
+
+        if (isCaller) {
+            startRingbackTone();
+        }
+
+        // Fetch other user profile to update UI
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users").document(otherUid).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && binding != null) {
+                        String username = documentSnapshot.getString("username");
+                        if (username != null && !username.trim().isEmpty()) {
+                            otherUsername = username;
+                        } else {
+                            otherUsername = documentSnapshot.getString("email");
+                        }
+                        binding.tvCallChannelName.setText(otherUsername != null ? otherUsername : "Cuộc gọi");
+                        binding.tvWaitingStatus.setText("Đang gọi cho " + otherUsername + "...");
+
+                        String avatarUrl = documentSnapshot.getString("avatarUrl");
+                        if (avatarUrl == null || avatarUrl.isEmpty()) {
+                            avatarUrl = documentSnapshot.getString("profilePic");
+                        }
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            binding.ivWaitingAvatar.setVisibility(View.VISIBLE);
+                            com.bumptech.glide.Glide.with(this)
+                                .load(avatarUrl)
+                                .placeholder(R.drawable.ic_user)
+                                .into(binding.ivWaitingAvatar);
+                        } else {
+                            binding.ivWaitingAvatar.setVisibility(View.VISIBLE);
+                            binding.ivWaitingAvatar.setImageResource(R.drawable.ic_user);
+                        }
+
+                        resolveParticipantNames();
+                    }
+                });
+
+        // Determine Firestore document path
+        String targetUser = isCaller ? otherUid : currentUserId;
+        dbCallListener = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(targetUser)
+                .collection("incomingCall")
+                .document("activeCall")
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        Log.e(TAG, "Error listening to call state", error);
+                        return;
+                    }
+                    if (snapshot != null && snapshot.exists()) {
+                        String status = snapshot.getString("status");
+                        String type = snapshot.getString("callType");
+                        
+                        if (type != null && !type.equals(callType)) {
+                            callType = type;
+                            syncCallTypeUI();
+                        }
+
+                        if ("answered".equals(status)) {
+                            stopRingbackTone();
+                        } else if ("rejected".equals(status) || "ended".equals(status)) {
+                            stopRingbackTone();
+                            if (getContext() != null) {
+                                String msg = "rejected".equals(status) ? "Cuộc gọi bị từ chối" : "Cuộc gọi đã kết thúc";
+                                Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                            }
+                            leaveAndExit();
+                        }
+                    } else {
+                        stopRingbackTone();
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Cuộc gọi đã kết thúc", Toast.LENGTH_SHORT).show();
+                        }
+                        leaveAndExit();
+                    }
+                });
+    }
+
+    private void endCallSignaling() {
+        stopRingbackTone();
+        if (serverId != null) return; // Only for DM calls
+        String currentUserId = viewModel.getCurrentUserId();
+        if (currentUserId == null || otherUid == null) return;
+
+        String targetUser = isCaller ? otherUid : currentUserId;
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(targetUser)
+                .collection("incomingCall")
+                .document("activeCall")
+                .delete()
+                .addOnFailureListener(e -> Log.e(TAG, "Error ending call on Firestore", e));
+    }
+
+    private void updateCallTypeFirestore(String newType) {
+        if (serverId != null) return; // Only for DM calls
+        String currentUserId = viewModel.getCurrentUserId();
+        if (currentUserId == null || otherUid == null) return;
+
+        String targetUser = isCaller ? otherUid : currentUserId;
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(targetUser)
+                .collection("incomingCall")
+                .document("activeCall")
+                .update("callType", newType)
+                .addOnFailureListener(e -> Log.e(TAG, "Error updating callType", e));
+    }
+
+    private void syncCallTypeUI() {
+        if (binding == null) return;
+        if (getActivity() == null) return;
+        getActivity().runOnUiThread(() -> {
+            boolean isVideoOff = "voice".equals(callType);
+            binding.btnToggleVideo.setSelected(isVideoOff);
+            updateVideoButtonUI(isVideoOff);
+            if (mRtcEngine != null) {
+                mRtcEngine.muteLocalVideoStream(isVideoOff);
+                if (!isVideoOff) {
+                    mRtcEngine.startPreview();
+                    binding.btnSwitchCamera.setVisibility(View.VISIBLE);
+                } else {
+                    if (!isSharingScreen) {
+                        mRtcEngine.stopPreview();
+                    }
+                    binding.btnSwitchCamera.setVisibility(View.GONE);
+                }
+            }
+            if (!participantList.isEmpty()) {
+                participantList.get(0).isVideoOff = isVideoOff;
+                sortParticipantList();
+                updateGridLayout();
+                if (adapter != null) adapter.notifyDataSetChanged();
+            }
+        });
+    }
+
     private void leaveAndExit() {
         if (getActivity() == null) return;
         getActivity().runOnUiThread(() -> {
@@ -1660,6 +2010,32 @@ public class VoiceCallFragment extends Fragment {
             } catch (Exception e) {
                 Log.e(TAG, "Error updating PiP params: " + e.getMessage());
             }
+        }
+    }
+
+    private void startRingbackTone() {
+        if (ringbackToneGenerator == null) {
+            try {
+                ringbackToneGenerator = new android.media.ToneGenerator(android.media.AudioManager.STREAM_VOICE_CALL, 80);
+                isRingbackPlaying = true;
+                ringbackHandler.post(ringbackRunnable);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to initialize ToneGenerator for ringback", e);
+            }
+        }
+    }
+
+    private void stopRingbackTone() {
+        isRingbackPlaying = false;
+        ringbackHandler.removeCallbacks(ringbackRunnable);
+        if (ringbackToneGenerator != null) {
+            try {
+                ringbackToneGenerator.stopTone();
+                ringbackToneGenerator.release();
+            } catch (Exception e) {
+                Log.e(TAG, "Error releasing ToneGenerator for ringback", e);
+            }
+            ringbackToneGenerator = null;
         }
     }
 }

@@ -30,10 +30,12 @@ public class HomeViewModel extends ViewModel {
     private final MutableLiveData<List<User>> friendList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<String> userStatus = new MutableLiveData<>();
     private final MutableLiveData<String> operationStatus = new MutableLiveData<>();
+    private final MutableLiveData<Map<String, Integer>> unreadCounts = new MutableLiveData<>(new HashMap<>());
 
     private ValueEventListener statusListener;
     private ValueEventListener friendsListener;
     private ListenerRegistration userProfileListener;
+    private ListenerRegistration unreadNotificationsListener;
     private final List<ListenerRegistration> friendProfileListeners = new ArrayList<>();
     
     private final Map<String, User> friendMap = new HashMap<>();
@@ -60,6 +62,10 @@ public class HomeViewModel extends ViewModel {
 
     public LiveData<String> getOperationStatus() {
         return operationStatus;
+    }
+
+    public LiveData<Map<String, Integer>> getUnreadCounts() {
+        return unreadCounts;
     }
 
     public FirebaseUser getCurrentUser() {
@@ -116,6 +122,16 @@ public class HomeViewModel extends ViewModel {
             public void onError(Exception e) {
                 operationStatus.setValue("Failed to get status: " + e.getMessage());
             }
+        });
+
+        // 1b. Listen to unread notifications count
+        unreadNotificationsListener = repository.listenToUnreadNotifications(uid, new HomeRepository.RealtimeCallback<Map<String, Integer>>() {
+            @Override
+            public void onData(Map<String, Integer> counts) {
+                unreadCounts.setValue(counts);
+            }
+            @Override
+            public void onError(Exception e) {}
         });
 
         // 2. Listen to pinned DMs from user profile
@@ -237,6 +253,26 @@ public class HomeViewModel extends ViewModel {
         });
     }
 
+    public void deleteDirectMessage(String friendUid) {
+        FirebaseUser user = getCurrentUser();
+        if (user == null || friendUid == null) return;
+        String uid = user.getUid();
+        
+        String dmRoomId = uid.compareTo(friendUid) < 0 ? "dm_" + uid + "_" + friendUid : "dm_" + friendUid + "_" + uid;
+        Firebase.getMessagesRefByRoom(dmRoomId).removeValue();
+        
+        if (pinnedDMs.contains(friendUid)) {
+            pinnedDMs.remove(friendUid);
+            repository.updatePinnedDMs(uid, new ArrayList<>(pinnedDMs));
+        }
+        
+        // Also remove from friendLastMsgMap so it disappears from UI if it was there
+        friendLastMsgMap.remove(friendUid);
+        updateFriendList();
+        
+        operationStatus.setValue("Đã xóa tin nhắn");
+    }
+
     public void joinServer(String inviteCode) {
         FirebaseUser user = getCurrentUser();
         if (user == null) return;
@@ -280,6 +316,10 @@ public class HomeViewModel extends ViewModel {
         }
         if (userProfileListener != null) {
             userProfileListener.remove();
+        }
+        if (unreadNotificationsListener != null) {
+            unreadNotificationsListener.remove();
+            unreadNotificationsListener = null;
         }
         clearProfileListeners();
         clearMessageListeners();

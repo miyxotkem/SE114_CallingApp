@@ -552,7 +552,7 @@ public class ServerFragment extends Fragment {
         if (binding == null) return;
         chatAdapter = new ChatZoneAdapter(chatList, new ChatZoneAdapter.OnChannelActionListener() {
             @Override public void onRename(ChatChannel channel) { showBaseRenameDialog(channel.getChatId(), channel.getChatName(), "Channels", "chat"); }
-            @Override public void onRemove(ChatChannel channel) { viewModel.removeChannel("chat", channel.getChatId()); }
+            @Override public void onRemove(ChatChannel channel) { showChannelDeleteConfirm("chat", channel.getChatId(), channel.getChatName()); }
         });
         chatAdapter.setAdmin(isAdminOrOwner);
         binding.rvChatChannels.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -564,7 +564,7 @@ public class ServerFragment extends Fragment {
         if (binding == null) return;
         CallChannelAdapter = new CallChannelAdapter(callList, new CallChannelAdapter.OnCallActionListener() {
             @Override public void onRename(CallChannel channel) { showBaseRenameDialog(channel.getCallId(), channel.getCallName(), "CallChannels", "call"); }
-            @Override public void onRemove(CallChannel channel) { viewModel.removeChannel("call", channel.getCallId()); }
+            @Override public void onRemove(CallChannel channel) { showChannelDeleteConfirm("call", channel.getCallId(), channel.getCallName()); }
             @Override
             public void onJoinCall(CallChannel channel) {
                 if (getContext() != null && !com.example.se114_callingsystem.core.util.NetworkMonitor.isNetworkAvailable(getContext())) {
@@ -588,7 +588,7 @@ public class ServerFragment extends Fragment {
         if (binding == null) return;
         PostListAdapter = new PostChannelAdapter(postList, new PostChannelAdapter.OnChannelActionListener() {
             @Override public void onRename(PostChannel channel) { showBaseRenameDialog(channel.getId(), channel.getName(), "PostChannels", "post"); }
-            @Override public void onRemove(PostChannel channel) { viewModel.removeChannel("post", channel.getId()); }
+            @Override public void onRemove(PostChannel channel) { showChannelDeleteConfirm("post", channel.getId(), channel.getName()); }
         });
         PostListAdapter.setAdmin(isAdminOrOwner);
         binding.rvPostChannels.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -680,6 +680,20 @@ public class ServerFragment extends Fragment {
             });
         }
         dialog.show();
+    }
+
+    private void showChannelDeleteConfirm(String type, String id, String name) {
+        if (getContext() == null) return;
+        com.example.se114_callingsystem.core.util.BottomSheetUtils.showConfirmDialog(
+            requireContext(),
+            "Xóa Kênh",
+            "Bạn có chắc chắn muốn xóa kênh '" + name + "' không?",
+            "Xóa",
+            "#F23F42",
+            () -> {
+                viewModel.removeChannel(type, id);
+            }
+        );
     }
 
     private void updateMainAvatarUI() {
