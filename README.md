@@ -123,7 +123,7 @@ If you would like to contribute:
 * **GitHub:** [@PeterBrr](https://github.com/PeterBrr)
 * **Focus:** Full-Stack .NET, System Architecture & API Design
 
-**Thinh Phat Ho**
+**Thinh Phat Ho**  
 *Software Engineering Student @ UIT*
 * **GitHub:** [@miyxotkem](https://github.com/miyxotkem)
 * **Focus:** Full-Stack .NET, System Architecture & API Design
