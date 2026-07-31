@@ -1,6 +1,7 @@
-<!-- HEADER -->
-<h1 align="center">📞 CallingApp</h1>
-<p align="center"><i>Discord-Style Community, Chat &amp; Voice/Video Platform</i></p>
+<!-- HEADER BANNER -->
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:4527A0,100:00BCD4&height=200&section=header&text=📞%20CallingApp&fontSize=55&fontColor=ffffff&desc=Discord-Style%20Community%2C%20Chat%20and%20Voice-Video%20Platform&descAlignY=75" width="100%" alt="Banner" />
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android" />
